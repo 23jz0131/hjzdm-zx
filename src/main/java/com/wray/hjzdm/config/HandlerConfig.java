@@ -10,7 +10,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
  * 拦截器
  */
 @Configuration
-public class HandlerConfig extends WebMvcConfigurationSupport {
+public class HandlerConfig implements WebMvcConfigurer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HandlerConfig.class);
 
@@ -58,16 +58,17 @@ public class HandlerConfig extends WebMvcConfigurationSupport {
     //    argumentResolvers.add(loginUserHandlerMethodArgumentResolver);
     //}
     @Override
-    protected void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://127.0.0.1:3000",
+                        "https://hjzdm-front-3jz-20260109.loca.lt"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .exposedHeaders("access-control-allow-headers", "access-control-allow-methods",
-                        "access-control-allow-origin", "access-control-max-age", "X-Frame-Options")
-                .allowCredentials(false)
+                .allowCredentials(true)
                 .maxAge(3600);
-        super.addCorsMappings(registry);
     }
 
     /**
@@ -75,15 +76,36 @@ public class HandlerConfig extends WebMvcConfigurationSupport {
      *
      * @param registry
      */
-    protected void addInterceptors(InterceptorRegistry registry) {
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
         // 不拦截的路径
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/swagger-ui/**", "/swagger-resources/**", "/webjars/**", "/v2/**",
-                        "/swagger-ui.html/**", "/doc.html/**", "/user/login", "/category/**");
-        //.addPathPatterns("/goods/queryLikedGoods", "/goods/detail", "/goods/operate", "/goods/add");
-        //.excludePathPatterns("/swagger-ui/**", "/swagger-resources/**", "/webjars/**", "/v2/**",
-        //        "/swagger-ui.html/**", "/doc.html/**", "/user/login","category/**","/goods/**");
+                .excludePathPatterns(
+                        // ===== 登录相关 =====
+                        "/user/localLogin",
+                        "/user/login",
+
+                        // ===== 游客可访问接口（关键）=====
+                        "/goods/search",
+                        "/goods/compare", // Add compare endpoint
+                        "/goods/detail/**",
+                        "/goods/page",
+                        "/goods/pageAll",
+                        "/category/list",
+                        "/category/attributes",
+
+                        // ===== Swagger / 基础 =====
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/v2/**",
+                        "/swagger-ui.html/**",
+                        "/doc.html/**",
+                        "/error",
+                        "/",
+                        "/index.html",
+                        "/static/**"
+                );
     }
 
     @Override
@@ -97,7 +119,6 @@ public class HandlerConfig extends WebMvcConfigurationSupport {
                 .addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
-        super.addResourceHandlers(registry);
     }
 
 }
