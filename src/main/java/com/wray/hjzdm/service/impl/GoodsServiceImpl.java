@@ -671,7 +671,11 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 
             log.info("调用 Yahoo API URL: {}", url);
 
-            String json = HttpClientUtil.doGet(url, Collections.emptyMap());
+            Map<String, String> headers = new HashMap<>();
+            headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            headers.put("Accept", "application/json");
+
+            String json = HttpClientUtil.doGetWithHeaders(url, Collections.emptyMap(), headers);
 
             if (json == null || json.trim().isEmpty()) {
                 log.error("Yahoo API 返回空响应");
