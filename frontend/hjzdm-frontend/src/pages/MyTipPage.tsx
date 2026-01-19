@@ -103,24 +103,21 @@ const MyTipPage: React.FC = () => {
     const file = files[0];
     
     if (!file.type.startsWith('image/')) {
-        alert('画像ファイルを選択してください');
-        return;
+      alert('画像ファイルを選択してください');
+      return;
     }
 
     try {
-        const res = await commonApi.upload(file);
-        if (res.data && res.data.code === 200) {
-            // 假设后端地址是 http://localhost:9090 (本地开发)
-            // 生产环境应使用相对路径或配置的域名
-            const backendUrl = 'http://localhost:9090'; 
-            const fullUrl = backendUrl + res.data.data;
-            setFormData(prev => ({ ...prev, imgUrl: fullUrl }));
-        } else {
-            alert('アップロード失敗');
-        }
+      const res = await commonApi.upload(file);
+      if (res.data && res.data.code === 200) {
+        const fullUrl = res.data.data;
+        setFormData(prev => ({ ...prev, imgUrl: fullUrl }));
+      } else {
+        alert('アップロード失敗');
+      }
     } catch (e) {
-        console.error(e);
-        alert('アップロードエラー');
+      console.error(e);
+      alert('アップロードエラー');
     }
   };
 
