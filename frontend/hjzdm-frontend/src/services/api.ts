@@ -233,4 +233,16 @@ export const disclosureOperateApi = {
   }
 };
 
+export const commentApi = {
+  add: (data: { disclosureId: number; content: string; parentId?: number }) => {
+    return apiClient.post('/comment/addComment', data);
+  },
+  list: (disclosureId: number) => {
+    return apiClient.post('/comment/queryComment', { disclosureId });
+  },
+  del: (commentId: number) => {
+    return apiClient.post('/comment/delComment', { commentId });
+  }
+};
+
 export default apiClient;

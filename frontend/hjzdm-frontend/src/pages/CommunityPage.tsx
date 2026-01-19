@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { disclosureApi, disclosureOperateApi } from '../services/api';
+import { disclosureApi, disclosureOperateApi, commentApi } from '../services/api';
 
 interface Disclosure {
   disclosureId: number;
@@ -13,10 +13,29 @@ interface Disclosure {
   authorName?: string;
 }
 
+interface Comment {
+  id: number;
+  parentId?: number;
+  disclosureId: number;
+  content: string;
+  createTime: string;
+  owner?: boolean;
+  avatarUrl?: string;
+  nickName?: string;
+  hasLike?: boolean;
+  status: number;
+  publisher?: boolean;
+}
+
 const CommunityPage: React.FC = () => {
   const navigate = useNavigate();
   const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentMap, setCommentMap] = useState<Record<number, Comment[]>>({});
+  const [commentInput, setCommentInput] = useState<Record<number, string>>({});
+  const [replyTo, setReplyTo] = useState<Record<number, Comment | null>>({});
+  const [openComments, setOpenComments] = useState<Record<number, boolean>>({});
+  const [commentLoading, setCommentLoading] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     loadDisclosures();
@@ -41,6 +60,68 @@ const CommunityPage: React.FC = () => {
       return false;
     }
     return true;
+  };
+
+  const loadComments = async (disclosureId: number) => {
+    try {
+      setCommentLoading(prev => ({ ...prev, [disclosureId]: true }));
+      const res = await commentApi.list(disclosureId);
+      const list: Comment[] = res.data.data || [];
+      setCommentMap(prev => ({ ...prev, [disclosureId]: list }));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCommentLoading(prev => ({ ...prev, [disclosureId]: false }));
+    }
+  };
+
+  const toggleComments = (disclosureId: number) => {
+    const isOpen = openComments[disclosureId];
+    const nextOpen = !isOpen;
+    setOpenComments(prev => ({ ...prev, [disclosureId]: nextOpen }));
+    if (nextOpen && !commentMap[disclosureId]) {
+      loadComments(disclosureId);
+    }
+  };
+
+  const handleSubmitComment = async (disclosureId: number) => {
+    if (!ensureLogin()) return;
+    const text = (commentInput[disclosureId] || '').trim();
+    if (!text) {
+      return;
+    }
+    const replyTarget = replyTo[disclosureId];
+    try {
+      await commentApi.add({
+        disclosureId,
+        content: text,
+        parentId: replyTarget ? replyTarget.id : undefined
+      });
+      setCommentInput(prev => ({ ...prev, [disclosureId]: '' }));
+      setReplyTo(prev => ({ ...prev, [disclosureId]: null }));
+      loadComments(disclosureId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteComment = async (disclosureId: number, commentId: number) => {
+    if (!ensureLogin()) return;
+    if (!window.confirm('本当にこのコメントを削除しますか？')) {
+      return;
+    }
+    try {
+      await commentApi.del(commentId);
+      loadComments(disclosureId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReply = (disclosureId: number, comment: Comment) => {
+    if (!ensureLogin()) return;
+    setReplyTo(prev => ({ ...prev, [disclosureId]: comment }));
+    setOpenComments(prev => ({ ...prev, [disclosureId]: true }));
   };
 
   const handleLike = async (id: number) => {
@@ -84,8 +165,107 @@ const CommunityPage: React.FC = () => {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => handleLike(item.disclosureId)} style={{ border: '1px solid #ddd', background: '#fff', padding: '5px 10px', cursor: 'pointer' }}>点赞</button>
                     <button onClick={() => handleCollect(item.disclosureId)} style={{ border: '1px solid #ddd', background: '#fff', padding: '5px 10px', cursor: 'pointer' }}>收藏</button>
+                    <button
+                      onClick={() => toggleComments(item.disclosureId)}
+                      style={{ border: '1px solid #ddd', background: '#fff', padding: '5px 10px', cursor: 'pointer' }}
+                    >
+                      {openComments[item.disclosureId] ? '隠す' : 'コメント'}
+                    </button>
                   </div>
                 </div>
+                {openComments[item.disclosureId] && (
+                  <div style={{ marginTop: '12px', borderTop: '1px solid #f0f0f0', paddingTop: '10px' }}>
+                    <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>コメント</div>
+                    {commentLoading[item.disclosureId] ? (
+                      <div style={{ fontSize: '12px', color: '#999' }}>読み込み中...</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {(commentMap[item.disclosureId] || []).map((c) => {
+                          const commentsForDisclosure = commentMap[item.disclosureId] || [];
+                          const parent = c.parentId ? commentsForDisclosure.find(p => p.id === c.parentId) : undefined;
+                          const isReply = !!parent;
+                          return (
+                            <div
+                              key={c.id}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: '6px 8px',
+                                background: '#fafafa',
+                                borderRadius: '4px'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', fontSize: '12px' }}>
+                                <span style={{ fontWeight: 600, marginRight: '6px' }}>
+                                  {c.publisher ? '投稿者 ' : ''}
+                                  {c.nickName || '匿名'}
+                                </span>
+                                <span style={{ color: '#999', fontSize: '11px' }}>
+                                  {new Date(c.createTime).toLocaleString()}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '13px', marginBottom: '4px' }}>
+                                {isReply && parent ? (
+                                  <span style={{ color: '#666', marginRight: '4px' }}>
+                                    返信 @{parent.nickName || '匿名'}:
+                                  </span>
+                                ) : null}
+                                <span>{c.content}</span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#0066c0' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleReply(item.disclosureId, c)}
+                                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+                                >
+                                  返信
+                                </button>
+                                {c.owner && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteComment(item.disclosureId, c.id)}
+                                    style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: '#d00' }}
+                                  >
+                                    削除
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div style={{ marginTop: '8px' }}>
+                      {replyTo[item.disclosureId] && (
+                        <div style={{ fontSize: '12px', marginBottom: '4px', color: '#666' }}>
+                          返信先: {replyTo[item.disclosureId]?.nickName || '匿名'}{' '}
+                          <button
+                            type="button"
+                            onClick={() => setReplyTo(prev => ({ ...prev, [item.disclosureId]: null }))}
+                            style={{ border: 'none', background: 'none', padding: 0, marginLeft: '4px', cursor: 'pointer', color: '#999' }}
+                          >
+                            取消
+                          </button>
+                        </div>
+                      )}
+                      <textarea
+                        value={commentInput[item.disclosureId] || ''}
+                        onChange={e => setCommentInput(prev => ({ ...prev, [item.disclosureId]: e.target.value }))}
+                        placeholder="コメントを入力してください..."
+                        style={{ width: '100%', minHeight: '60px', padding: '6px 8px', fontSize: '13px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
+                      />
+                      <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitComment(item.disclosureId)}
+                          style={{ background: '#ff5000', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                        >
+                          投稿
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

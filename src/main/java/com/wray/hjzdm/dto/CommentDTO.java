@@ -45,6 +45,9 @@ public class CommentDTO implements Serializable {
     /** 是否喜欢 */
     private Boolean hasLike;
 
+    /** 是否为投稿者评论 */
+    private Boolean publisher = false;
+
     /**
      * 作者
      */

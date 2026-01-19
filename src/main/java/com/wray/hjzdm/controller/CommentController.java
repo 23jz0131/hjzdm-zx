@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.wray.hjzdm.common.BaseContext;
 import com.wray.hjzdm.common.Result;
 import com.wray.hjzdm.dto.CommentDTO;
 import com.wray.hjzdm.dto.QueryDTO;
@@ -25,6 +26,9 @@ public class CommentController {
      */
     @PostMapping("/addComment")
     public Result addComment(@RequestBody Comment comment) {
+        if (BaseContext.getCurrentId() == null) {
+            return Result.error("未登录");
+        }
         commentService.submitComment(comment);
         return Result.success("评论成功", null);
     }
@@ -34,6 +38,9 @@ public class CommentController {
      */
     @PostMapping("/delComment")
     public Result delComment(@RequestBody QueryDTO queryDto) {
+        if (BaseContext.getCurrentId() == null) {
+            return Result.error("未登录");
+        }
         commentService.delComment(queryDto.getCommentId());
         return Result.success("删除成功", null);
     }

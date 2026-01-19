@@ -40,6 +40,7 @@ public class CommentConverter {
         dto.setAvatarUrl(null);
         dto.setNickName(null);
         dto.setHasLike(false);
+        dto.setPublisher(false);
         return dto;
     }
 
