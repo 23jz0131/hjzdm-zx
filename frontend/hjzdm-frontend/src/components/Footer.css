@@ -1,0 +1,42 @@
+.footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+  padding: 8px 0;
+  margin-top: auto;
+}
+/* 已移除内容，仅保留版权 */
+
+.footer-section {
+  margin-bottom: 8px; /* 进一步减少底部边距 */
+  min-width: 100px; /* 进一步减小最小宽度 */
+  text-align: center; /* 居中对齐内容 */
+}
+
+.footer-section h4 {
+  margin: 0 0 6px; /* 进一步减少底部边距 */
+  color: #333;
+  font-size: 13px; /* 进一步减小字体大小 */
+}
+
+.footer-section p {
+  margin: 2px 0; /* 进一步减少上下边距 */
+  color: #666;
+  font-size: 11px; /* 进一步减小字体大小 */
+  cursor: pointer;
+}
+
+.footer-section p:hover {
+  color: #ff4400;
+}
+
+.footer-bottom {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 6px 0;
+  }
+}

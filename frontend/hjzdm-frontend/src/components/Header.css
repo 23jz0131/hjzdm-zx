@@ -1,0 +1,165 @@
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  max-width: 1200px;
+  margin: 0 auto 10px;
+}
+
+.logo a {
+  font-size: 24px;
+  font-weight: bold;
+  color: #003399; /* Kakaku uses blue for logo often, or keep brand color */
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  padding: 6px 10px;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.nav a:hover,
+.nav a.active {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.user-actions a {
+  text-decoration: none;
+  color: #333;
+  font-weight: normal;
+  margin-left: 15px;
+  font-size: 13px;
+}
+
+.user-actions .user-name {
+  color: #333;
+  font-weight: normal;
+  margin-left: 15px;
+  font-size: 13px;
+}
+
+.user-actions .auth-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  margin-left: 10px;
+}
+
+.user-actions .auth-primary {
+  border-color: #ff4400;
+  color: #ff4400;
+}
+
+.user-actions .auth-link:hover {
+  border-color: #999;
+  text-decoration: none;
+}
+
+.user-actions .auth-primary:hover {
+  border-color: #e63d00;
+  color: #e63d00;
+}
+
+.user-actions .logout-button {
+  background: none;
+  border: none;
+  color: #333;
+  font-weight: normal;
+  cursor: pointer;
+  margin-left: 15px;
+  text-decoration: none;
+  padding: 0;
+  font-size: 13px;
+}
+
+.user-actions .logout-button:hover {
+  color: #ff4400;
+  text-decoration: underline;
+}
+
+.header-search {
+  display: flex;
+  justify-content: center;
+  background-color: #ff4400; /* Kakaku style: search bar often in a colored band or just prominent */
+  padding: 10px 0;
+  margin: 0 -20px; /* Extend to full width */
+}
+
+.header-search form {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 20px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 2px 0 0 2px;
+  font-size: 14px;
+}
+
+.search-button {
+  padding: 8px 20px;
+  background-color: #333; /* Contrast button */
+  color: white;
+  border: none;
+  border-radius: 0 2px 2px 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.search-button:hover {
+  background-color: #555;
+}
+
+@media (max-width: 768px) {
+  .header-top {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .header-search {
+    order: 2;
+    margin: 0 -10px;
+  }
+  
+  .header-search form {
+    width: 100%;
+    padding: 0 10px;
+  }
+}

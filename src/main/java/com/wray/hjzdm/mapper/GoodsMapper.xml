@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- GOODS [goods]SQLMapper自动映射 -->
+<!--  注意:此文件由框架自动生成-用户自定义可以使用Ext扩展函数方式进行处理2024-04-18 21:20:43 -->
+<mapper namespace="com.wray.hjzdm.mapper.GoodsMapper">
+
+
+    <insert id="addGoods">
+        <selectKey keyProperty="goodsId" order="AFTER" resultType="java.lang.Long">
+            select last_insert_id()
+        </selectKey>
+        INSERT INTO GOODS( GOODS_NAME, GOODS_NUMBER, GOODS_PRICE, GOODS_LINK, IMG_URL, CREATE_TIME,
+        UPDATE_TIME, CAT_ID, AUTHOR, MALL_TYPE, BRAND,STATUS)
+        VALUES (#{goodsName}, #{goodsNumber}, #{goodsPrice},
+        #{goodsLink}, #{imgUrl}, #{createTime}, #{updateTime}, #{catId}, #{author}, #{mallType}, #{brand},#{status})
+    </insert>
+    <select id="queryMyCollect"
+            resultType="com.wray.hjzdm.entity.Goods">
+        SELECT GOODS_ID,
+               GOODS_NAME,
+               GOODS_NUMBER,
+               GOODS_PRICE,
+               GOODS_LINK,
+               IMG_URL,
+               CREATE_TIME
+        FROM GOODS
+        WHERE GOODS_ID IN (SELECT GOODS_ID FROM GOODS_COLLECT WHERE USER_ID = #{userId})
+    </select>
+
+    <select id="queryBrowseHistory"
+            resultType="com.wray.hjzdm.entity.Goods">
+        SELECT G.GOODS_ID,
+               G.GOODS_NAME,
+               G.GOODS_NUMBER,
+               G.GOODS_PRICE,
+               G.GOODS_LINK,
+               G.IMG_URL,
+               H.BROWSE_TIME as CREATE_TIME
+        FROM GOODS G
+        INNER JOIN USER_BROWSE_HISTORY H ON G.GOODS_ID = H.GOODS_ID
+        WHERE H.USER_ID = #{userId}
+        ORDER BY H.BROWSE_TIME DESC
+    </select>
+
+    <select id="queryGoodsWithAttrs" resultType="com.wray.hjzdm.entity.Goods">
+        SELECT * FROM GOODS g
+        <where>
+            <if test="dto.query != null and dto.query != ''">
+                AND g.GOODS_NAME LIKE CONCAT('%', #{dto.query}, '%')
+            </if>
+            <if test="dto.catId != null">
+                AND g.CAT_ID = #{dto.catId}
+            </if>
+            <if test="dto.minPrice != null">
+                AND g.GOODS_PRICE &gt;= #{dto.minPrice}
+            </if>
+            <if test="dto.maxPrice != null">
+                AND g.GOODS_PRICE &lt;= #{dto.maxPrice}
+            </if>
+            <if test="dto.mallTypes != null and dto.mallTypes.size() > 0">
+                AND g.MALL_TYPE IN
+                <foreach collection="dto.mallTypes" item="mt" open="(" separator="," close=")">
+                    #{mt}
+                </foreach>
+            </if>
+            <if test="dto.attrFilters != null and dto.attrFilters.size() > 0">
+                <foreach collection="dto.attrFilters.entrySet()" item="value" index="key" separator=" AND ">
+                    EXISTS (
+                        SELECT 1 FROM GOODS_ATTRIBUTE ga
+                        WHERE ga.GOODS_ID = g.GOODS_ID
+                        AND ga.ATTR_ID = #{key}
+                        AND ga.ATTR_VALUE = #{value}
+                    )
+                </foreach>
+            </if>
+        </where>
+        ORDER BY g.CREATE_TIME DESC
+    </select>
+
+</mapper>

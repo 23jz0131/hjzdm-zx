@@ -1,0 +1,250 @@
+.home {
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  background: #f5f5f5;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.home-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 20px auto;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 0 16px;
+}
+
+/* Sidebar */
+.home-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.sidebar-box {
+  background: #fff;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+}
+
+.sidebar-header {
+  background: #eee;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  border-bottom: 1px solid #ccc;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  border-bottom: 1px solid #f0f0f0;
+}
+.sidebar-menu li:last-child {
+  border-bottom: none;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  color: #0033cc;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.sidebar-menu-item:hover {
+  background: #f9f9f9;
+  text-decoration: underline;
+  color: #ff4400;
+}
+
+.sidebar-menu-item img {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* Main Content */
+.home-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Compact Search Bar */
+.home-search-section {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #ff4400;
+  font-size: 14px;
+  outline: none;
+}
+
+.home-search-btn {
+  padding: 8px 20px;
+  background: #ff4400;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border: 2px solid #ff4400;
+}
+.home-search-btn:hover {
+  background: #e63d00;
+  border-color: #e63d00;
+}
+
+/* Rankings / Featured List */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #ff4400;
+  padding-bottom: 5px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.ranking-list {
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.ranking-row {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  align-items: flex-start;
+  gap: 15px;
+}
+.ranking-row:last-child {
+  border-bottom: none;
+}
+
+.rank-num {
+  width: 24px;
+  height: 24px;
+  background: #999;
+  color: #fff;
+  text-align: center;
+  line-height: 24px;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.rank-num.top-3 {
+  background: #ff4400;
+}
+
+.rank-img {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rank-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.rank-info {
+  flex: 1;
+}
+
+.rank-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0033cc;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.rank-title:hover {
+  text-decoration: underline;
+  color: #ff4400;
+}
+
+.rank-meta {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.rank-price {
+  font-size: 18px;
+  color: #bf0000;
+  font-weight: bold;
+}
+.rank-price-sub {
+  font-size: 11px;
+  color: #888;
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+/* Hot Tags */
+.hot-tags {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+}
+.hot-tags a {
+  color: #0033cc;
+  margin-right: 10px;
+  text-decoration: none;
+}
+.hot-tags a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+    padding: 10px;
+  }
+  .home-sidebar {
+    width: 100%;
+  }
+  .home-search-section {
+    flex-direction: column;
+  }
+  .home-search-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .home-search-btn {
+    width: 100%;
+  }
+}

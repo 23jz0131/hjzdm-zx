@@ -1,0 +1,64 @@
+package com.wray.hjzdm.entity;
+import java.io.Serializable;
+import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+;
+
+/**
+ * <b>[goods_like]数据持久化对象</b>
+ * <p>
+ * 注意:此文件由框架自动生成-用户自定义可以使用扩展函数方式进行处理。
+ * </p>
+ *
+ * @author makejava
+ * @date 2024-04-25 01:17:42
+ */
+@Entity
+@Table(name = "GOODS_LIKE")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class GoodsLike implements Serializable {
+    private static final long serialVersionUID = -25614327130424990L;
+
+    /**
+     * 点赞信息id
+     */
+    @Id
+    @Column(name = "ID")
+    private Long id;
+    /**
+     * 商品id
+     */
+    @Column(name = "GOODS_ID")
+    private Long goodsId;
+    /**
+     * 点赞人id
+     */
+    @Column(name = "USER_ID")
+    private Long userId;
+    /**
+     * 更新时间
+     */
+    @Column(name = "UPDATE_TIME")
+    private Date updateTime;
+
+    /**
+     * 0 取消 1 点赞 2点踩
+     */
+    @Column(name = "STATUS")
+    private Integer status;
+
+}
+
+
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wray.hjzdm.mapper.CommentMapper">
+    <insert id="insertComment">
+        INSERT INTO COMMENT(ID, PARENT_ID, DISCLOSURE_ID, CONTENT, CREATE_TIME, AUTHOR, STATUS)
+        VALUES (#{id}, #{parentId}, #{disclosureId}, #{content}, #{createTime}, #{author}, 1)
+    </insert>
+    <select id="queryComment" resultType="com.wray.hjzdm.dto.CommentDTO">
+        SELECT C.ID,
+               U.AVATAR AS AVATAR_URL,
+               C.PARENT_ID,
+               C.DISCLOSURE_ID,
+               C.CONTENT,
+               C.CREATE_TIME,
+               C.AUTHOR,
+               C.STATUS,
+               U.NAME   AS NICK_NAME,
+               C.STATUS
+        FROM COMMENT C
+                 LEFT JOIN USER U ON C.AUTHOR = U.ID
+        WHERE DISCLOSURE_ID = #{disclosureId}
+          AND STATUS = 1
+        ORDER BY CREATE_TIME ASC
+
+    </select>
+
+
+</mapper>

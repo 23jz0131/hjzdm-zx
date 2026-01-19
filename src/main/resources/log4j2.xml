@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <!-- 变量配置  -->
+    <Properties>
+        <!-- 日志目录，prd环境取值改为/opt/logs/monitor -->
+        <Property name="log_path">/home/china-unicorn/logs/monitor</Property>
+        <Property name="logfile">china-unicorn</Property>
+        <Property name="layout_pattern">[%d][%p][%t][%c:%L] %m%n</Property>
+        <Property name="file_pattern">${log_path}/${logfile}.log-%d{yyyy-MM-dd}-%i.gz</Property>
+    </Properties>
+
+    <!-- appender配置 -->
+    <Appenders>
+        <!-- 控制台 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${layout_pattern}"/>
+        </Console>
+        <!-- 每天滚动文件 -->
+        <RollingFile name="DailyRollingFile" fileName="${log_path}/${logfile}.log"
+                     filePattern="${file_pattern}">
+            <PatternLayout pattern="${layout_pattern}"/>
+            <policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+            </policies>
+            <!--i的滚动大小限制是100-->
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${log_path}">
+                    <IfFileName glob="${logfile}-*.log.gz">
+                        <!--目标路径下满足文件名命名要求的文件，保留天数或者路径下文件总大小-->
+                        <IfAny>
+                            <IfLastModified age="7d"/>
+                            <IfAccumulatedFileSize exceeds="500 MB"/>
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="DEBUG">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="DailyRollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

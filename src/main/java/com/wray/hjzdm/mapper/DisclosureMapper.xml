@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- CATEGORY [category]SQLMapper自动映射 -->
+<!--  注意:此文件由框架自动生成-用户自定义可以使用Ext扩展函数方式进行处理2024-04-15 14:52:54 -->
+<mapper namespace="com.wray.hjzdm.mapper.DisclosureMapper">
+
+</mapper>

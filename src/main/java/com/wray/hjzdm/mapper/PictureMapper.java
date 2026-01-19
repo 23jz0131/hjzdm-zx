@@ -1,0 +1,22 @@
+package com.wray.hjzdm.mapper;
+import org.apache.ibatis.annotations.Mapper;
+import com.wray.hjzdm.config.MyMapper;
+import com.wray.hjzdm.entity.Picture;
+
+;
+
+/**
+ * <b>CATEGORY [CategoryMapper]数据访问接口</b>
+ *
+ * <p>
+ * 注意:此文件由框架自动生成-用户自定义可以使用Ext扩展函数方式进行处理
+ * </p>
+ *
+ * @author makejava
+ * @since 2024-04-15 14:52:54
+ */
+@Mapper
+public interface PictureMapper extends MyMapper<Picture> {
+
+}
+
