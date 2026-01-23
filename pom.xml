@@ -147,11 +147,11 @@
             <version>1.2.9</version>
         </dependency>
 
-        <!-- H2 Database -->
+        <!-- H2 Database (已移除 scope=runtime 以确保在打包时排除，但在开发时可选) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
 
         <!-- 数据库 -->
