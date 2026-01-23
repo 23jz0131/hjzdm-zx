@@ -238,9 +238,20 @@ const Home: React.FC = () => {
                       />
                     </div>
                     <div className="rank-info">
-                      <Link to={`/compare?query=${encodeURIComponent(product.name)}`} className="rank-title">
-                        {product.name}
-                      </Link>
+                      {product.link ? (
+                        <a 
+                          href={product.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="rank-title"
+                        >
+                          {product.name}
+                        </a>
+                      ) : (
+                        <Link to={`/compare?query=${encodeURIComponent(product.name)}`} className="rank-title">
+                          {product.name}
+                        </Link>
+                      )}
                       <div className="rank-meta">
                         {product.platform} | 評価: ★★★★☆ ({(Math.random() * 100).toFixed(0)})
                       </div>
