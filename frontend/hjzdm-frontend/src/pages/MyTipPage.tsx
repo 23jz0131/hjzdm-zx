@@ -25,7 +25,7 @@ const MyTipPage: React.FC = () => {
     content: '',
     link: '',
     price: '',
-    imgUrl: ''
+    imgUrls: [] as string[]
   });
 
   useEffect(() => {
@@ -46,17 +46,38 @@ const MyTipPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 前端校验
+    if (formData.title.length > 200) {
+        alert('商品名/タイトルは200文字以内で入力してください。');
+        return;
+    }
+    if (formData.link.length > 2000) {
+        alert('リンクURLが長すぎます（2000文字以内）。');
+        return;
+    }
+    if (formData.content.length > 2000) {
+        alert('説明/コメントは2000文字以内で入力してください。');
+        return;
+    }
+    
+    const priceNum = Number(formData.price);
+    if (isNaN(priceNum) || priceNum < 0 || priceNum > 100000000) {
+        alert('価格は0〜1億円の範囲で入力してください。');
+        return;
+    }
+
     try {
       await disclosureApi.add({
         title: formData.title,
         content: formData.content,
         link: formData.link,
         disclosurePrice: Number(formData.price),
-        imgUrl: formData.imgUrl
+        imgUrl: formData.imgUrls.join(',') // 将数组用逗号连接成字符串
       });
       alert('投稿しました！審査をお待ちください。'); // Submitted! Please wait for review.
       setShowForm(false);
-      setFormData({ title: '', content: '', link: '', price: '', imgUrl: '' });
+      setFormData({ title: '', content: '', link: '', price: '', imgUrls: [] });
       loadDisclosures();
     } catch (err) {
       alert('投稿に失敗しました。'); // Failed to submit.
@@ -100,25 +121,43 @@ const MyTipPage: React.FC = () => {
 
   const handleFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const file = files[0];
     
-    if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください');
-      return;
+    // 检查数量限制
+    if (formData.imgUrls.length + files.length > 4) {
+        alert('画像は最大4枚までです');
+        return;
     }
 
-    try {
-      const res = await commonApi.upload(file);
-      if (res.data && res.data.code === 200) {
-        const fullUrl = res.data.data;
-        setFormData(prev => ({ ...prev, imgUrl: fullUrl }));
-      } else {
-        alert('アップロード失敗');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('アップロードエラー');
+    const newUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) {
+            alert('画像ファイルを選択してください: ' + file.name);
+            continue;
+        }
+
+        try {
+            const res = await commonApi.upload(file);
+            if (res.data && res.data.code === 200) {
+                newUrls.push(res.data.data);
+            } else {
+                alert('アップロード失敗: ' + file.name);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('アップロードエラー: ' + file.name);
+        }
     }
+
+    setFormData(prev => ({ ...prev, imgUrls: [...prev.imgUrls, ...newUrls] }));
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+        ...prev,
+        imgUrls: prev.imgUrls.filter((_, i) => i !== index)
+    }));
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -174,42 +213,112 @@ const MyTipPage: React.FC = () => {
               />
             </div>
             <div className="form-group">
-              <label>画像</label>
+              <label>画像 (最大4枚)</label>
               <div 
                 className="image-uploader"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 style={{ 
-                  border: '2px dashed #ccc', 
+                  border: '2px dashed #e0e0e0', 
                   borderRadius: '8px', 
                   padding: '20px', 
-                  textAlign: 'center',
-                  cursor: 'pointer',
                   background: '#fafafa',
-                  marginBottom: '10px'
+                  marginBottom: '10px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '15px',
+                  alignItems: 'flex-start',
+                  minHeight: '120px'
                 }}
-                onClick={() => document.getElementById('file-input')?.click()}
               >
-                {formData.imgUrl ? (
-                    <img src={formData.imgUrl} alt="Preview" style={{ maxHeight: '300px', maxWidth: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
-                ) : (
-                    <p style={{ color: '#999', margin: 0 }}>画像をドラッグ＆ドロップ、またはクリックしてアップロード</p>
+                {/* プレビュー画像リスト */}
+                {formData.imgUrls.map((url, index) => (
+                    <div key={index} style={{ position: 'relative', width: '100px', height: '100px', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                        <img src={url} alt={`Uploaded ${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button 
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            style={{ 
+                                position: 'absolute', 
+                                top: '4px', 
+                                right: '4px', 
+                                background: 'rgba(0, 0, 0, 0.6)', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '50%', 
+                                width: '22px', 
+                                height: '22px', 
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                lineHeight: 1
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
+                ))}
+
+                {/* 追加ボタン (4枚未満の場合のみ表示) */}
+                {formData.imgUrls.length < 4 && (
+                    <div 
+                        onClick={() => document.getElementById('file-input')?.click()}
+                        style={{ 
+                            width: '100px', 
+                            height: '100px', 
+                            border: '2px dashed #ccc', 
+                            borderRadius: '8px', 
+                            display: 'flex', 
+                            flexDirection: 'column',
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            cursor: 'pointer', 
+                            background: '#fff',
+                            color: '#999',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.borderColor = '#ff5000';
+                            e.currentTarget.style.color = '#ff5000';
+                            e.currentTarget.style.background = '#fff5f0';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.borderColor = '#ccc';
+                            e.currentTarget.style.color = '#999';
+                            e.currentTarget.style.background = '#fff';
+                        }}
+                    >
+                        <span style={{ fontSize: '32px', lineHeight: '32px', fontWeight: '300' }}>+</span>
+                        <span style={{ fontSize: '10px', marginTop: '5px' }}>
+                            {formData.imgUrls.length === 0 ? '画像を追加' : '追加'}
+                        </span>
+                    </div>
                 )}
+
+                {/* 非表示のファイル入力 */}
                 <input 
                     id="file-input"
                     type="file" 
                     accept="image/*" 
+                    multiple
                     style={{ display: 'none' }} 
                     onChange={(e) => handleFileChange(e.target.files)}
                 />
               </div>
+              
+              {/* URL入力欄 (オプション) */}
               <input 
                 type="text" 
-                value={formData.imgUrl} 
-                onChange={e => setFormData({...formData, imgUrl: e.target.value})}
-                placeholder="または画像URLを直接入力"
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }}
+                value={formData.imgUrls.join(',')}
+                readOnly
+                placeholder="アップロードされた画像のURLがここに表示されます"
+                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box', background: '#f9f9f9', color: '#666', fontSize: '12px' }}
               />
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+                ※ ドラッグ＆ドロップでも画像を追加できます
+              </div>
             </div>
             <div className="form-group">
               <label>説明 / コメント</label>
@@ -234,21 +343,29 @@ const MyTipPage: React.FC = () => {
           <div className="tip-list">
             {disclosures.map((item) => (
               <div key={item.disclosureId} className="tip-item" style={{ border: '1px solid #eee', padding: '15px', marginBottom: '15px', borderRadius: '8px' }}>
-                <div className="tip-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <h3 style={{ margin: 0 }}>{item.title || '無題'}</h3>
-                  <span className={`status status-${getStatusClass(item.status)}`} style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '12px' }}>
+                <div className="tip-header" style={{ display: 'grid', gridTemplateColumns: '1fr 80px', alignItems: 'center', marginBottom: '10px', gap: '15px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.title}>{item.title || '無題'}</h3>
+                  <span className={`status status-${getStatusClass(item.status)}`} style={{ padding: '4px 8px', borderRadius: '4px', background: '#f5f5f5', fontSize: '12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                     {getStatusText(item.status)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                  {item.imgUrl && (
-                    <img src={item.imgUrl} alt={item.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div className="tip-content" style={{ marginBottom: '5px' }}>{item.content}</div>
-                    <div className="tip-price" style={{ color: '#ff5000', fontWeight: 'bold' }}>¥{item.disclosurePrice}</div>
-                    <div className="tip-link">
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0066c0', fontSize: '12px' }}>商品ページへ</a>
+                  <div style={{ width: '80px', height: '80px', flexShrink: 0, background: '#f9f9f9', borderRadius: '4px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee' }}>
+                    {item.imgUrl ? (
+                      <img src={item.imgUrl.split(',')[0]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '10px', color: '#ccc' }}>No Image</span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div className="tip-content" style={{ marginBottom: '5px', fontSize: '14px', color: '#666', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4' }}>
+                        {item.content}
+                    </div>
+                    <div>
+                        <div className="tip-price" style={{ color: '#ff5000', fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>¥{item.disclosurePrice}</div>
+                        <div className="tip-link" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0066c0', fontSize: '12px' }}>{item.link}</a>
+                        </div>
                     </div>
                   </div>
                 </div>

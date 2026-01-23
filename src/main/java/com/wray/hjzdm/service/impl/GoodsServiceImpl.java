@@ -115,28 +115,58 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
                 goods.setUpdateTime(new Date());
             }
             log.info("Adding goods with: catId={}, author={}, brand={}, mallType={}", goods.getCatId(), goods.getAuthor(), goods.getBrand(), goods.getMallType());
+            
+            // Check existence by link FIRST
             if (StringUtils.hasText(goods.getGoodsLink())) {
-                Goods existed = this.lambdaQuery()
+                List<Goods> existedList = this.lambdaQuery()
                         .eq(Goods::getGoodsLink, goods.getGoodsLink())
-                        .one();
-                if (existed != null) {
+                        .list();
+                if (existedList != null && !existedList.isEmpty()) {
+                    Goods existed = existedList.get(0);
                     goods.setGoodsId(existed.getGoodsId());
+                    log.info("Found existing goods by link: id={}", existed.getGoodsId());
                     return true;
                 }
             }
+            
             boolean ok = this.save(goods);
-            if (ok && goods.getGoodsId() == null && StringUtils.hasText(goods.getGoodsLink())) {
+            if (!ok) {
+                log.error("GoodsServiceImpl.save(goods) returned false. Goods: {}", JSON.toJSONString(goods));
+            }
+            
+            // Double check if save failed but it was due to concurrency
+            if (!ok && goods.getGoodsId() == null && StringUtils.hasText(goods.getGoodsLink())) {
                 Goods saved = this.lambdaQuery()
                         .eq(Goods::getGoodsLink, goods.getGoodsLink())
                         .orderByDesc(Goods::getCreateTime)
+                        .last("LIMIT 1")
                         .one();
                 if (saved != null) {
                     goods.setGoodsId(saved.getGoodsId());
+                    log.info("Found existing goods after failed save: id={}", saved.getGoodsId());
+                    return true;
                 }
             }
             return ok;
         } catch (Exception e) {
             log.error("添加商品失败: {}", e.getMessage(), e);
+            // Try to recover if it's a duplicate key error
+            if (StringUtils.hasText(goods.getGoodsLink())) {
+                 try {
+                    Goods saved = this.lambdaQuery()
+                            .eq(Goods::getGoodsLink, goods.getGoodsLink())
+                            .orderByDesc(Goods::getCreateTime)
+                            .last("LIMIT 1")
+                            .one();
+                    if (saved != null) {
+                        goods.setGoodsId(saved.getGoodsId());
+                        log.info("Recovered from error, found existing goods: id={}", saved.getGoodsId());
+                        return true;
+                    }
+                 } catch (Exception ex) {
+                     // ignore
+                 }
+            }
             return false;
         }
     }

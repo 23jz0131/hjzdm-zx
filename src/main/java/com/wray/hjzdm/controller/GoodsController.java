@@ -46,6 +46,42 @@ public class GoodsController {
         return Result.success(goods);
     }
 
+    /**
+     * 新增商品并自动记录浏览历史 (Atomic operation for better UX)
+     */
+    @PostMapping("/addAndHistory")
+    public Result<Boolean> addAndHistory(@RequestBody Goods goods) {
+        log.info("Received addAndHistory request: {}", JSON.toJSONString(goods));
+        
+        // 1. Add or Get Goods
+        boolean ok = goodsService.add(goods);
+        if (!ok || goods.getGoodsId() == null) {
+            log.error("addAndHistory failed: goodsService.add returned {}, goodsId={}", ok, goods.getGoodsId());
+            return Result.error("商品保存失败");
+        }
+        
+        // 2. Record History
+        Long userId = BaseContext.getCurrentId();
+        log.info("DEBUG: BaseContext.getCurrentId() = {}", userId);
+
+        if (userId != null) {
+            try {
+                OperateDTO operateDto = new OperateDTO();
+                operateDto.setUserId(userId);
+                operateDto.setGoodsId(goods.getGoodsId());
+                historyService.addHistory(operateDto);
+                log.info("History recorded for user {} goods {}", userId, goods.getGoodsId());
+            } catch (Exception e) {
+                log.error("Failed to record history asynchronously", e);
+                // Don't fail the request just because history failed
+            }
+        } else {
+            log.warn("DEBUG: User ID is null, skipping history. Is the user logged in?");
+        }
+        
+        return Result.success(true);
+    }
+
     @PostMapping("/search")
     public Result<List<Goods>> search(@RequestBody QueryDTO queryDto) {
         return Result.success(goodsService.queryGoods(queryDto));

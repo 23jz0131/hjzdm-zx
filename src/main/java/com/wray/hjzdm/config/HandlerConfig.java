@@ -31,6 +31,9 @@ public class HandlerConfig implements WebMvcConfigurer {
     @Autowired
     private LoginUserHandlerMethodArgumentResolver loginUserHandlerMethodArgumentResolver;
 
+    @org.springframework.beans.factory.annotation.Value("${file.upload-path}")
+    private String uploadPath;
+
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
@@ -111,7 +114,7 @@ public class HandlerConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + System.getProperty("user.dir") + "/uploads/");
+                .addResourceLocations("file:" + uploadPath);
 
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");

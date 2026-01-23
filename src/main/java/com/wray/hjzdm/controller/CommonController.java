@@ -20,6 +20,9 @@ import java.util.UUID;
 @Slf4j
 public class CommonController {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.wray.hjzdm.service.CloudStorageService cloudStorageService;
+
     @PostMapping("/upload")
     @ApiOperation("文件上传")
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
@@ -28,35 +31,13 @@ public class CommonController {
         }
 
         try {
-            // 获取文件名
-            String originalFilename = file.getOriginalFilename();
-            String suffix = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
-            } else {
-                suffix = ".jpg"; // 默认后缀
-            }
-            String fileName = UUID.randomUUID().toString() + suffix;
-
-            // 保存路径：当前项目下的 uploads 目录
-            String basePath = System.getProperty("user.dir") + "/uploads/";
-            File dir = new File(basePath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            // 保存文件
-            file.transferTo(new File(dir, fileName));
-
-            // 返回访问路径 (假设已配置 /uploads/** 映射)
-            // 注意：这里返回相对路径，前端可能需要拼接 host，或者后端返回完整 URL
-            // 这里返回相对路径，配合 HandlerConfig 的资源映射即可
-            String url = "/uploads/" + fileName;
+            // 委托给 CloudStorageService 处理上传（支持 Cloudinary 或本地）
+            String url = cloudStorageService.upload(file);
             return Result.success("上传成功", url);
 
         } catch (IOException e) {
             log.error("文件上传失败", e);
-            return Result.error("文件上传失败");
+            return Result.error("文件上传失败: " + e.getMessage());
         }
     }
 }

@@ -15,7 +15,7 @@ const apiBaseUrl = getApiBaseUrl();
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 10000,
+  timeout: 15000, // Increase timeout to 15s
   headers: {
     'Content-Type': 'application/json',
   },
@@ -81,6 +81,11 @@ export const goodsApi = {
   // 新增商品并返回
   addAndReturn: (data: any) => {
     return apiClient.post('/goods/addAndReturn', data);
+  },
+
+  // 新增商品并记录历史
+  addAndHistory: (data: any) => {
+    return apiClient.post('/goods/addAndHistory', data);
   },
   
   // 获取本地商品（支持动态属性筛选）

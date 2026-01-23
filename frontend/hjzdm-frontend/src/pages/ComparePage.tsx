@@ -165,36 +165,66 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  const ensureGoodsIdAndHistory = async (product: Product) => {
+  const ensureGoodsIdAndHistory = async (product: Product, event?: React.MouseEvent) => {
+    // 阻止默认跳转，必须等待历史记录完成
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const targetUrl = product.goodsLink;
+    const doRedirect = () => {
+        if (targetUrl) {
+            window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('请先登录，才能记录浏览历史');
+        doRedirect();
         return;
       }
-      console.log('ensureGoodsIdAndHistory called for goods:', product.goodsName, 'goodsId:', product.goodsId);
-      if (product.goodsId) {
-        const res = await userApi.addHistory(product.goodsId);
-        console.log('addHistory response:', res.data);
-        return;
-      }
-      const payload: any = {
-        goodsName: product.goodsName,
-        goodsPrice: product.goodsPrice,
-        goodsLink: product.goodsLink,
-        imgUrl: product.imgUrl,
-        mallType: product.mallType,
-        status: 1
-      };
-      const addRes = await goodsApi.addAndReturn(payload);
-      console.log('addAndReturn response:', addRes.data);
-      if (addRes.data && addRes.data.code === 200 && addRes.data.data && addRes.data.data.goodsId) {
-        const newId = addRes.data.data.goodsId as number;
-        const res = await userApi.addHistory(newId);
-        console.log('addHistory after add response:', res.data);
-      }
+      
+      console.log('Recording history for:', product.goodsName);
+      
+      // 核心逻辑：无论是已有ID还是新商品，都强制等待 API 完成
+      // 为了防止 API 卡死，设置一个 3000ms 的超时的 Promise
+      const historyPromise = (async () => {
+          if (product.goodsId) {
+            console.log('Product has ID:', product.goodsId, 'Calling userApi.addHistory');
+            await userApi.addHistory(product.goodsId);
+            console.log('userApi.addHistory success');
+          } else {
+            console.log('Product has NO ID. Calling goodsApi.addAndHistory');
+            const payload: any = {
+                goodsName: product.goodsName,
+                goodsPrice: product.goodsPrice,
+                goodsLink: product.goodsLink,
+                imgUrl: product.imgUrl,
+                mallType: product.mallType,
+                status: 1
+            };
+            // Use the new combined endpoint
+            await goodsApi.addAndHistory(payload);
+            console.log('goodsApi.addAndHistory success');
+          }
+      })();
+
+      // 竞速：API 完成 vs 5000ms 超时
+      await Promise.race([
+          historyPromise,
+          new Promise(resolve => setTimeout(resolve, 5000))
+      ]);
+      console.log('History recorded (or timed out)');
+      
+      console.log('History recorded (or timed out)');
+      
     } catch (e) {
-      console.error('ensureGoodsIdAndHistory error:', e);
+      console.error('History record failed:', e);
+    } finally {
+      // 无论成功失败，必须跳转
+      doRedirect();
     }
   };
 
@@ -795,7 +825,7 @@ const ComparePage: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-title"
-                        onClick={() => { ensureGoodsIdAndHistory(product); }}
+                        onClick={(e) => { ensureGoodsIdAndHistory(product, e); }}
                       >
                         {product.goodsName}
                       </a>
@@ -819,7 +849,7 @@ const ComparePage: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-shop"
-                      onClick={() => { ensureGoodsIdAndHistory(product); }}
+                      onClick={(e) => { ensureGoodsIdAndHistory(product, e); }}
                     >
                       前往购买
                     </a>

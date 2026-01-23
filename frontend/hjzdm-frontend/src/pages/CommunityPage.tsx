@@ -92,16 +92,23 @@ const CommunityPage: React.FC = () => {
     }
     const replyTarget = replyTo[disclosureId];
     try {
-      await commentApi.add({
+      const res = await commentApi.add({
         disclosureId,
         content: text,
         parentId: replyTarget ? replyTarget.id : undefined
       });
-      setCommentInput(prev => ({ ...prev, [disclosureId]: '' }));
-      setReplyTo(prev => ({ ...prev, [disclosureId]: null }));
-      loadComments(disclosureId);
+      
+      if (res.data.code === 200) {
+        setCommentInput(prev => ({ ...prev, [disclosureId]: '' }));
+        setReplyTo(prev => ({ ...prev, [disclosureId]: null }));
+        // 强制重新加载评论列表
+        await loadComments(disclosureId);
+      } else {
+        alert(res.data.msg || 'コメントの投稿に失敗しました');
+      }
     } catch (e) {
       console.error(e);
+      alert('エラーが発生しました');
     }
   };
 
@@ -146,9 +153,9 @@ const CommunityPage: React.FC = () => {
         <div className="community-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {disclosures.map((item) => (
             <div key={item.disclosureId} className="community-card" style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-              <div className="card-image" style={{ height: '200px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="card-image" style={{ height: '200px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {item.imgUrl ? (
-                  <img src={item.imgUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <img src={item.imgUrl.split(',')[0]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : (
                   <span style={{ color: '#ccc' }}>No Image</span>
                 )}
@@ -178,6 +185,8 @@ const CommunityPage: React.FC = () => {
                     <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>コメント</div>
                     {commentLoading[item.disclosureId] ? (
                       <div style={{ fontSize: '12px', color: '#999' }}>読み込み中...</div>
+                    ) : (commentMap[item.disclosureId] || []).length === 0 ? (
+                      <div style={{ fontSize: '12px', color: '#999', padding: '8px 0' }}>コメントはまだありません。</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {(commentMap[item.disclosureId] || []).map((c) => {
@@ -251,7 +260,7 @@ const CommunityPage: React.FC = () => {
                       <textarea
                         value={commentInput[item.disclosureId] || ''}
                         onChange={e => setCommentInput(prev => ({ ...prev, [item.disclosureId]: e.target.value }))}
-                        placeholder="コメントを入力してください..."
+                        placeholder={replyTo[item.disclosureId] ? `返信 @${replyTo[item.disclosureId]?.nickName || '匿名'}...` : "コメントを入力してください..."}
                         style={{ width: '100%', minHeight: '60px', padding: '6px 8px', fontSize: '13px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
                       />
                       <div style={{ textAlign: 'right', marginTop: '4px' }}>

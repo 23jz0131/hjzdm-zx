@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,7 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "COMMENT")
+@TableName("\"COMMENT\"")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,13 +39,14 @@ public class Comment implements Serializable {
      */
     @Id
     @Column(name = "ID")
-    @TableId(value = "ID", type = IdType.AUTO)
+    @TableId(value = "ID", type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
      * 父级id
      */
-    @Column(name = "PARENTID")
+    @Column(name = "parent_id")
+    @com.baomidou.mybatisplus.annotation.TableField("parent_id")
     private Long parentId;
     /**
      * 爆料id

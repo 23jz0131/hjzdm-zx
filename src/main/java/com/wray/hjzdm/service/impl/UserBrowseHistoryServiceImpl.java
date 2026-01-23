@@ -25,8 +25,11 @@ public class UserBrowseHistoryServiceImpl extends ServiceImpl<UserBrowseHistoryM
     @Override
     public void addHistory(OperateDTO operateDto) {
         if (operateDto.getUserId() == null || operateDto.getGoodsId() == null) {
+            System.out.println("History skipped: Missing userId or goodsId");
             return;
         }
+
+        System.out.println("Attempting to save history: User " + operateDto.getUserId() + ", Goods " + operateDto.getGoodsId());
 
         // Check if exists
         UserBrowseHistory exists = this.getOne(new LambdaQueryWrapper<UserBrowseHistory>()
@@ -35,14 +38,16 @@ public class UserBrowseHistoryServiceImpl extends ServiceImpl<UserBrowseHistoryM
 
         if (exists != null) {
             exists.setBrowseTime(new Date());
-            this.updateById(exists);
+            boolean updated = this.updateById(exists);
+            System.out.println("History updated: " + updated);
         } else {
             UserBrowseHistory history = UserBrowseHistory.builder()
                     .userId(operateDto.getUserId())
                     .goodsId(operateDto.getGoodsId())
                     .browseTime(new Date())
                     .build();
-            this.save(history);
+            boolean saved = this.save(history);
+            System.out.println("History saved: " + saved);
         }
     }
 

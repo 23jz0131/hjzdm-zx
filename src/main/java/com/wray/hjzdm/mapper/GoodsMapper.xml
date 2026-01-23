@@ -12,7 +12,7 @@
             select last_insert_id()
         </selectKey>
         INSERT INTO GOODS( GOODS_NAME, GOODS_NUMBER, GOODS_PRICE, GOODS_LINK, IMG_URL, CREATE_TIME,
-        UPDATE_TIME, CAT_ID, AUTHOR, MALL_TYPE, BRAND,STATUS)
+        UPDATE_TIME, CAT_ID, `AUTHOR`, MALL_TYPE, BRAND,STATUS)
         VALUES (#{goodsName}, #{goodsNumber}, #{goodsPrice},
         #{goodsLink}, #{imgUrl}, #{createTime}, #{updateTime}, #{catId}, #{author}, #{mallType}, #{brand},#{status})
     </insert>

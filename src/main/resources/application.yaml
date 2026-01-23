@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: ${PORT:9090}
 
 spring:
   main:
@@ -10,18 +10,19 @@ spring:
       matching-strategy: ant_path_matcher
 
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:file:./data/hjzdm;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;MODE=MySQL
-    username: sa
-    password: 
-    # druid:
-    #   driver-class-name: com.mysql.cj.jdbc.Driver
-    #   url: jdbc:mysql://www.funnybear.top:23334/hjzdm?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
-    #   username: root
-    #   password: 123456
+    # 优先使用环境变量中的 MySQL 配置，默认使用 funnybear 数据库
+    # 在 Render 的 Environment 中配置 SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://www.funnybear.top:23334/hjzdm?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    # 强制指定 Druid 的驱动类，防止自动推断为 H2
+    druid:
+      driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    # database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -45,6 +46,10 @@ spring:
       time-to-live: 3600000
       cache-null-values: true
       use-key-prefix: true
+
+# 文件上传路径配置
+file:
+  upload-path: ${UPLOAD_PATH:./uploads/}
 
 # 微信（你现在用不用都没关系）
 wechat:

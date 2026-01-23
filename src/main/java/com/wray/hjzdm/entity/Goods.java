@@ -78,8 +78,8 @@ public class Goods implements Serializable {
     /**
      * 作者id
      */
-    @Column(name = "AUTHOR")
-    @TableField("AUTHOR")
+    @Column(name = "`AUTHOR`")
+    @TableField("`AUTHOR`")
     private Long author;
     /**
      * 商城分类: 1.京东 2.淘宝 3.拼多多

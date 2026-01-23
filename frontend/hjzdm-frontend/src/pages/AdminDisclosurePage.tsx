@@ -23,6 +23,7 @@ const AdminDisclosurePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<Disclosure[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selectedImages, setSelectedImages] = useState<Record<number, string>>({}); // State to track selected image per item
 
   const isAdmin = (() => {
     const token = localStorage.getItem('token');
@@ -172,15 +173,15 @@ const AdminDisclosurePage: React.FC = () => {
                       transition: 'background 0.2s'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 15, flex: 1, overflow: 'hidden' }}>
-                      <span style={{ color: '#999', fontSize: 12, minWidth: 30 }}>#{it.disclosureId}</span>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '40%' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 100px 120px', alignItems: 'center', gap: 15, flex: 1, marginRight: 20 }}>
+                      <span style={{ color: '#999', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>#{it.disclosureId}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={it.title}>
                         {it.title}
                       </span>
-                      <span style={{ color: '#ff4400', fontWeight: 700 }}>¥{it.disclosurePrice}</span>
-                      <span style={{ fontSize: 12, color: '#666' }}>{new Date(it.createTime).toLocaleDateString()}</span>
+                      <span style={{ color: '#ff4400', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>¥{it.disclosurePrice}</span>
+                      <span style={{ fontSize: 12, color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{new Date(it.createTime).toLocaleDateString()}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#999', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ fontSize: 12, color: '#999', display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                       {isExpanded ? '▲ 閉じる' : '▼ 詳細・審査'}
                     </div>
                   </div>
@@ -189,24 +190,57 @@ const AdminDisclosurePage: React.FC = () => {
                   {isExpanded && (
                     <div style={{ borderTop: '1px solid #eee', padding: 20, animation: 'fadeIn 0.3s' }}>
                       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                        {/* Image */}
-                        <div style={{ width: 240, height: 240, background: '#f5f5f5', borderRadius: 4, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee' }}>
-                          {it.imgUrl ? (
-                            <img
-                              src={it.imgUrl}
-                              alt={it.title}
-                              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          ) : (
-                            <span style={{ color: '#ccc' }}>No Image</span>
+                        {/* Image Gallery */}
+                        <div style={{ width: 240, flexShrink: 0 }}>
+                          {/* Main Image */}
+                          <div style={{ width: '100%', height: 240, background: '#f5f5f5', borderRadius: 4, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', marginBottom: 10 }}>
+                            {it.imgUrl ? (
+                              <img
+                                src={selectedImages[it.disclosureId] || (it.imgUrl.includes(',') ? it.imgUrl.split(',')[0] : it.imgUrl)}
+                                alt={it.title}
+                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                onError={(e) => { 
+                                    console.error('Image load failed:', (e.target as HTMLImageElement).src);
+                                    (e.target as HTMLImageElement).style.display = 'none'; 
+                                }}
+                              />
+                            ) : (
+                              <span style={{ color: '#ccc' }}>No Image</span>
+                            )}
+                          </div>
+                          
+                          {/* Thumbnail List */}
+                          {it.imgUrl && (
+                            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                              {(it.imgUrl.includes(',') ? it.imgUrl.split(',') : [it.imgUrl]).map((url, idx) => (
+                                <div 
+                                  key={idx}
+                                  onClick={() => setSelectedImages(prev => ({ ...prev, [it.disclosureId]: url }))}
+                                  style={{ 
+                                    width: 50, 
+                                    height: 50, 
+                                    border: (selectedImages[it.disclosureId] || (it.imgUrl?.includes(',') ? it.imgUrl?.split(',')[0] : it.imgUrl)) === url ? '2px solid #ff4400' : '1px solid #eee', 
+                                    borderRadius: 4, 
+                                    overflow: 'hidden', 
+                                    cursor: 'pointer',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  <img 
+                                    src={url} 
+                                    alt={`thumb-${idx}`} 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
 
                         {/* Details */}
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: 18 }}>{it.title}</h3>
-                          <div style={{ marginBottom: 15, color: '#555', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: 18, wordBreak: 'break-all' }}>{it.title}</h3>
+                          <div style={{ marginBottom: 15, color: '#555', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '300px', overflowY: 'auto', padding: '10px', background: '#fafafa', borderRadius: '4px', border: '1px solid #f0f0f0' }}>
                             {it.content}
                           </div>
                           <div style={{ marginBottom: 20 }}>

@@ -80,6 +80,7 @@ const Header: React.FC = () => {
           <Link to="/">ホーム</Link>
           <Link to="/compare">価格比較</Link>
           <Link to="/community">みんなの投稿</Link>
+          {isLoggedIn && <Link to="/browse-history">閲覧履歴</Link>}
           {isAdmin && <Link to="/admin/disclosures" style={{ color: '#ff4d4f' }}>投稿審査</Link>}
           <Link to={isLoggedIn ? '/profile' : '/login'}>マイページ</Link>
         </nav>
