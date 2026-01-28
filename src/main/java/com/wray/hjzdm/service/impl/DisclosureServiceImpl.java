@@ -1,4 +1,5 @@
 package com.wray.hjzdm.service.impl;
+
 import java.sql.Date;
 import java.util.List;
 import java.util.Objects;
@@ -17,8 +18,6 @@ import com.wray.hjzdm.mapper.CommentMapper;
 import com.wray.hjzdm.mapper.DisclosureMapper;
 import com.wray.hjzdm.service.DisclosureService;
 import com.wray.hjzdm.service.GoodsService;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import com.wray.hjzdm.common.Constants;
 
 @Service
 public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclosure> implements DisclosureService {
@@ -34,17 +33,31 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
     @Autowired
     private com.wray.hjzdm.mapper.UserMapper userMapper;
 
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    // Redis removed
+    // @Autowired
+    // private StringRedisTemplate stringRedisTemplate;
+
+    // ... (helper methods preserved if any were between the deleted lines?)
+    // Actually the target content spans from StringRedisTemplate definition down to
+    // uncollect method.
+    // I need to be careful not to delete `isAdmin`.
+    // Let's break this down.
+
+    // Step 1: Remove field.
+    // Step 2: Empty methods.
+
+    // I will use multi_replace to be safe and precise.
 
     @Autowired
     private com.wray.hjzdm.service.NotificationService notificationService;
 
     private boolean isAdmin() {
         Long currentId = BaseContext.getCurrentId();
-        if (currentId == null) return false;
-        if (ADMIN_USER_ID.equals(currentId)) return true;
-        
+        if (currentId == null)
+            return false;
+        if (ADMIN_USER_ID.equals(currentId))
+            return true;
+
         com.wray.hjzdm.entity.User user = userMapper.selectById(currentId);
         return user != null && "admin".equals(user.getName());
     }
@@ -64,18 +77,19 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
     @Override
     public boolean addDisclosure(Disclosure disclosure) {
         if (disclosure.getGoodsId() != null) {
-            Goods goods = goodsService.getOne(new LambdaQueryWrapper<Goods>().eq(Goods::getGoodsId, disclosure.getGoodsId()));
+            Goods goods = goodsService
+                    .getOne(new LambdaQueryWrapper<Goods>().eq(Goods::getGoodsId, disclosure.getGoodsId()));
             if (goods == null) {
                 return false;
             }
         }
-        
+
         disclosure.setCreateTime(Date.from(java.time.Instant.now()));
         disclosure.setDisclosureId(null);
         Long userId = BaseContext.getCurrentId();
         disclosure.setAuthor(userId);
         disclosure.setStatus(0); // Default pending
-        
+
         try {
             int result = this.baseMapper.insert(disclosure);
             return result > 0;
@@ -87,50 +101,34 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
     @Override
     public void like(Long userId, Long disclosureId) {
-        if (userId == null || disclosureId == null) {
-            return;
-        }
-        String key = Constants.DISCLOSURE_LIKE + disclosureId;
-        stringRedisTemplate.opsForSet().add(key, userId.toString());
+        // Redis disabled
     }
 
     @Override
     public void unlike(Long userId, Long disclosureId) {
-        if (userId == null || disclosureId == null) {
-            return;
-        }
-        String key = Constants.DISCLOSURE_LIKE + disclosureId;
-        stringRedisTemplate.opsForSet().remove(key, userId.toString());
+        // Redis disabled
     }
 
     @Override
     public void collect(Long userId, Long disclosureId) {
-        if (userId == null || disclosureId == null) {
-            return;
-        }
-        String key = Constants.USER_DISCLOSURE_COLLECT + userId;
-        stringRedisTemplate.opsForSet().add(key, disclosureId.toString());
+        // Redis disabled
     }
 
     @Override
     public void uncollect(Long userId, Long disclosureId) {
-        if (userId == null || disclosureId == null) {
-            return;
-        }
-        String key = Constants.USER_DISCLOSURE_COLLECT + userId;
-        stringRedisTemplate.opsForSet().remove(key, disclosureId.toString());
+        // Redis disabled
     }
 
     @Override
     public boolean delete(Long disclosureId) {
         Disclosure disclosure = this.baseMapper.selectOne(
                 new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getDisclosureId, disclosureId));
-        
+
         // 允许作者本人 或 管理员 删除
         if (disclosure == null) {
             return false;
         }
-        
+
         boolean isAuthor = Objects.equals(disclosure.getAuthor(), BaseContext.getCurrentId());
         if (!isAuthor && !isAdmin()) {
             return false;
@@ -164,7 +162,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                 title = "投稿却下のお知らせ";
                 content = "あなたの投稿「" + (disclosure.getTitle() != null ? disclosure.getTitle() : "無題") + "」は承認されませんでした。";
             }
-            
+
             if (!title.isEmpty()) {
                 notificationService.sendNotification(disclosure.getAuthor(), title, content);
             }

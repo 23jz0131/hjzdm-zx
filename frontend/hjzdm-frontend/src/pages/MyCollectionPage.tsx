@@ -45,7 +45,7 @@ const MyCollectionPage: React.FC = () => {
 
   const handleCancelCollect = async (goodsId: number) => {
     // 実際のアプリケーションでは、コレクション解除APIを呼び出す必要があります
-    console.log(`コレクション解除商品: ${goodsId}`);
+    // Debug log removed
     // ローカル状態を更新
     setProducts(products.filter(product => product.goodsId !== goodsId));
   };
@@ -86,7 +86,7 @@ const MyCollectionPage: React.FC = () => {
                 <div className="product-info">
                   <div className="product-image">
                     <img 
-                      src={product.imgUrl || 'https://picsum.photos/100/100?random=product'} 
+                      src={product.imgUrl || '/images/default-product.png'} 
                       alt={product.goodsName} 
                     />
                   </div>

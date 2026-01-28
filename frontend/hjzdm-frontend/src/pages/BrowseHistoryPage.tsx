@@ -28,7 +28,7 @@ const BrowseHistoryPage: React.FC = () => {
       setError(null);
       // Fetch more items to show a fuller history
       const response = await userApi.getHistory(1, 500);
-      console.log('History loaded:', response.data.data);
+      // Debug log removed
       setProducts(response.data.data || []);
     } catch (err) {
       setError('閲覧履歴の取得に失敗しました');

@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 @MapperScan("com.wray.hjzdm.mapper")
-@EnableCaching
+// @EnableCaching // Redis removed
 public class HjzdmApplication {
 
     public static void main(String[] args) {
@@ -21,16 +21,16 @@ public class HjzdmApplication {
     public CommandLineRunner cleanup(GoodsMapper goodsMapper) {
         return args -> {
             // Clean up invalid goods (price 0 or default name) created during testing
-            goodsMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.wray.hjzdm.entity.Goods>()
-                    .eq("GOODS_PRICE", 0)
-                    .or()
-                    .eq("GOODS_NAME", "未命名商品")
-                    .or()
-                    .isNull("GOODS_LINK")
-                    .or()
-                    .eq("GOODS_LINK", "")
-            );
-            System.out.println("Cleaned up invalid goods data.");
+            goodsMapper.delete(
+                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.wray.hjzdm.entity.Goods>()
+                            .eq("GOODS_PRICE", 0)
+                            .or()
+                            .eq("GOODS_NAME", "未命名商品")
+                            .or()
+                            .isNull("GOODS_LINK")
+                            .or()
+                            .eq("GOODS_LINK", ""));
+            // Log cleaned up invalid goods data
         };
     }
 

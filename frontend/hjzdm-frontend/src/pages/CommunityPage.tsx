@@ -66,10 +66,19 @@ const CommunityPage: React.FC = () => {
     try {
       setCommentLoading(prev => ({ ...prev, [disclosureId]: true }));
       const res = await commentApi.list(disclosureId);
+      if (res.data.code !== 200) {
+        console.error('コメントの読み込みに失敗しました:', res.data.msg);
+        setCommentMap(prev => ({ ...prev, [disclosureId]: [] }));
+        return;
+      }
       const list: Comment[] = res.data.data || [];
       setCommentMap(prev => ({ ...prev, [disclosureId]: list }));
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setCommentMap(prev => ({ ...prev, [disclosureId]: [] }));
+      if (e.response?.data?.msg) {
+        console.error('コメントの読み込みに失敗しました:', e.response.data.msg);
+      }
     } finally {
       setCommentLoading(prev => ({ ...prev, [disclosureId]: false }));
     }
@@ -88,6 +97,11 @@ const CommunityPage: React.FC = () => {
     if (!ensureLogin()) return;
     const text = (commentInput[disclosureId] || '').trim();
     if (!text) {
+      alert('コメントを入力してください');
+      return;
+    }
+    if (text.length > 500) {
+      alert('コメントは500文字以内で入力してください');
       return;
     }
     const replyTarget = replyTo[disclosureId];
@@ -106,9 +120,13 @@ const CommunityPage: React.FC = () => {
       } else {
         alert(res.data.msg || 'コメントの投稿に失敗しました');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('エラーが発生しました');
+      if (e.response?.data?.msg) {
+        alert(e.response.data.msg);
+      } else {
+        alert('コメントの投稿に失敗しました');
+      }
     }
   };
 
@@ -118,10 +136,19 @@ const CommunityPage: React.FC = () => {
       return;
     }
     try {
-      await commentApi.del(commentId);
+      const res = await commentApi.del(commentId);
+      if (res.data.code !== 200) {
+        alert(res.data.msg || 'コメントの削除に失敗しました');
+      }
+      // 重新加载评论列表
       loadComments(disclosureId);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e.response?.data?.msg) {
+        alert(e.response.data.msg);
+      } else {
+        alert('コメントの削除に失敗しました');
+      }
     }
   };
 
@@ -155,7 +182,15 @@ const CommunityPage: React.FC = () => {
             <div key={item.disclosureId} className="community-card" style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
               <div className="card-image" style={{ height: '200px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {item.imgUrl ? (
-                  <img src={item.imgUrl.split(',')[0]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <img 
+                    src={item.imgUrl.includes(',') ? item.imgUrl.split(',')[0] : item.imgUrl}
+                    alt={item.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                    onError={(e) => {
+                      console.error('Image load failed:', (e.target as HTMLImageElement).src);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
                 ) : (
                   <span style={{ color: '#ccc' }}>No Image</span>
                 )}

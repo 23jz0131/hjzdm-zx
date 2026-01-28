@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  * @date 2024-04-23 21:28:44
  */
 @Entity
-@Table(name = "DISCLOSURE")
+@Table(name = "`DISCLOSURE`")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -29,17 +29,17 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
                              Object handler) throws Exception {
         
         String uri = request.getRequestURI();
-        System.out.println(">>> [INTERCEPTOR] REQUEST: " + uri + " [" + request.getMethod() + "]");
+        // Debug log removed
 
         // Handle OPTIONS request for CORS
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            System.out.println(">>> [INTERCEPTOR] Allowing OPTIONS request");
+            // Debug log removed
             return true;
         }
 
         // 1️⃣ 非 Controller 请求直接放行
         if (!(handler instanceof HandlerMethod)) {
-            System.out.println(">>> [INTERCEPTOR] Skipping non-controller handler: " + handler.getClass().getName());
+            // Debug log removed
             return true;
         }
 
@@ -50,7 +50,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
 
         // 3️⃣ 从 header 中获取 token
         String token = request.getHeader(jwtProperties.getUserTokenName());
-        System.out.println(">>> Token header (" + jwtProperties.getUserTokenName() + "): " + (token == null ? "null" : (token.isEmpty() ? "empty" : "present")));
+        // Debug log removed
 
         // ⭐⭐⭐ 关键修复：没有 token = 游客，直接放行
         if (token == null || token.trim().isEmpty()) {

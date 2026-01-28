@@ -51,7 +51,7 @@ const Home: React.FC = () => {
           const res = await goodsApi.compareGoods(q);
           if (res.data && res.data.code === 200 && Array.isArray(res.data.data)) {
             // 展开每个分组的最低价商品
-            res.data.data.forEach((group: any) => {
+            res.data.data.forEach((group: { goodsList: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[] }) => {
               const list = Array.isArray(group.goodsList) ? group.goodsList : [];
               if (list.length > 0) {
                 // 选择最低价条目
@@ -62,11 +62,11 @@ const Home: React.FC = () => {
                 }, list[0]);
                 if (cheapest && cheapest.goodsName && cheapest.goodsPrice && cheapest.goodsLink) {
                   collected.push({
-                    id: cheapest.goodsId || Math.floor(Math.random() * 1e9),
+                    id: (cheapest as any).goodsId || Math.floor(Math.random() * 1e9),
                     name: cheapest.goodsName,
                     price: cheapest.goodsPrice,
-                    imageUrl: typeof cheapest.imgUrl === 'string' ? cheapest.imgUrl : '',
-                    platform: getPlatformName(cheapest.mallType),
+                    imageUrl: typeof (cheapest as any).imgUrl === 'string' ? (cheapest as any).imgUrl : '',
+                    platform: getPlatformName((cheapest as any).mallType || 0),
                     originalPrice: cheapest.goodsPrice ? Math.floor(cheapest.goodsPrice * 1.1) : undefined,
                     link: cheapest.goodsLink
                   });
@@ -88,7 +88,7 @@ const Home: React.FC = () => {
           const items = (fallbackRes.data && fallbackRes.data.data) ? fallbackRes.data.data : [];
           items.forEach((item: any) => {
             collected.push({
-              id: item.goodsId,
+              id: item.goodsId || Math.floor(Math.random() * 1e9),
               name: item.goodsName,
               price: item.goodsPrice,
               imageUrl: typeof item.imgUrl === 'string' ? item.imgUrl : '',
@@ -121,8 +121,8 @@ const Home: React.FC = () => {
       // Fallback data
       setProducts(Array(5).fill(0).map((_, i) => ({
         id: i,
-        name: 'Sample Product ' + (i+1),
-        price: 10000 + i*500,
+        name: 'Sample Product ' + (i + 1),
+        price: 10000 + i * 500,
         imageUrl: '',
         platform: 'Demo',
         originalPrice: 12000
@@ -159,14 +159,14 @@ const Home: React.FC = () => {
             <ul className="sidebar-menu">
               {categories.map((c) => (
                 <li key={c.key}>
-                  <div 
+                  <div
                     className="sidebar-menu-item"
                     onClick={() => navigate(`/compare?query=${encodeURIComponent(c.query)}`)}
                   >
                     {/* Placeholder icon logic */}
-                    <img 
-                      src={c.image} 
-                      alt="" 
+                    <img
+                      src={c.image}
+                      alt=""
                       onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
                     />
                     {c.name}
@@ -206,9 +206,9 @@ const Home: React.FC = () => {
           <div className="hot-tags">
             <strong>注目キーワード: </strong>
             {hotTags.map(tag => (
-              <a 
-                key={tag} 
-                href="#" 
+              <a
+                key={tag}
+                href="#"
                 onClick={(e) => { e.preventDefault(); navigate(`/compare?query=${encodeURIComponent(tag)}`); }}
               >
                 {tag}
@@ -231,18 +231,18 @@ const Home: React.FC = () => {
                   <div key={product.id || index} className="ranking-row">
                     <div className={`rank-num ${index < 3 ? 'top-3' : ''}`}>{index + 1}</div>
                     <div className="rank-img">
-                      <img 
-                        src={product.imageUrl || 'https://placehold.co/80x80'} 
+                      <img
+                        src={product.imageUrl || 'https://placehold.co/80x80'}
                         alt={product.name}
                         onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=NoImg'}
                       />
                     </div>
                     <div className="rank-info">
                       {product.link ? (
-                        <a 
-                          href={product.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={product.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="rank-title"
                         >
                           {product.name}

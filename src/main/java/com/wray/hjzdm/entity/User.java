@@ -48,7 +48,13 @@ public class User implements Serializable {
     @Column(name = "OPENID")
     private String openid;
     /**
-     * 名称
+     * 昵称
+     */
+    @Column(name = "NICKNAME")
+    private String nickname;
+    
+    /**
+     * 名称（账号名）
      */
     @Column(name = "NAME")
     private String name;
@@ -77,8 +83,24 @@ public class User implements Serializable {
      */
     @Column(name = "create_time")
     private Date createTime;
+    
+    /**
+     * 性别
+     */
+    @Column(name = "GENDER")
+    private Integer gender;
+    
+    /**
+     * 年龄
+     */
+    @Column(name = "AGE")
+    private Integer age;
+    
+    /**
+     * 生日
+     */
+    @Column(name = "BIRTH_DATE")
+    private Date birthDate;
 
 }
-
-
 

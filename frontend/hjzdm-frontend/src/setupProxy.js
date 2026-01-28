@@ -5,6 +5,18 @@ module.exports = function (app) {
 
   app.use(
     [
+      '/api/user',
+      '/api/common',
+      '/api/goods',
+      '/api/disclosure',
+      '/api/notification',
+      '/api/comment',
+      '/api/history',
+      '/api/compare-history',
+      '/api/collection',
+      '/api/ai',
+      '/api/category',
+      // Old paths compatibility
       '/user',
       '/common',
       '/goods',
@@ -21,6 +33,8 @@ module.exports = function (app) {
       target,
       changeOrigin: true,
       ws: true,
+      // Add pathRewrite if needed, but for now we keep it simple
+      // pathRewrite: { '^/api': '' } 
     })
   );
 

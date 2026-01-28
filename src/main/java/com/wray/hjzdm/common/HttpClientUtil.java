@@ -59,10 +59,10 @@ public class HttpClientUtil {
             if(statusCode == 200){
                 result = EntityUtils.toString(response.getEntity(),"UTF-8");
             } else {
-                System.out.println("HTTP Request Failed: " + statusCode + " URL: " + url);
+                // Log HTTP Request Failed
                 // 尝试读取错误信息
                 String errorBody = EntityUtils.toString(response.getEntity(),"UTF-8");
-                System.out.println("Error Body: " + errorBody);
+                // Log Error Body
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -122,9 +122,9 @@ public class HttpClientUtil {
             if(statusCode == 200){
                 result = EntityUtils.toString(response.getEntity(),"UTF-8");
             } else {
-                System.out.println("HTTP Request Failed: " + statusCode + " URL: " + url);
+                // Log HTTP Request Failed
                 String errorBody = EntityUtils.toString(response.getEntity(),"UTF-8");
-                System.out.println("Error Body: " + errorBody);
+                // Log Error Body
             }
         }catch (Exception e){
             e.printStackTrace();

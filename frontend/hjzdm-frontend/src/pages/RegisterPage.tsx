@@ -74,7 +74,7 @@ const RegisterPage: React.FC = () => {
         confirmPassword: formData.confirmPassword
       });
 
-      console.log('Response data:', response.data); // 调试日志
+      // 调试日志 removed
       
       if (response.data && response.data.code === 200) {
         setSuccess('登録が完了しました！ログインしてください。');
@@ -87,7 +87,7 @@ const RegisterPage: React.FC = () => {
         });
         // 3秒后跳转到登录页面
         setTimeout(() => {
-          navigate('/login');
+          navigate('/profile-setup');
         }, 3000);
       } else {
         // 尝试从响应中获取错误消息
@@ -128,8 +128,8 @@ const RegisterPage: React.FC = () => {
       <div className="register-container">
         <h2>新規登録</h2>
         
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && <div className="error-message">⚠️ {error}</div>}
+        {success && <div className="success-message">✅ {success}</div>}
         
         <form onSubmit={handleSubmit} className="register-form">
           <div className="form-group">
@@ -193,7 +193,7 @@ const RegisterPage: React.FC = () => {
             className="register-button"
             disabled={loading}
           >
-            {loading ? '登録中...' : '登録'}
+            {loading ? '登録中...' : '新規登録'}
           </button>
         </form>
         

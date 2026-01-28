@@ -174,24 +174,37 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     @Override
     public List<Goods> queryGoods(QueryDTO queryDto) {
         List<Goods> all = new ArrayList<>();
+        
+        // 1. Rakuten Search
         if (rakutenEnabled) {
             for (int p = 1; p <= RAKUTEN_MAX_PAGES; p++) {
-                List<Goods> pageList = searchRakuten(queryDto, p);
-                if (pageList == null || pageList.isEmpty()) {
-                    break;
+                try {
+                    List<Goods> pageList = searchRakuten(queryDto, p);
+                    if (pageList == null || pageList.isEmpty()) {
+                        break;
+                    }
+                    all.addAll(pageList);
+                } catch (Exception e) {
+                    log.error("Rakuten Search Error", e);
                 }
-                all.addAll(pageList);
             }
         } else {
-            log.info("Rakuten 数据源已禁用，改用 Yahoo 搜索");
-            for (int p = 1; p <= YAHOO_MAX_PAGES; p++) {
+            log.info("Rakuten 数据源已禁用");
+        }
+
+        // 2. Yahoo Search (Always execute if not explicitly disabled via code, currently no config flag)
+        for (int p = 1; p <= YAHOO_MAX_PAGES; p++) {
+            try {
                 List<Goods> pageList = searchYahoo(queryDto, p);
                 if (pageList == null || pageList.isEmpty()) {
                     break;
                 }
                 all.addAll(pageList);
+            } catch (Exception e) {
+                log.error("Yahoo Search Error", e);
             }
         }
+        
         return all;
     }
 
@@ -557,7 +570,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             );
 
             log.error("DEBUG: Rakuten URL: " + url);
-            System.out.println("DEBUG_SYSOUT: Rakuten URL: " + url);
+            // Debug log removed
 
             log.info("调用 Rakuten API URL: {}", url);
 
@@ -567,7 +580,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             String json = HttpClientUtil.doGet(url, Collections.emptyMap());
 
             log.error("DEBUG: Rakuten Response: " + json);
-            System.out.println("DEBUG_SYSOUT: Rakuten Response length: " + (json != null ? json.length() : "null"));
+            // Debug log removed
 
             if (json == null || json.trim().isEmpty()) {
                 log.error("Rakuten API 返回空响应");

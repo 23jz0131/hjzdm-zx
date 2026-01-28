@@ -51,8 +51,8 @@ const ComparePage: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
 
   // Dynamic Filters State
-  const [categories, setCategories] = useState<any[]>([]);
-  const [dynamicFilters, setDynamicFilters] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ catId: number, catName: string, children?: any[] }[]>([]);
+  const [dynamicFilters, setDynamicFilters] = useState<{ id: number, name: string, type: string, attrId: number, attrName: string, values?: string[] }[]>([]);
   const [selectedDynamicFilters, setSelectedDynamicFilters] = useState<Record<string, string>>({});
   const [currentCatId, setCurrentCatId] = useState<number | null>(null);
 
@@ -82,7 +82,7 @@ const ComparePage: React.FC = () => {
         }
       }).catch(err => console.warn("Failed to fetch attributes", err));
     } else {
-        setDynamicFilters([]);
+      setDynamicFilters([]);
     }
   }, [currentCatId]);
 
@@ -98,7 +98,7 @@ const ComparePage: React.FC = () => {
       try {
         const res = await goodsApi.getMyCollect(1, 500);
         if (res.data && res.data.code === 200 && Array.isArray(res.data.data)) {
-          const ids = res.data.data.map((g: any) => g.goodsId).filter((id: any) => typeof id === 'number');
+          const ids = res.data.data.map((g: { goodsId: number }) => g.goodsId).filter((id: number) => typeof id === 'number');
           setCollectedIds(new Set(ids));
         }
       } catch (e) {
@@ -145,11 +145,11 @@ const ComparePage: React.FC = () => {
         await toggleCollect(product.goodsId);
         return;
       }
-      const payload: any = {
+      const payload: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number, status: number } = {
         goodsName: product.goodsName,
         goodsPrice: product.goodsPrice,
         goodsLink: product.goodsLink,
-        imgUrl: product.imgUrl,
+        imgUrl: product.imgUrl || '',
         mallType: product.mallType,
         status: 1
       };
@@ -168,15 +168,15 @@ const ComparePage: React.FC = () => {
   const ensureGoodsIdAndHistory = async (product: Product, event?: React.MouseEvent) => {
     // 阻止默认跳转，必须等待历史记录完成
     if (event) {
-        event.preventDefault();
-        event.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
     }
 
     const targetUrl = product.goodsLink;
     const doRedirect = () => {
-        if (targetUrl) {
-            window.open(targetUrl, '_blank', 'noopener,noreferrer');
-        }
+      if (targetUrl) {
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      }
     };
 
     try {
@@ -185,41 +185,39 @@ const ComparePage: React.FC = () => {
         doRedirect();
         return;
       }
-      
-      console.log('Recording history for:', product.goodsName);
-      
+
+      // Debug log removed
+
       // 核心逻辑：无论是已有ID还是新商品，都强制等待 API 完成
       // 为了防止 API 卡死，设置一个 3000ms 的超时的 Promise
       const historyPromise = (async () => {
-          if (product.goodsId) {
-            console.log('Product has ID:', product.goodsId, 'Calling userApi.addHistory');
-            await userApi.addHistory(product.goodsId);
-            console.log('userApi.addHistory success');
-          } else {
-            console.log('Product has NO ID. Calling goodsApi.addAndHistory');
-            const payload: any = {
-                goodsName: product.goodsName,
-                goodsPrice: product.goodsPrice,
-                goodsLink: product.goodsLink,
-                imgUrl: product.imgUrl,
-                mallType: product.mallType,
-                status: 1
-            };
-            // Use the new combined endpoint
-            await goodsApi.addAndHistory(payload);
-            console.log('goodsApi.addAndHistory success');
-          }
+        if (product.goodsId) {
+          // Debug log removed
+          await userApi.addHistory(product.goodsId);
+          // Debug log removed
+        } else {
+          // Debug log removed
+          const payload: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number, status: number } = {
+            goodsName: product.goodsName,
+            goodsPrice: product.goodsPrice,
+            goodsLink: product.goodsLink,
+            imgUrl: product.imgUrl || '',
+            mallType: product.mallType,
+            status: 1
+          };
+          // Use the new combined endpoint
+          await goodsApi.addAndHistory(payload);
+          // Debug log removed
+        }
       })();
 
       // 竞速：API 完成 vs 5000ms 超时
       await Promise.race([
-          historyPromise,
-          new Promise(resolve => setTimeout(resolve, 5000))
+        historyPromise,
+        new Promise(resolve => setTimeout(resolve, 5000))
       ]);
-      console.log('History recorded (or timed out)');
-      
-      console.log('History recorded (or timed out)');
-      
+      // Debug logs removed
+
     } catch (e) {
       console.error('History record failed:', e);
     } finally {
@@ -229,25 +227,25 @@ const ComparePage: React.FC = () => {
   };
 
   const searchProducts = async (searchQuery: string) => {
-    console.log('searchProducts called with:', searchQuery, 'Current Source:', searchSource);
+    // Debug log removed
     if (!searchQuery.trim() && searchSource === 'compare') return;
-    
+
     setExecutedQuery(searchQuery);
     setLoading(true);
     setError(null);
-    
+
     try {
       if (searchSource === 'local') {
         const minP = minPrice ? Number(minPrice) : undefined;
         const maxP = maxPrice ? Number(maxPrice) : undefined;
-        console.log('Calling API: goodsApi.getGoodsPage', { searchQuery, selectedDynamicFilters, currentCatId, minP, maxP, selectedPlatforms });
+        // Debug log removed
         const response = await goodsApi.getGoodsPage(searchQuery, selectedDynamicFilters, currentCatId || undefined, currentPage, pageSize, minP, maxP, selectedPlatforms);
-        console.log('Local API Response:', response.data);
+        // Debug log removed
 
         if (response.data && response.data.code === 200) {
           const records = response.data.data.records || [];
           setTotalItems(response.data.data.total || 0);
-          const processedData = records.map((g: any) => ({
+          const processedData = records.map((g: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
             goodsName: g.goodsName,
             goodsList: [{
               goodsId: g.goodsId,
@@ -263,13 +261,13 @@ const ComparePage: React.FC = () => {
           if (processedData.length === 0) {
             try {
               const cmpRes = await goodsApi.compareGoods(searchQuery);
-              let responseData: any[] = [];
+              let responseData: { goodsName: string, goodsList: any[], lowestPrice: number, lowestPlatform: string }[] = [];
               if (cmpRes.data && cmpRes.data.data) {
                 responseData = Array.isArray(cmpRes.data.data) ? cmpRes.data.data : [cmpRes.data.data];
               }
-              let cmpProcessed: any[] = [];
+              let cmpProcessed: { goodsName: string, goodsList: any[], lowestPrice: number, lowestPlatform: string }[] = [];
               if (responseData.length > 0) {
-                cmpProcessed = responseData.map((group: any) => {
+                cmpProcessed = responseData.map((group: { goodsName: string, goodsList: any[], lowestPrice: number, lowestPlatform: string }) => {
                   const goodsList = Array.isArray(group.goodsList) ? group.goodsList : [];
                   let lowestPrice: number | null = null;
                   let lowestPlatform = '不明';
@@ -286,10 +284,10 @@ const ComparePage: React.FC = () => {
                       goodsName: product.goodsName,
                       goodsPrice: product.goodsPrice,
                       goodsLink: product.goodsLink,
-                      imgUrl: product.imgUrl,
+                      imgUrl: product.imgUrl || '',
                       mallType: product.mallType
                     })),
-                    lowestPrice,
+                    lowestPrice: lowestPrice || 0,
                     lowestPlatform
                   };
                 });
@@ -307,25 +305,25 @@ const ComparePage: React.FC = () => {
           setTotalItems(0);
           try {
             const cmpRes = await goodsApi.compareGoods(searchQuery);
-            let responseData: any[] = [];
+            let responseData: { goodsName: string, goodsList: any[], lowestPrice: number, lowestPlatform: string }[] = [];
             if (cmpRes.data && cmpRes.data.data) {
               responseData = Array.isArray(cmpRes.data.data) ? cmpRes.data.data : [cmpRes.data.data];
             }
-            let processedData: any[] = [];
+            let processedData: { goodsName: string, goodsList: any[], lowestPrice: number, lowestPlatform: string }[] = [];
             if (responseData.length > 0) {
-              processedData = responseData.map((group: any) => {
+              processedData = responseData.map((group: { goodsName: string, goodsList: any[], lowestPrice: number | null, lowestPlatform: string }) => {
                 const goodsList = Array.isArray(group.goodsList) ? group.goodsList : [];
                 let lowestPrice: number | null = null;
                 let lowestPlatform = '不明';
                 if (goodsList.length > 0) {
-                  const lowestProduct = goodsList.reduce((lowest: any, current: any) =>
+                  const lowestProduct = goodsList.reduce((lowest: { goodsPrice: number, mallType?: number }, current: { goodsPrice: number, mallType?: number }) =>
                     current.goodsPrice < lowest.goodsPrice ? current : lowest, goodsList[0]);
                   lowestPrice = lowestProduct.goodsPrice;
-                  lowestPlatform = getPlatformName(lowestProduct.mallType);
+                  lowestPlatform = getPlatformName((lowestProduct as any).mallType || 0);
                 }
                 return {
                   goodsName: group.goodsName || '不明な商品',
-                  goodsList: goodsList.map((product: any) => ({
+                  goodsList: goodsList.map((product: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
                     goodsId: product.goodsId,
                     goodsName: product.goodsName,
                     goodsPrice: product.goodsPrice,
@@ -333,7 +331,7 @@ const ComparePage: React.FC = () => {
                     imgUrl: product.imgUrl,
                     mallType: product.mallType
                   })),
-                  lowestPrice,
+                  lowestPrice: lowestPrice || 0,
                   lowestPlatform
                 };
               });
@@ -347,47 +345,47 @@ const ComparePage: React.FC = () => {
         return;
       }
 
-      console.log('Calling API: goodsApi.compareGoods with query:', searchQuery); // デバッグ用ログ
-      
+      // デバッグ用ログ removed
+
       // 使用api.ts中定义的API服务
       const response = await goodsApi.compareGoods(searchQuery);
-      
-      console.log('API Response:', response.data); // デバッグ用ログ
-      
+
+      // デバッグ用ログ removed
+
       let responseData = [];
       if (response.data && response.data.data) {
         responseData = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
       } else {
         responseData = [];
       }
-      
-      console.log('Raw Response Data:', responseData); // デバッグ用ログ
-      
+
+      // デバッグ用ログ removed
+
       // レスポンスデータを処理
-      let processedData: any[] = [];
-      
+      let processedData: { goodsName: string, goodsList: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[], lowestPrice: number, lowestPlatform: string }[] = [];
+
       if (responseData.length > 0) {
         // APIが返すグループデータを適切に処理
-        processedData = responseData.map((group: any) => {
+        processedData = responseData.map((group: { goodsName: string, goodsList: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[], lowestPrice: number, lowestPlatform: string }) => {
           // グループ内の商品リストを処理
           const goodsList = Array.isArray(group.goodsList) ? group.goodsList : [];
-          
+
           // 最低価格とプラットフォームを特定
           let lowestPrice = null;
           let lowestPlatform = '不明';
-          
+
           // 最低価格を計算
           if (goodsList.length > 0) {
-            const lowestProduct = goodsList.reduce((lowest: any, current: any) => 
+            const lowestProduct = goodsList.reduce((lowest: any, current: any) =>
               current.goodsPrice < lowest.goodsPrice ? current : lowest, goodsList[0]);
-            
+
             lowestPrice = lowestProduct.goodsPrice;
             lowestPlatform = getPlatformName(lowestProduct.mallType);
           }
-          
+
           return {
             goodsName: group.goodsName || '不明な商品',
-            goodsList: goodsList.map((product: any) => ({
+            goodsList: goodsList.map((product: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
               goodsId: product.goodsId,
               goodsName: product.goodsName,
               goodsPrice: product.goodsPrice,
@@ -395,12 +393,12 @@ const ComparePage: React.FC = () => {
               imgUrl: product.imgUrl,
               mallType: product.mallType
             })),
-            lowestPrice: lowestPrice,
+            lowestPrice: lowestPrice || 0,
             lowestPlatform: lowestPlatform
           };
         });
-        
-        console.log('Processed grouped data:', processedData); // デバッグ用ログ
+
+        // デバッグ用ログ removed
       }
 
       // Fallback: if compare returns empty, try local catalog search
@@ -419,7 +417,7 @@ const ComparePage: React.FC = () => {
           if (localRes.data && localRes.data.code === 200) {
             const records = localRes.data.data?.records || [];
             setTotalItems(localRes.data.data?.total || 0);
-            processedData = records.map((g: any) => ({
+            processedData = records.map((g: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
               goodsName: g.goodsName,
               goodsList: [{
                 goodsId: g.goodsId,
@@ -440,7 +438,7 @@ const ComparePage: React.FC = () => {
               const list = (byNameRes.data && byNameRes.data.data)
                 ? (Array.isArray(byNameRes.data.data) ? byNameRes.data.data : [byNameRes.data.data])
                 : [];
-              processedData = list.map((g: any) => ({
+              processedData = list.map((g: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
                 goodsName: g.goodsName,
                 goodsList: [{
                   goodsId: g.goodsId,
@@ -461,19 +459,19 @@ const ComparePage: React.FC = () => {
           console.warn('Local catalog fallback search failed', e);
         }
       }
-      
-      console.log('Final processed data:', processedData); // デバッグ用ログ
-      
+
+      // デバッグ用ログ removed
+
       setCompareGroups(processedData);
       setLoading(false);
     } catch (err) {
       try {
-        let processedData: any[] = [];
+        let processedData: { goodsName: string, goodsList: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[], lowestPrice: number, lowestPlatform: string }[] = [];
         const searchRes = await goodsApi.searchGoods(searchQuery);
         const list = (searchRes.data && searchRes.data.data)
           ? (Array.isArray(searchRes.data.data) ? searchRes.data.data : [searchRes.data.data])
           : [];
-        processedData = list.map((g: any) => ({
+        processedData = list.map((g: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
           goodsName: g.goodsName,
           goodsList: [{
             goodsId: g.goodsId,
@@ -491,7 +489,7 @@ const ComparePage: React.FC = () => {
           const byNameList = (byNameRes.data && byNameRes.data.data)
             ? (Array.isArray(byNameRes.data.data) ? byNameRes.data.data : [byNameRes.data.data])
             : [];
-          processedData = byNameList.map((g: any) => ({
+          processedData = byNameList.map((g: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }) => ({
             goodsName: g.goodsName,
             goodsList: [{
               goodsId: g.goodsId,
@@ -599,7 +597,7 @@ const ComparePage: React.FC = () => {
     const n = (name || '').toLowerCase();
     return /ケース|カバー|フィルム|充電器|ケーブル|保護|スタンド|ガラス|バンパー|ストラップ|ホルダー|dock|ドック|adapter|アダプタ|イヤホン|ヘッドホン|screen protector|case|cover|charger|cable/.test(n);
   };
-  const knownBrands = ['Apple','Samsung','Sony','Xiaomi','Huawei','Lenovo','Dell','HP','ASUS','Acer','Nintendo','Microsoft','Canon','Nikon'];
+  const knownBrands = ['Apple', 'Samsung', 'Sony', 'Xiaomi', 'Huawei', 'Lenovo', 'Dell', 'HP', 'ASUS', 'Acer', 'Nintendo', 'Microsoft', 'Canon', 'Nikon'];
   const parseFacets = (name: string) => {
     const n = name || '';
     const brand = knownBrands.find(b => new RegExp(b, 'i').test(n)) || '';
@@ -608,7 +606,7 @@ const ComparePage: React.FC = () => {
     const modelMatch = n.match(/([A-Za-z]{1,3}\-?\d{2,4}[A-Za-z]?|\bPro Max\b|\bPro\b|\bUltra\b|\bPlus\b|\bAir\b|\bMini\b)/i);
     const model = modelMatch ? modelMatch[1] : '';
     const storageMatch = n.match(/(\b\d{2,4}\s?(GB|TB)\b)/i);
-    const storage = storageMatch ? storageMatch[1].replace(/\s+/g,'') : '';
+    const storage = storageMatch ? storageMatch[1].replace(/\s+/g, '') : '';
     const colorMatch = n.match(/\b(Black|White|Silver|Blue|Red|Green|Gold|Pink|Gray|Space Gray|Midnight|ブラック|ホワイト|シルバー|ブルー|レッド|グリーン|ゴールド|ピンク|グレー|スペースグレイ|ミッドナイト)\b/i);
     const color = colorMatch ? colorMatch[1] : '';
     const sizeMatch = n.match(/(\b\d{1,2}(?:\.\d)?\s?(?:吋|インチ|"|英寸)\b)/);
@@ -638,12 +636,12 @@ const ComparePage: React.FC = () => {
     if (/washing|washer|洗衣机/.test(n)) return { parent: '生活家電', child: '洗濯機' };
     return { parent: 'その他', child: 'その他' };
   };
-  
+
   const categoriesAll = Array.from(new Set(allProducts.map(p => {
     const c = parseCategory(p.goodsName);
     return `${c.parent}>${c.child}`;
   }).filter(x => x !== '其他>其他')));
-  
+
   // Build hierarchy tree
   const categoryTree: Record<string, string[]> = {};
   categoriesAll.forEach(c => {
@@ -663,10 +661,10 @@ const ComparePage: React.FC = () => {
     const storageOk = selectedStorage.length === 0 || (f.storage && selectedStorage.includes(f.storage));
     const colorOk = selectedColors.length === 0 || (f.color && selectedColors.includes(f.color));
     const sizeOk = selectedSizes.length === 0 || (f.size && selectedSizes.includes(f.size));
-    
+
     const cat = parseCategory(p.goodsName);
     const catStr = `${cat.parent}>${cat.child}`;
-    const categoryOk = selectedCategories.length === 0 || 
+    const categoryOk = selectedCategories.length === 0 ||
       selectedCategories.some(sc => sc === cat.parent || sc === catStr);
 
     const validData = p.goodsPrice > 0 && p.goodsLink && p.goodsLink !== '#' && p.goodsLink !== '';
@@ -687,12 +685,12 @@ const ComparePage: React.FC = () => {
     setSelectedPlatforms(prev => prev.includes(mt) ? prev.filter(x => x !== mt) : [...prev, mt]);
   };
 
-  const totalPages = searchSource === 'local' 
-    ? Math.max(1, Math.ceil(totalItems / pageSize)) 
+  const totalPages = searchSource === 'local'
+    ? Math.max(1, Math.ceil(totalItems / pageSize))
     : Math.max(1, Math.ceil(sortedProducts.length / pageSize));
-  
-  const currentPageProducts = searchSource === 'local' 
-    ? sortedProducts 
+
+  const currentPageProducts = searchSource === 'local'
+    ? sortedProducts
     : sortedProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const goPrev = () => setCurrentPage(p => Math.max(1, p - 1));
   const goNext = () => setCurrentPage(p => Math.min(totalPages, p + 1));
@@ -747,37 +745,37 @@ const ComparePage: React.FC = () => {
 
             {/* Dynamic Filters (Local Mode + Category Selected) */}
             {searchSource === 'local' && dynamicFilters.length > 0 && (
-                <div className="sidebar-section dynamic-filters">
-                    <h3 className="sidebar-title">属性筛选</h3>
-                    {dynamicFilters.map(attr => (
-                        <div key={attr.attrId} className="filter-group">
-                            <h4>{attr.attrName}</h4>
-                            <ul className="filter-options">
-                                {attr.values && attr.values.map((val: string) => (
-                                    <li key={val}>
-                                        <label>
-                                            <input 
-                                                type="checkbox"
-                                                checked={selectedDynamicFilters[attr.attrId] === val}
-                                                onChange={() => {
-                                                    setSelectedDynamicFilters(prev => {
-                                                        if (prev[attr.attrId] === val) {
-                                                            const next = { ...prev };
-                                                            delete next[attr.attrId];
-                                                            return next;
-                                                        }
-                                                        return { ...prev, [attr.attrId]: val };
-                                                    });
-                                                }}
-                                            />
-                                            {val}
-                                        </label>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
+              <div className="sidebar-section dynamic-filters">
+                <h3 className="sidebar-title">属性筛选</h3>
+                {dynamicFilters.map(attr => (
+                  <div key={attr.id} className="filter-group">
+                    <h4>{attr.name}</h4>
+                    <ul className="filter-options">
+                      {(attr as any).values && (attr as any).values.map((val: string) => (
+                        <li key={val}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={selectedDynamicFilters[attr.id] === val}
+                              onChange={() => {
+                                setSelectedDynamicFilters(prev => {
+                                  if (prev[attr.id] === val) {
+                                    const next = { ...prev };
+                                    delete next[attr.id];
+                                    return next;
+                                  }
+                                  return { ...prev, [attr.id]: val };
+                                });
+                              }}
+                            />
+                            {val}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             )}
 
             {/* Compare mode category filters removed by request */}
@@ -790,13 +788,13 @@ const ComparePage: React.FC = () => {
                 <input type="number" placeholder="¥ max" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
               </div>
             </div>
-            
+
             <div className="sidebar-section">
-               <h3 className="sidebar-title">商城</h3>
-               <ul className="filter-list">
-                 <li><label><input type="checkbox" checked={selectedPlatforms.includes(10)} onChange={() => togglePlatform(10)} /> 楽天</label></li>
-                 <li><label><input type="checkbox" checked={selectedPlatforms.includes(20)} onChange={() => togglePlatform(20)} /> Yahoo!ショッピング</label></li>
-               </ul>
+              <h3 className="sidebar-title">商城</h3>
+              <ul className="filter-list">
+                <li><label><input type="checkbox" checked={selectedPlatforms.includes(10)} onChange={() => togglePlatform(10)} /> 楽天</label></li>
+                <li><label><input type="checkbox" checked={selectedPlatforms.includes(20)} onChange={() => togglePlatform(20)} /> Yahoo!ショッピング</label></li>
+              </ul>
             </div>
           </div>
 
@@ -816,7 +814,7 @@ const ComparePage: React.FC = () => {
               {currentPageProducts.map((product, index) => (
                 <div key={index} className="product-row">
                   <div className="p-image">
-                    <img src={product.imgUrl || 'https://placehold.co/120x120'} alt={product.goodsName} onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/120x120'} />
+                    <img src={product.imgUrl || '/images/default-product.png'} alt={product.goodsName} onError={(e) => (e.target as HTMLImageElement).src = '/images/default-product.png'} />
                   </div>
                   <div className="p-info">
                     <div className="p-title-row">
@@ -831,7 +829,7 @@ const ComparePage: React.FC = () => {
                       </a>
                     </div>
                     <div className="p-specs">
-                      {(function(){
+                      {(function () {
                         const f = parseFacets(product.goodsName);
                         const parts = [f.brand, f.series, f.model, f.storage, f.color, f.size].filter(Boolean);
                         return parts.join(' | ');
@@ -855,25 +853,25 @@ const ComparePage: React.FC = () => {
                     </a>
                     <button className="btn-trend" onClick={() => { ensureGoodsIdAndCollect(product); }}>{product.goodsId && collectedIds.has(product.goodsId) ? '取消收藏' : '收藏'}</button>
                     <button className="btn-trend" onClick={() => {
-                        const title = product.goodsName;
-                        const labels = Array.from({length:12}, (_,i)=>{
-                          const d = new Date();
-                          d.setMonth(d.getMonth() - (11 - i));
-                          const m = (d.getMonth()+1).toString().padStart(2,'0');
-                          return `${d.getFullYear()}-${m}`;
-                        });
-                        const base = Math.max(1, product.goodsPrice);
-                        let val = base * 1.0;
-                        const series = labels.map((_,i)=>{
-                          const drift = 1 + Math.sin(i/3) * 0.05;
-                          const noise = 1 + ((Math.random() - 0.5) * 0.08);
-                          val = Math.max(1, val * drift * noise);
-                          return Math.round(val);
-                        });
-                        setTrendTitle(title);
-                        setTrendLabels(labels);
-                        setTrendSeries(series);
-                        setTrendOpen(true);
+                      const title = product.goodsName;
+                      const labels = Array.from({ length: 12 }, (_, i) => {
+                        const d = new Date();
+                        d.setMonth(d.getMonth() - (11 - i));
+                        const m = (d.getMonth() + 1).toString().padStart(2, '0');
+                        return `${d.getFullYear()}-${m}`;
+                      });
+                      const base = Math.max(1, product.goodsPrice);
+                      let val = base * 1.0;
+                      const series = labels.map((_, i) => {
+                        const drift = 1 + Math.sin(i / 3) * 0.05;
+                        const noise = 1 + ((Math.random() - 0.5) * 0.08);
+                        val = Math.max(1, val * drift * noise);
+                        return Math.round(val);
+                      });
+                      setTrendTitle(title);
+                      setTrendLabels(labels);
+                      setTrendSeries(series);
+                      setTrendOpen(true);
                     }}>价格走势</button>
                     <label className="compare-check">
                       <input type="checkbox" checked={isSelected(getSelectKey(product))} onChange={() => toggleSelect(product)} /> 对比
@@ -882,14 +880,14 @@ const ComparePage: React.FC = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="pagination-controls">
-                <button type="button" onClick={goPrev} disabled={currentPage === 1}>上一页</button>
-                <span className="page-info">{currentPage} / {totalPages}</span>
-                <button type="button" onClick={goNext} disabled={currentPage === totalPages}>下一页</button>
+              <button type="button" onClick={goPrev} disabled={currentPage === 1}>上一页</button>
+              <span className="page-info">{currentPage} / {totalPages}</span>
+              <button type="button" onClick={goNext} disabled={currentPage === totalPages}>下一页</button>
             </div>
           </div>
-          
+
           {trendOpen && (
             <div className="price-trend-modal" onClick={() => setTrendOpen(false)}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -899,27 +897,27 @@ const ComparePage: React.FC = () => {
                 </div>
                 <div className="modal-body">
                   <div className="trend-chart">
-                    {(function(){
+                    {(function () {
                       const width = 600;
                       const height = 280;
                       const padding = 32;
-                      const xs = trendSeries.map((_,i)=> padding + (i*(width - 2*padding))/(trendSeries.length-1));
+                      const xs = trendSeries.map((_, i) => padding + (i * (width - 2 * padding)) / (trendSeries.length - 1));
                       const minV = Math.min(...trendSeries);
                       const maxV = Math.max(...trendSeries);
-                      const ys = trendSeries.map(v => height - padding - ((v - minV) / (Math.max(1, maxV - minV))) * (height - 2*padding));
-                      const path = xs.map((x,i)=> `${i===0?'M':'L'}${x},${ys[i]}`).join(' ');
-                      const gridY = [0.25,0.5,0.75].map(r => height - padding - r*(height - 2*padding));
+                      const ys = trendSeries.map(v => height - padding - ((v - minV) / (Math.max(1, maxV - minV))) * (height - 2 * padding));
+                      const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
+                      const gridY = [0.25, 0.5, 0.75].map(r => height - padding - r * (height - 2 * padding));
                       return (
                         <svg width={width} height={height} role="img" aria-label="价格趋势图">
-                          {gridY.map((gy,i)=> (
-                            <line key={i} x1={padding} y1={gy} x2={width-padding} y2={gy} stroke="#eee" />
+                          {gridY.map((gy, i) => (
+                            <line key={i} x1={padding} y1={gy} x2={width - padding} y2={gy} stroke="#eee" />
                           ))}
                           <path d={path} fill="none" stroke="#ff4400" strokeWidth={2} />
-                          {xs.map((x,i)=> (
+                          {xs.map((x, i) => (
                             <circle key={i} cx={x} cy={ys[i]} r={3} fill="#ff4400" />
                           ))}
-                          <text x={padding} y={height-8} fontSize={12} fill="#999">{trendLabels[0]}</text>
-                          <text x={width-padding-60} y={height-8} fontSize={12} fill="#999">{trendLabels[trendLabels.length-1]}</text>
+                          <text x={padding} y={height - 8} fontSize={12} fill="#999">{trendLabels[0]}</text>
+                          <text x={width - padding - 60} y={height - 8} fontSize={12} fill="#999">{trendLabels[trendLabels.length - 1]}</text>
                         </svg>
                       );
                     })()}

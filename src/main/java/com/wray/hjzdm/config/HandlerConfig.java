@@ -98,6 +98,10 @@ public class HandlerConfig implements WebMvcConfigurer {
                         "/category/list",
                         "/category/attributes",
 
+                        // ===== WebSocket =====
+                        "/ws/**",
+                        "/ws",
+
                         // ===== Swagger / 基础 =====
                         "/swagger-resources/**",
                         "/webjars/**",

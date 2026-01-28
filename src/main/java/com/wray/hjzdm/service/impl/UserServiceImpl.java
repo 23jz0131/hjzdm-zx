@@ -7,13 +7,16 @@ import com.wray.hjzdm.dto.UserRegisterDTO;
 import com.wray.hjzdm.entity.User;
 import com.wray.hjzdm.mapper.UserMapper;
 import com.wray.hjzdm.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -159,6 +162,62 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         this.save(user);
         
+        return user;
+    }
+    
+    @Override
+    public User getUserProfile(Long userId) {
+        try {
+            if (userId == null) {
+                log.warn("用户ID为空，无法获取用户信息");
+                return null;
+            }
+            
+            log.debug("正在查询用户信息，用户ID: {}", userId);
+            User user = this.getById(userId);
+            log.debug("数据库查询结果，用户ID: {}, 查询结果: {}", userId, user != null);
+            
+            if (user == null) {
+                log.warn("未找到用户信息，用户ID: {}", userId);
+                // 查询所有用户以帮助调试
+                List<User> allUsers = this.list();
+                log.info("数据库中总共有 {} 个用户，示例用户: {}", allUsers.size(), 
+                    allUsers.stream().limit(3).map(u -> u.getId() + ":"+ u.getName()).collect(java.util.stream.Collectors.toList()));
+                return null;
+            }
+            
+            return user;
+        } catch (Exception e) {
+            log.error("获取用户信息失败，用户ID: {}", userId, e);
+            return null;
+        }
+    }
+    
+    @Override
+    public User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, Integer age, Date birthDate) {
+        User user = this.getById(userId);
+        if (user != null) {
+            if (avatar != null) {
+                user.setAvatar(avatar);
+            }
+            if (nickname != null) {
+                user.setNickname(nickname);
+            }
+            if (name != null) {
+                user.setName(name);
+            }
+            if (gender != null) {
+                user.setGender(gender);
+            }
+            if (age != null) {
+                user.setAge(age);
+            }
+            if (birthDate != null) {
+                user.setBirthDate(birthDate);
+            }
+            
+            this.updateById(user);
+        }
         return user;
     }
 }

@@ -15,7 +15,7 @@ import java.io.Serializable;
  * Stores the specific value of an attribute for a specific good
  */
 @Entity
-@Table(name = "GOODS_ATTRIBUTE")
+@Table(name = "`GOODS_ATTRIBUTE`")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

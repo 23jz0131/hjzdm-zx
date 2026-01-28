@@ -13,7 +13,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Entity
-@Table(name = "NOTIFICATION")
+@Table(name = "`NOTIFICATION`")
 @TableName("NOTIFICATION")
 @Data
 @AllArgsConstructor

@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "COMMENT")
-@TableName("\"COMMENT\"")
+@TableName(value = "COMMENT", autoResultMap = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

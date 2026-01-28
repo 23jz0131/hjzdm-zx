@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
         password: formData.password
       });
 
-      console.log('Login response data:', response.data); // 调试日志
+      // 调试日志 removed
       
       if (response.data && response.data.code === 200) {
         // 登录成功，跳转到主页

@@ -15,7 +15,7 @@ import java.io.Serializable;
  * Defines available attributes for a specific category (e.g., "Screen Size" for "Monitors")
  */
 @Entity
-@Table(name = "CATEGORY_ATTRIBUTE")
+@Table(name = "`CATEGORY_ATTRIBUTE`")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

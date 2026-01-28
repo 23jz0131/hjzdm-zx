@@ -50,6 +50,19 @@ const NotificationPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (window.confirm('この通知を削除してもよろしいですか？')) {
+      try {
+        await notificationApi.deleteNotification(id);
+        // 通知リストを更新
+        setList(prev => prev.filter(it => it.id !== id));
+      } catch (e) {
+        console.error(e);
+        alert('通知の削除に失敗しました');
+      }
+    }
+  };
+
   return (
     <div style={{ maxWidth: 800, margin: '20px auto', padding: 20, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid #eee', paddingBottom: 10 }}>
@@ -82,7 +95,8 @@ const NotificationPage: React.FC = () => {
                 borderBottom: '1px solid #eee', 
                 background: item.isRead === 0 ? '#e6f7ff' : '#fff',
                 cursor: item.isRead === 0 ? 'pointer' : 'default',
-                transition: 'background 0.3s'
+                transition: 'background 0.3s',
+                position: 'relative'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -90,8 +104,26 @@ const NotificationPage: React.FC = () => {
                   {item.isRead === 0 && <span style={{ color: '#1890ff', marginRight: 6 }}>●</span>}
                   {item.title}
                 </div>
-                <div style={{ fontSize: 12, color: '#999' }}>
-                  {new Date(item.createTime).toLocaleString()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 12, color: '#999' }}>
+                    {new Date(item.createTime).toLocaleString()}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the parent click handler
+                      handleDelete(item.id);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      background: '#f5f5f5',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    削除
+                  </button>
                 </div>
               </div>
               <div style={{ color: '#666', fontSize: 14, lineHeight: 1.5 }}>

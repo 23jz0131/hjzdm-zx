@@ -10,4 +10,5 @@ public interface NotificationService extends IService<Notification> {
     List<Notification> getMyNotifications(Long userId);
     void markAsRead(Long notificationId);
     void markAllAsRead(Long userId);
+    void deleteNotification(Long notificationId);
 }

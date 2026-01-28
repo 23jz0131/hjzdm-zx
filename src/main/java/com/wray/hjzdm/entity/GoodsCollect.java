@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  * @date 2024-04-25 22:08:09
  */
 @Entity
-@Table(name = "GOODS_COLLECT")
+@Table(name = "`GOODS_COLLECT`")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

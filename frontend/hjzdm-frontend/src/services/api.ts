@@ -45,6 +45,8 @@ apiClient.interceptors.response.use(
     // 如果需要特定的错误处理逻辑，可以在这里添加
     // 例如：如果 401 未授权，跳转到登录页
     if (error.response && error.response.status === 401) {
+        // 清除本地存储的令牌
+        localStorage.removeItem('token');
         // window.location.href = '/login'; // 可选：自动跳转
     }
     return Promise.reject(error);
@@ -161,6 +163,9 @@ export const notificationApi = {
   },
   markAllAsRead: () => {
     return apiClient.post('/notification/readAll');
+  },
+  deleteNotification: (id: number) => {
+    return apiClient.post('/notification/delete', { id });
   }
 };
 
@@ -203,6 +208,9 @@ export const userApi = {
   },
   localLogin: (loginData: { phone: string; password: string }) => {
     return apiClient.post('/user/localLogin', loginData);
+  },
+  updateProfile: (profileData: { avatar?: string; nickname?: string; name?: string; gender?: number; age?: number; birthDate?: string | null }) => {
+    return apiClient.post('/user/updateProfile', profileData);
   }
 };
 

@@ -42,7 +42,7 @@ const ComparisonHistoryPage: React.FC = () => {
   };
 
   const searchAgain = (query: string) => {
-    console.log(`再検索: ${query}`);
+    // Debug log removed
     // 実際のアプリケーションでは、価格比較ページに移動し検索語を渡す必要があります
   };
 

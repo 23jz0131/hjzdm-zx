@@ -12,6 +12,16 @@ const Header: React.FC = () => {
   // 检查当前是否在比价页面
   const isComparePage = location.pathname === '/compare';
   const isHomePage = location.pathname === '/';
+  const isAdminPage = location.pathname.includes('/admin');
+  const isProfilePage = location.pathname.includes('/profile');
+  const isLoginPage = location.pathname === '/login' || location.pathname === '/register';
+  const isCommunityPage = location.pathname === '/community';
+  const isRegisterPage = location.pathname === '/register'; // Also treat register separately for consistency
+
+  // 调试日志
+  useEffect(() => {
+    // Debug logs removed
+  }, [location.pathname, isComparePage, isHomePage, isAdminPage, isProfilePage, isLoginPage, isCommunityPage, isRegisterPage]);
 
   const syncAuthState = () => {
     const token = localStorage.getItem('token');
@@ -65,7 +75,7 @@ const Header: React.FC = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const query = formData.get('query')?.toString();
     if (query) {
-      // 可以跳转到比价页面并传递搜索参数
+      // 可以跳转到比价ページ并传递搜索参数
       navigate(`/compare?query=${encodeURIComponent(query)}`);
     }
   };
@@ -100,7 +110,7 @@ const Header: React.FC = () => {
           )}
         </div>
       </div>
-      {!isComparePage && !isHomePage && (
+      {!isComparePage && !isHomePage && !isAdminPage && !isProfilePage && !isLoginPage && !isCommunityPage && !isRegisterPage && (
         <div className="header-search">
           <form onSubmit={handleSearch}>
             <input 

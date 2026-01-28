@@ -43,4 +43,19 @@ public class NotificationController {
         notificationService.markAllAsRead(userId);
         return Result.success("ok");
     }
+    
+    @PostMapping("/delete")
+    public Result deleteNotification(@RequestBody Notification notification) {
+        Long userId = BaseContext.getCurrentId();
+        if (userId == null) {
+            return Result.error("未登录");
+        }
+        // 验证通知是否属于当前用户
+        Notification dbNotification = notificationService.getById(notification.getId());
+        if (dbNotification == null || !dbNotification.getUserId().equals(userId)) {
+            return Result.error("无权删除此通知");
+        }
+        notificationService.deleteNotification(notification.getId());
+        return Result.success("ok");
+    }
 }
