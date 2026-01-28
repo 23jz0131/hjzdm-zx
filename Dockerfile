@@ -5,7 +5,8 @@ COPY frontend/hjzdm-frontend/package*.json ./
 COPY frontend/hjzdm-frontend/package-lock.json ./
 RUN npm ci --legacy-peer-deps
 COPY frontend/hjzdm-frontend/ ./
-RUN npx react-scripts build
+RUN npm install react-scripts --save-dev
+RUN npm run build
 
 # Stage 2: Build Backend
 FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
