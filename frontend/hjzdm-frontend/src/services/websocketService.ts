@@ -17,10 +17,10 @@ class WebSocketService {
 
   connect(userId?: number) {
     // 构建WebSocket连接URL
-    // 使用当前页面的hostname，但指定后端端口，避免跨域问题
+    // 使用环境变量或默认后端地址，避免直接使用页面host可能导致的问题
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const backendHost = window.location.hostname; // 使用当前页面的主机名
-    const backendPort = 9090; // 后端WebSocket服务端口
+    const backendHost = process.env.REACT_APP_WS_HOST || 'localhost'; // 使用环境变量或默认localhost
+    const backendPort = process.env.REACT_APP_WS_PORT || 9090; // 使用环境变量或默认端口
     const wsUrl = `${protocol}//${backendHost}:${backendPort}/ws`;
     
     console.log('Attempting to connect to WebSocket:', wsUrl);

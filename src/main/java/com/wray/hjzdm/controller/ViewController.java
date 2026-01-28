@@ -33,7 +33,6 @@ public class ViewController implements ErrorController {
         "/profile",
         "/compare",
         "/my-collection",
-        "/browse-history",
         "/my-tip",
         "/notifications",
         "/admin/**",

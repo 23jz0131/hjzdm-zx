@@ -85,10 +85,7 @@ export const goodsApi = {
     return apiClient.post('/goods/addAndReturn', data);
   },
 
-  // 新增商品并记录历史
-  addAndHistory: (data: any) => {
-    return apiClient.post('/goods/addAndHistory', data);
-  },
+
   
   // 获取本地商品（支持动态属性筛选）
   getGoodsPage: (query: string, attrFilters?: Record<string, string>, catId?: number, page: number = 1, size: number = 20, minPrice?: number, maxPrice?: number, mallTypes?: number[]) => {
@@ -182,18 +179,6 @@ export const commonApi = {
 };
 
 export const userApi = {
-  getHistory: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/user/queryHistory', { pageNum: page, pageSize: size });
-  },
-  addHistory: (goodsId: number) => {
-    return apiClient.post('/user/addHistory', { goodsId });
-  },
-  clearHistory: () => {
-    return apiClient.post('/user/clearHistory');
-  },
-  deleteHistory: (goodsId: number) => {
-    return apiClient.post('/user/deleteHistory', { goodsId });
-  },
   getProfile: () => {
     return apiClient.post('/user/me');
   },

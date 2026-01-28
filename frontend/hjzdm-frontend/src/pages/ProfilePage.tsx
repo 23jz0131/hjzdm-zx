@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { goodsApi, userApi, disclosureApi, notificationApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import UserSidebar from '../components/UserSidebar';
+import { useWebSocket } from '../services/websocketService';
 import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
@@ -36,10 +37,66 @@ const ProfilePage: React.FC = () => {
     { id: 5, name: '通知', icon: '🔔', count: 0 }
   ]);
 
+  // 使用WebSocket接收实时通知
+  useWebSocket({
+    onMessage: (message) => {
+      console.log('Received WebSocket message in Profile:', message);
+      if (message.type === 'notification') {
+        // 收到新通知时刷新通知计数
+        loadNotificationCount();
+      }
+    },
+    onOpen: () => {
+      console.log('WebSocket connected for profile');
+    },
+    onClose: (event) => {
+      console.log('WebSocket disconnected from profile:', event);
+    },
+    onError: (error) => {
+      console.error('WebSocket error in profile:', error);
+    },
+    onNotification: (notification) => {
+      console.log('Received notification via WebSocket in profile:', notification);
+      // 收到实时通知时更新通知计数
+      loadNotificationCount();
+    }
+  });
+
   // ユーザーデータの読み込み
   useEffect(() => {
     loadUserData();
   }, []);
+
+  const loadNotificationCount = async () => {
+    try {
+      const notiRes = await notificationApi.getMyNotifications();
+      if (notiRes?.data?.code === 200) {
+        const notiList = notiRes?.data?.data || [];
+        const unreadList = notiList.filter((n: { isRead: number }) => n.isRead === 0);
+
+        let notiCount = 0;
+        if (unreadList.length > 0) {
+          // 検查最新メッセージ時間是否晚于上次クリック時間
+          const latestMsg = unreadList[0]; // 假设后端已按時間倒序返回
+          const latestTime = new Date(latestMsg.createTime).getTime();
+          const lastCheck = parseInt(localStorage.getItem('last_notification_check_time') || '0');
+
+          if (latestTime > lastCheck) {
+            notiCount = unreadList.length;
+          }
+        }
+
+        setFeatureCounts(prev =>
+          prev.map(item => {
+            if (item.id === 5) return { ...item, count: notiCount };
+            return item;
+          })
+        );
+      }
+    } catch (notiError) {
+      console.warn('通知情報取得エラー:', notiError);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -194,7 +251,7 @@ const ProfilePage: React.FC = () => {
         navigate('/my-collection');
         break;
       case 2:
-        navigate('/browse-history');
+        navigate('/my-collection');
         break;
       case 4:
         navigate('/my-tip');

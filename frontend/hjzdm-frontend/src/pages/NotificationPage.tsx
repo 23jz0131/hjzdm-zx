@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationApi } from '../services/api';
+import { useWebSocket } from '../services/websocketService'; // Import WebSocket hook
 
 interface Notification {
   id: number;
@@ -14,6 +15,31 @@ const NotificationPage: React.FC = () => {
   const navigate = useNavigate();
   const [list, setList] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 使用WebSocket接收实时通知
+  useWebSocket({
+    onMessage: (message) => {
+      console.log('Received WebSocket message:', message);
+      if (message.type === 'notification') {
+        // 收到新通知时刷新列表
+        load();
+      }
+    },
+    onOpen: () => {
+      console.log('WebSocket connected for notifications');
+    },
+    onClose: (event) => {
+      console.log('WebSocket disconnected:', event);
+    },
+    onError: (error) => {
+      console.error('WebSocket error:', error);
+    },
+    onNotification: (notification) => {
+      console.log('Received notification via WebSocket:', notification);
+      // 收到实时通知时刷新列表
+      load();
+    }
+  });
 
   const load = async () => {
     try {

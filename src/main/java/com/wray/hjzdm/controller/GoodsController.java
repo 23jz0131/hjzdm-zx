@@ -8,7 +8,7 @@ import com.wray.hjzdm.dto.OperateDTO;
 import com.wray.hjzdm.dto.QueryDTO;
 import com.wray.hjzdm.entity.Goods;
 import com.wray.hjzdm.service.GoodsService;
-import com.wray.hjzdm.service.UserBrowseHistoryService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +26,7 @@ public class GoodsController {
     @Autowired
     private GoodsService goodsService;
 
-    @Autowired
-    private UserBrowseHistoryService historyService;
+
 
     /* ================= 基础功能 ================= */
 
@@ -46,40 +45,14 @@ public class GoodsController {
         return Result.success(goods);
     }
 
-    /**
-     * 新增商品并自动记录浏览历史 (Atomic operation for better UX)
-     */
-    @PostMapping("/addAndHistory")
-    public Result<Boolean> addAndHistory(@RequestBody Goods goods) {
-        log.info("Received addAndHistory request: {}", JSON.toJSONString(goods));
-        
-        // 1. Add or Get Goods
+    @PostMapping("/addAndReturn")
+    public Result<Goods> addAndReturn(@RequestBody Goods goods) {
+        log.info("Received addAndReturn request: {}", JSON.toJSONString(goods));
         boolean ok = goodsService.add(goods);
-        if (!ok || goods.getGoodsId() == null) {
-            log.error("addAndHistory failed: goodsService.add returned {}, goodsId={}", ok, goods.getGoodsId());
-            return Result.error("商品保存失败");
+        if (!ok) {
+            return Result.error("新增失败");
         }
-        
-        // 2. Record History
-        Long userId = BaseContext.getCurrentId();
-        log.info("DEBUG: BaseContext.getCurrentId() = {}", userId);
-
-        if (userId != null) {
-            try {
-                OperateDTO operateDto = new OperateDTO();
-                operateDto.setUserId(userId);
-                operateDto.setGoodsId(goods.getGoodsId());
-                historyService.addHistory(operateDto);
-                log.info("History recorded for user {} goods {}", userId, goods.getGoodsId());
-            } catch (Exception e) {
-                log.error("Failed to record history asynchronously", e);
-                // Don't fail the request just because history failed
-            }
-        } else {
-            log.warn("DEBUG: User ID is null, skipping history. Is the user logged in?");
-        }
-        
-        return Result.success(true);
+        return Result.success(goods);
     }
 
     @PostMapping("/search")
@@ -89,13 +62,7 @@ public class GoodsController {
 
     @GetMapping("/detail")
     public Result<Goods> detail(@RequestParam Long goodsId) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId != null) {
-            OperateDTO operateDto = new OperateDTO();
-            operateDto.setUserId(userId);
-            operateDto.setGoodsId(goodsId);
-            historyService.addHistory(operateDto);
-        }
+
         return Result.success(goodsService.queryGoodsDetail(goodsId));
     }
 

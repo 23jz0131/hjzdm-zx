@@ -166,63 +166,10 @@ const ComparePage: React.FC = () => {
   };
 
   const ensureGoodsIdAndHistory = async (product: Product, event?: React.MouseEvent) => {
-    // 阻止默认跳转，必须等待历史记录完成
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
+    // 直接跳转，不再记录浏览历史
     const targetUrl = product.goodsLink;
-    const doRedirect = () => {
-      if (targetUrl) {
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
-      }
-    };
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        doRedirect();
-        return;
-      }
-
-      // Debug log removed
-
-      // 核心逻辑：无论是已有ID还是新商品，都强制等待 API 完成
-      // 为了防止 API 卡死，设置一个 3000ms 的超时的 Promise
-      const historyPromise = (async () => {
-        if (product.goodsId) {
-          // Debug log removed
-          await userApi.addHistory(product.goodsId);
-          // Debug log removed
-        } else {
-          // Debug log removed
-          const payload: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number, status: number } = {
-            goodsName: product.goodsName,
-            goodsPrice: product.goodsPrice,
-            goodsLink: product.goodsLink,
-            imgUrl: product.imgUrl || '',
-            mallType: product.mallType,
-            status: 1
-          };
-          // Use the new combined endpoint
-          await goodsApi.addAndHistory(payload);
-          // Debug log removed
-        }
-      })();
-
-      // 竞速：API 完成 vs 5000ms 超时
-      await Promise.race([
-        historyPromise,
-        new Promise(resolve => setTimeout(resolve, 5000))
-      ]);
-      // Debug logs removed
-
-    } catch (e) {
-      console.error('History record failed:', e);
-    } finally {
-      // 无论成功失败，必须跳转
-      doRedirect();
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     }
   };
 

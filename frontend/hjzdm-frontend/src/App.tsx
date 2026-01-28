@@ -7,7 +7,7 @@ import Home from './pages/Home';
 import ComparePage from './pages/ComparePage';
 import ProfilePage from './pages/ProfilePage';
 import MyCollectionPage from './pages/MyCollectionPage';
-import BrowseHistoryPage from './pages/BrowseHistoryPage';
+
 import MyTipPage from './pages/MyTipPage';
 import CommunityPage from './pages/CommunityPage';
 import AdminDisclosurePage from './pages/AdminDisclosurePage';
@@ -29,8 +29,7 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/my-collection" element={<ProtectedRoute><MyCollectionPage /></ProtectedRoute>} />
-          <Route path="/browse-history" element={<ProtectedRoute><BrowseHistoryPage /></ProtectedRoute>} />
-          <Route path="/my-tip" element={<ProtectedRoute><MyTipPage /></ProtectedRoute>} />
+                    <Route path="/my-tip" element={<ProtectedRoute><MyTipPage /></ProtectedRoute>} />
           <Route path="/submit-disclosure" element={<ProtectedRoute><SubmitDisclosurePage /></ProtectedRoute>} />
           <Route path="/admin/disclosures" element={<ProtectedRoute><AdminDisclosurePage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />

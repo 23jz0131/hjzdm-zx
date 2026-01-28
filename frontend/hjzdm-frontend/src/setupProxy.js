@@ -28,6 +28,8 @@ module.exports = function (app) {
       '/collection',
       '/ai',
       '/category',
+      // WebSocket endpoint
+      '/ws',
     ],
     createProxyMiddleware({
       target,

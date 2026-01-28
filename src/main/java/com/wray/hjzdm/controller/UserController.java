@@ -133,55 +133,5 @@ public class UserController {
         return Result.success(user);
     }
 
-    @Autowired
-    private com.wray.hjzdm.service.UserBrowseHistoryService historyService;
 
-    @PostMapping("/queryHistory")
-    @ApiOperation("查询浏览历史")
-    public Result<java.util.List<com.wray.hjzdm.entity.Goods>> queryHistory(
-            @RequestBody com.wray.hjzdm.dto.QueryDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        return Result.success(historyService.queryHistory(dto));
-    }
-
-    @PostMapping("/addHistory")
-    @ApiOperation("添加浏览历史")
-    public Result<Boolean> addHistory(@RequestBody com.wray.hjzdm.dto.OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        historyService.addHistory(dto);
-        return Result.success(true);
-    }
-
-    @PostMapping("/clearHistory")
-    @ApiOperation("清空浏览历史")
-    public Result<Boolean> clearHistory() {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        historyService.clearHistory(userId);
-        return Result.success(true);
-    }
-
-    @PostMapping("/deleteHistory")
-    @ApiOperation("删除单条浏览历史")
-    public Result<Boolean> deleteHistory(@RequestBody com.wray.hjzdm.dto.OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        if (dto.getGoodsId() == null) {
-            return Result.error("商品ID不能为空");
-        }
-        historyService.deleteHistory(userId, dto.getGoodsId());
-        return Result.success(true);
-    }
 }
