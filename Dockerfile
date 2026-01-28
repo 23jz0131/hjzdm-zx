@@ -2,6 +2,7 @@
 FROM node:18 AS frontend-build
 WORKDIR /frontend
 COPY frontend/hjzdm-frontend/package*.json ./
+COPY frontend/hjzdm-frontend/package-lock.json ./
 RUN npm install
 COPY frontend/hjzdm-frontend/ ./
 RUN npm run build
