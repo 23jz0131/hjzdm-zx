@@ -6,6 +6,7 @@ COPY frontend/hjzdm-frontend/package-lock.json ./
 RUN npm ci --legacy-peer-deps
 COPY frontend/hjzdm-frontend/ ./
 RUN npm install react-scripts --save-dev
+RUN chmod +x node_modules/.bin/* 2>/dev/null || true
 RUN npm run build
 
 # Stage 2: Build Backend
