@@ -3,8 +3,9 @@ FROM node:18 AS frontend-build
 WORKDIR /frontend
 COPY frontend/hjzdm-frontend/package*.json ./
 COPY frontend/hjzdm-frontend/package-lock.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY frontend/hjzdm-frontend/ ./
+RUN chmod +x node_modules/.bin/* 2>/dev/null || true
 RUN npm run build
 
 # Stage 2: Build Backend
