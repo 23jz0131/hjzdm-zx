@@ -176,14 +176,7 @@ const Home: React.FC = () => {
             </ul>
           </div>
 
-          <div className="sidebar-box">
-            <h3 className="sidebar-header">サービス</h3>
-            <ul className="sidebar-menu">
-              <li><Link to="/compare" className="sidebar-menu-item">価格比較</Link></li>
 
-              <li><Link to="/my-collection" className="sidebar-menu-item">マイコレクション</Link></li>
-            </ul>
-          </div>
         </aside>
 
         {/* Main Content */}
