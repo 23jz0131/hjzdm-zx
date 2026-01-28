@@ -21,34 +21,138 @@ interface CompareGroup {
 
 const ComparePage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get('query') || '');
-  const [compareGroups, setCompareGroups] = useState<CompareGroup[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sortOption, setSortOption] = useState('price_asc');
-  const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>([]);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [selectedStorage, setSelectedStorage] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [trendOpen, setTrendOpen] = useState(false);
-  const [trendLabels, setTrendLabels] = useState<string[]>([]);
-  const [trendSeries, setTrendSeries] = useState<number[]>([]);
-  const [trendTitle, setTrendTitle] = useState('');
-  const [collectedIds, setCollectedIds] = useState<Set<number>>(new Set());
-
+  
+  // 从 sessionStorage 恢复状态
+  const [query, setQuery] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_query');
+    return searchParams.get('query') || saved || '';
+  });
+  
+  const [compareGroups, setCompareGroups] = useState<CompareGroup[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_compareGroups');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [loading, setLoading] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_loading');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  const [error, setError] = useState<string | null>(() => {
+    const saved = sessionStorage.getItem('comparePage_error');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
+  const [sortOption, setSortOption] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_sortOption');
+    return saved || 'price_asc';
+  });
+  
+  const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedPlatforms');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [minPrice, setMinPrice] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_minPrice');
+    return saved || '';
+  });
+  
+  const [maxPrice, setMaxPrice] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_maxPrice');
+    return saved || '';
+  });
+  
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_currentPage');
+    return saved ? parseInt(saved) : 1;
+  });
+  
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_pageSize');
+    return saved ? parseInt(saved) : 50;
+  });
+  
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedKeys');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedBrands');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedSeries, setSelectedSeries] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedSeries');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedModels, setSelectedModels] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedModels');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedStorage, setSelectedStorage] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedStorage');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedColors, setSelectedColors] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedColors');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedSizes');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedCategories');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [trendOpen, setTrendOpen] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_trendOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  const [trendLabels, setTrendLabels] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_trendLabels');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [trendSeries, setTrendSeries] = useState<number[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_trendSeries');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [trendTitle, setTrendTitle] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_trendTitle');
+    return saved || '';
+  });
+  
+  const [collectedIds, setCollectedIds] = useState<Set<number>>(() => {
+    const saved = sessionStorage.getItem('comparePage_collectedIds');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  
   // Search Source
-  const [searchSource, setSearchSource] = useState<'local' | 'compare'>('compare');
-  const [executedQuery, setExecutedQuery] = useState('');
-  const [totalItems, setTotalItems] = useState(0);
+  const [searchSource, setSearchSource] = useState<'local' | 'compare'>(() => {
+    const saved = sessionStorage.getItem('comparePage_searchSource');
+    return saved || 'compare';
+  });
+  
+  const [executedQuery, setExecutedQuery] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_executedQuery');
+    return saved || '';
+  });
+  
+  const [totalItems, setTotalItems] = useState(() => {
+    const saved = sessionStorage.getItem('comparePage_totalItems');
+    return saved ? parseInt(saved) : 0;
+  });
 
   // Dynamic Filters State
   const [categories, setCategories] = useState<{ catId: number, catName: string, children?: any[] }[]>([]);
@@ -56,6 +160,111 @@ const ComparePage: React.FC = () => {
   const [selectedDynamicFilters, setSelectedDynamicFilters] = useState<Record<string, string>>({});
   const [currentCatId, setCurrentCatId] = useState<number | null>(null);
 
+  // 保存状态到 sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_query', query);
+  }, [query]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_compareGroups', JSON.stringify(compareGroups));
+  }, [compareGroups]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_loading', JSON.stringify(loading));
+  }, [loading]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_error', JSON.stringify(error));
+  }, [error]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_sortOption', sortOption);
+  }, [sortOption]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedPlatforms', JSON.stringify(selectedPlatforms));
+  }, [selectedPlatforms]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_minPrice', minPrice);
+  }, [minPrice]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_maxPrice', maxPrice);
+  }, [maxPrice]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_currentPage', currentPage.toString());
+  }, [currentPage]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_pageSize', pageSize.toString());
+  }, [pageSize]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedKeys', JSON.stringify(selectedKeys));
+  }, [selectedKeys]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedBrands', JSON.stringify(selectedBrands));
+  }, [selectedBrands]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedSeries', JSON.stringify(selectedSeries));
+  }, [selectedSeries]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedModels', JSON.stringify(selectedModels));
+  }, [selectedModels]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedStorage', JSON.stringify(selectedStorage));
+  }, [selectedStorage]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedColors', JSON.stringify(selectedColors));
+  }, [selectedColors]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedSizes', JSON.stringify(selectedSizes));
+  }, [selectedSizes]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_selectedCategories', JSON.stringify(selectedCategories));
+  }, [selectedCategories]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_trendOpen', JSON.stringify(trendOpen));
+  }, [trendOpen]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_trendLabels', JSON.stringify(trendLabels));
+  }, [trendLabels]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_trendSeries', JSON.stringify(trendSeries));
+  }, [trendSeries]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_trendTitle', trendTitle);
+  }, [trendTitle]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_collectedIds', JSON.stringify(Array.from(collectedIds)));
+  }, [collectedIds]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_searchSource', searchSource);
+  }, [searchSource]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_executedQuery', executedQuery);
+  }, [executedQuery]);
+  
+  useEffect(() => {
+    sessionStorage.setItem('comparePage_totalItems', totalItems.toString());
+  }, [totalItems]);
+  
   // Fetch categories on mount
   useEffect(() => {
     categoryApi.getList().then(res => {
@@ -663,6 +872,15 @@ const ComparePage: React.FC = () => {
       return '不明な店铺';
     }
   };
+
+  // 清理函数 - 可选，如果想在页面卸载时清除存储数据
+  useEffect(() => {
+    return () => {
+      // 这里可以选择清除部分存储的数据，或者保留它们以供下次访问
+      // 例如，我们可以保留搜索结果，但清除加载状态
+      sessionStorage.setItem('comparePage_loading', 'false');
+    };
+  }, []);
 
   return (
     <div className="compare-page">
