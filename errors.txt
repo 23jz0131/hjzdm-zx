@@ -1,0 +1,15 @@
+[ERROR] COMPILATION ERROR : 
+[ERROR] /C:/Users/3jz/Desktop/HJZDM/src/main/java/com/wray/hjzdm/service/impl/UserServiceImpl.java:[11,50] パッケージorg.springframework.security.crypto.bcryptは存在しません
+[ERROR] /C:/Users/3jz/Desktop/HJZDM/src/main/java/com/wray/hjzdm/service/impl/UserServiceImpl.java:[22,19] シンボルを見つけられません
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.8.1:compile (default-compile) on project HJZDM: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/3jz/Desktop/HJZDM/src/main/java/com/wray/hjzdm/service/impl/UserServiceImpl.java:[11,50] パッケージorg.springframework.security.crypto.bcryptは存在しません
+[ERROR] /C:/Users/3jz/Desktop/HJZDM/src/main/java/com/wray/hjzdm/service/impl/UserServiceImpl.java:[22,19] シンボルを見つけられません
+[ERROR]   シンボル:   クラス BCryptPasswordEncoder
+[ERROR]   場所: クラス com.wray.hjzdm.service.impl.UserServiceImpl
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

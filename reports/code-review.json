@@ -1,0 +1,747 @@
+{
+  "summary": {
+    "total": 105,
+    "bySeverity": {
+      "major": 38,
+      "minor": 61,
+      "info": 6
+    }
+  },
+  "issues": [
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\setupProxy.js",
+      "line": 4,
+      "issue": "absolute-http-url",
+      "snippet": "const target = process.env.BACKEND_ORIGIN || 'http://localhost:9090';",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\setupProxy.js",
+      "line": 4,
+      "issue": "localhost-backend",
+      "snippet": "const target = process.env.BACKEND_ORIGIN || 'http://localhost:9090';",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\api.ts",
+      "line": 6,
+      "issue": "absolute-http-url",
+      "snippet": "// 2. 依赖 package.json 中的 \"proxy\": \"http://localhost:9090\" 配置",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\api.ts",
+      "line": 6,
+      "issue": "localhost-backend",
+      "snippet": "// 2. 依赖 package.json 中的 \"proxy\": \"http://localhost:9090\" 配置",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\api.ts",
+      "line": 7,
+      "issue": "localhost-backend",
+      "snippet": "// 3. 在开发环境中，API 请求将发送到前端服务器（如 localhost:3000），然后被代理转发到后端（localhost:9090）",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\api.ts",
+      "line": 82,
+      "issue": "ts-any",
+      "snippet": "addAndReturn: (data: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\userApi.ts",
+      "line": 3,
+      "issue": "absolute-http-url",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\services\\userApi.ts",
+      "line": 3,
+      "issue": "localhost-backend",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\AdminDisclosurePage.tsx",
+      "line": 50,
+      "issue": "ts-any",
+      "snippet": "} catch (e: any) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\AdminDisclosurePage.tsx",
+      "line": 75,
+      "issue": "ts-any",
+      "snippet": "} catch (e: any) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\AdminDisclosurePage.tsx",
+      "line": 83,
+      "issue": "window-dialog",
+      "snippet": "if (!window.confirm('本当に削除しますか？この操作は取り消せません。')) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\AdminDisclosurePage.tsx",
+      "line": 90,
+      "issue": "ts-any",
+      "snippet": "} catch (e: any) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\BrowseHistoryPage.tsx",
+      "line": 89,
+      "issue": "absolute-http-url",
+      "snippet": "src={product.imgUrl || 'https://picsum.photos/100/100?random=product'}",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\CommunityPage.tsx",
+      "line": 110,
+      "issue": "window-dialog",
+      "snippet": "if (!window.confirm('本当にこのコメントを削除しますか？')) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 54,
+      "issue": "ts-any",
+      "snippet": "const [categories, setCategories] = useState<any[]>([]);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 55,
+      "issue": "ts-any",
+      "snippet": "const [dynamicFilters, setDynamicFilters] = useState<any[]>([]);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 101,
+      "issue": "ts-any",
+      "snippet": "const ids = res.data.data.map((g: any) => g.goodsId).filter((id: any) => typeof id === 'number');",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 148,
+      "issue": "ts-any",
+      "snippet": "const payload: any = {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 175,
+      "issue": "console-log",
+      "snippet": "console.log('ensureGoodsIdAndHistory called for goods:', product.goodsName, 'goodsId:', product.goodsId);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 178,
+      "issue": "console-log",
+      "snippet": "console.log('addHistory response:', res.data);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 181,
+      "issue": "ts-any",
+      "snippet": "const payload: any = {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 190,
+      "issue": "console-log",
+      "snippet": "console.log('addAndReturn response:', addRes.data);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 194,
+      "issue": "console-log",
+      "snippet": "console.log('addHistory after add response:', res.data);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 202,
+      "issue": "console-log",
+      "snippet": "console.log('searchProducts called with:', searchQuery, 'Current Source:', searchSource);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 213,
+      "issue": "console-log",
+      "snippet": "console.log('Calling API: goodsApi.getGoodsPage', { searchQuery, selectedDynamicFilters, currentCatId, minP, maxP, selectedPlatforms });",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 215,
+      "issue": "console-log",
+      "snippet": "console.log('Local API Response:', response.data);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 220,
+      "issue": "ts-any",
+      "snippet": "const processedData = records.map((g: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 236,
+      "issue": "ts-any",
+      "snippet": "let responseData: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 240,
+      "issue": "ts-any",
+      "snippet": "let cmpProcessed: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 242,
+      "issue": "ts-any",
+      "snippet": "cmpProcessed = responseData.map((group: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 247,
+      "issue": "ts-any",
+      "snippet": "const lowestProduct = goodsList.reduce((lowest: any, current: any) =>",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 254,
+      "issue": "ts-any",
+      "snippet": "goodsList: goodsList.map((product: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 280,
+      "issue": "ts-any",
+      "snippet": "let responseData: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 284,
+      "issue": "ts-any",
+      "snippet": "let processedData: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 286,
+      "issue": "ts-any",
+      "snippet": "processedData = responseData.map((group: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 291,
+      "issue": "ts-any",
+      "snippet": "const lowestProduct = goodsList.reduce((lowest: any, current: any) =>",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 298,
+      "issue": "ts-any",
+      "snippet": "goodsList: goodsList.map((product: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 320,
+      "issue": "console-log",
+      "snippet": "console.log('Calling API: goodsApi.compareGoods with query:', searchQuery); // デバッグ用ログ",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 325,
+      "issue": "console-log",
+      "snippet": "console.log('API Response:', response.data); // デバッグ用ログ",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 334,
+      "issue": "console-log",
+      "snippet": "console.log('Raw Response Data:', responseData); // デバッグ用ログ",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 337,
+      "issue": "ts-any",
+      "snippet": "let processedData: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 341,
+      "issue": "ts-any",
+      "snippet": "processedData = responseData.map((group: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 351,
+      "issue": "ts-any",
+      "snippet": "const lowestProduct = goodsList.reduce((lowest: any, current: any) =>",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 360,
+      "issue": "ts-any",
+      "snippet": "goodsList: goodsList.map((product: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 373,
+      "issue": "console-log",
+      "snippet": "console.log('Processed grouped data:', processedData); // デバッグ用ログ",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 392,
+      "issue": "ts-any",
+      "snippet": "processedData = records.map((g: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 413,
+      "issue": "ts-any",
+      "snippet": "processedData = list.map((g: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 435,
+      "issue": "console-log",
+      "snippet": "console.log('Final processed data:', processedData); // デバッグ用ログ",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 441,
+      "issue": "ts-any",
+      "snippet": "let processedData: any[] = [];",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 446,
+      "issue": "ts-any",
+      "snippet": "processedData = list.map((g: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 464,
+      "issue": "ts-any",
+      "snippet": "processedData = byNameList.map((g: any) => ({",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparePage.tsx",
+      "line": 789,
+      "issue": "absolute-http-url",
+      "snippet": "<img src={product.imgUrl || 'https://placehold.co/120x120'} alt={product.goodsName} onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/120x120'} />",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ComparisonHistoryPage.tsx",
+      "line": 45,
+      "issue": "console-log",
+      "snippet": "console.log(`再検索: ${query}`);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 24,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'smartphone', name: 'Smartphones / SIM', image: 'https://placehold.co/20x20', query: 'スマートフォン' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 25,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'laptop', name: 'PCs / Tablets', image: 'https://placehold.co/20x20', query: 'パソコン' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 26,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'camera', name: 'Cameras', image: 'https://placehold.co/20x20', query: 'カメラ' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 27,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'appliance', name: 'Home Appliances', image: 'https://placehold.co/20x20', query: '家電' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 28,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'audio', name: 'Audio / Headphones', image: 'https://placehold.co/20x20', query: 'イヤホン' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 29,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'fashion', name: 'Fashion / Watches', image: 'https://placehold.co/20x20', query: 'ファッション' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 30,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'beauty', name: 'Beauty / Health', image: 'https://placehold.co/20x20', query: '美容' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 31,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'game', name: 'Games / Toys', image: 'https://placehold.co/20x20', query: 'ゲーム' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 32,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'outdoor', name: 'Sports / Outdoor', image: 'https://placehold.co/20x20', query: 'スポーツ' },",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 33,
+      "issue": "absolute-http-url",
+      "snippet": "{ key: 'car', name: 'Cars / Bikes', image: 'https://placehold.co/20x20', query: '車' }",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 54,
+      "issue": "ts-any",
+      "snippet": "res.data.data.forEach((group: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 58,
+      "issue": "ts-any",
+      "snippet": "const cheapest = list.reduce((min: any, cur: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 89,
+      "issue": "ts-any",
+      "snippet": "items.forEach((item: any) => {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 235,
+      "issue": "absolute-http-url",
+      "snippet": "src={product.imageUrl || 'https://placehold.co/80x80'}",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\Home.tsx",
+      "line": 237,
+      "issue": "absolute-http-url",
+      "snippet": "onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=NoImg'}",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\LoginPage.tsx",
+      "line": 6,
+      "issue": "absolute-http-url",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\LoginPage.tsx",
+      "line": 6,
+      "issue": "localhost-backend",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\LoginPage.tsx",
+      "line": 44,
+      "issue": "console-log",
+      "snippet": "console.log('Login response data:', response.data); // 调试日志",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\LoginPage.tsx",
+      "line": 58,
+      "issue": "ts-any",
+      "snippet": "} catch (err: any) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\MyCollectionPage.tsx",
+      "line": 48,
+      "issue": "console-log",
+      "snippet": "console.log(`コレクション解除商品: ${goodsId}`);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\MyCollectionPage.tsx",
+      "line": 89,
+      "issue": "absolute-http-url",
+      "snippet": "src={product.imgUrl || 'https://picsum.photos/100/100?random=product'}",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\MyTipPage.tsx",
+      "line": 89,
+      "issue": "window-dialog",
+      "snippet": "if (!window.confirm('本当に削除しますか？この操作は取り消せません。')) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\MyTipPage.tsx",
+      "line": 173,
+      "issue": "absolute-http-url",
+      "snippet": "placeholder=\"https://...\"",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ProfilePage.tsx",
+      "line": 67,
+      "issue": "ts-any",
+      "snippet": "const unreadList = notiList.filter((n: any) => n.isRead === 0);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\ProfilePage.tsx",
+      "line": 122,
+      "issue": "absolute-http-url",
+      "snippet": "<img src={profile?.avatar || 'https://placehold.co/60x60'} alt=\"アバター\" className=\"avatar\" />",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\RegisterPage.tsx",
+      "line": 6,
+      "issue": "absolute-http-url",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\RegisterPage.tsx",
+      "line": 6,
+      "issue": "localhost-backend",
+      "snippet": "const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';",
+      "severity": "info"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\RegisterPage.tsx",
+      "line": 77,
+      "issue": "console-log",
+      "snippet": "console.log('Response data:', response.data); // 调试日志",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\frontend\\hjzdm-frontend\\src\\pages\\RegisterPage.tsx",
+      "line": 97,
+      "issue": "ts-any",
+      "snippet": "} catch (err: any) {",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\HjzdmApplication.java",
+      "line": 33,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"Cleaned up invalid goods data.\");",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\AiClient.java",
+      "line": 32,
+      "issue": "hardcoded-http",
+      "snippet": "String url = \"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\" + apiKey;",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\AmazonServiceImpl.java",
+      "line": 42,
+      "issue": "hardcoded-http",
+      "snippet": "String url = \"https://www.amazon.co.jp/s?k=\" + encodedKeyword;",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\AmazonServiceImpl.java",
+      "line": 76,
+      "issue": "hardcoded-http",
+      "snippet": "String link = linkEl != null ? \"https://www.amazon.co.jp\" + linkEl.attr(\"href\") : \"\";",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\GoodsServiceImpl.java",
+      "line": 63,
+      "issue": "hardcoded-http",
+      "snippet": "\"https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706\"",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\GoodsServiceImpl.java",
+      "line": 579,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"DEBUG_SYSOUT: Rakuten URL: \" + url);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\GoodsServiceImpl.java",
+      "line": 589,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"DEBUG_SYSOUT: Rakuten Response length: \" + (json != null ? json.length() : \"null\"));",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\service\\impl\\GoodsServiceImpl.java",
+      "line": 743,
+      "issue": "hardcoded-http",
+      "snippet": "String url = \"https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch\"",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\config\\HandlerConfig.java",
+      "line": 64,
+      "issue": "hardcoded-http",
+      "snippet": "\"http://localhost:3000\",",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\config\\HandlerConfig.java",
+      "line": 65,
+      "issue": "hardcoded-http",
+      "snippet": "\"http://127.0.0.1:3000\",",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\config\\HandlerConfig.java",
+      "line": 66,
+      "issue": "hardcoded-http",
+      "snippet": "\"https://hjzdm-front-3jz-20260109.loca.lt\"",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\common\\HttpClientUtil.java",
+      "line": 62,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"HTTP Request Failed: \" + statusCode + \" URL: \" + url);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\common\\HttpClientUtil.java",
+      "line": 65,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"Error Body: \" + errorBody);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\common\\HttpClientUtil.java",
+      "line": 125,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"HTTP Request Failed: \" + statusCode + \" URL: \" + url);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\java\\com\\wray\\hjzdm\\common\\HttpClientUtil.java",
+      "line": 127,
+      "issue": "system-out",
+      "snippet": "System.out.println(\"Error Body: \" + errorBody);",
+      "severity": "minor"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 51,
+      "issue": "potential-secret-in-config",
+      "snippet": "app-id: wx791af01f47f2f70a",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 52,
+      "issue": "potential-secret-in-config",
+      "snippet": "secret: f9ff26a80f5a88815470b5523c7886d2",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 56,
+      "issue": "potential-secret-in-config",
+      "snippet": "user-secret-key: wray12121212asdhiashdikasbdiasgfiabgfkbaiwfgiwfawfafa",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 58,
+      "issue": "potential-secret-in-config",
+      "snippet": "user-token-name: Authorization",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 83,
+      "issue": "potential-secret-in-config",
+      "snippet": "app-id: 1065081596741280321",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 84,
+      "issue": "potential-secret-in-config",
+      "snippet": "application-secret: d3cea25fd388a80da369ee74a20e67c9c4b00625",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 88,
+      "issue": "potential-secret-in-config",
+      "snippet": "client-id: dj00aiZpPVJXRUtpaEVLTmRjQSZzPWNvbnN1bWVyc2VjcmV0Jng9MzQ-",
+      "severity": "major"
+    },
+    {
+      "file": "C:\\Users\\3jz\\Desktop\\HJZDM\\src\\main\\resources\\application.yaml",
+      "line": 89,
+      "issue": "potential-secret-in-config",
+      "snippet": "secret: 8TwrbIHTWFS5Zk6tyOBQLVHdOQQ6g3XEnQmU70SO",
+      "severity": "major"
+    }
+  ]
+}

@@ -1,0 +1,213 @@
+Code Review Summary
+Total: 105
+Major: 38, Minor: 61, Info: 6
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\setupProxy.js:4
+  const target = process.env.BACKEND_ORIGIN || 'http://localhost:9090';
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\setupProxy.js:4
+  const target = process.env.BACKEND_ORIGIN || 'http://localhost:9090';
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\api.ts:6
+  // 2. 依赖 package.json 中的 "proxy": "http://localhost:9090" 配置
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\api.ts:6
+  // 2. 依赖 package.json 中的 "proxy": "http://localhost:9090" 配置
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\api.ts:7
+  // 3. 在开发环境中，API 请求将发送到前端服务器（如 localhost:3000），然后被代理转发到后端（localhost:9090）
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\api.ts:82
+  addAndReturn: (data: any) => {
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\userApi.ts:3
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\services\userApi.ts:3
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\AdminDisclosurePage.tsx:50
+  } catch (e: any) {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\AdminDisclosurePage.tsx:75
+  } catch (e: any) {
+[minor] window-dialog @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\AdminDisclosurePage.tsx:83
+  if (!window.confirm('本当に削除しますか？この操作は取り消せません。')) {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\AdminDisclosurePage.tsx:90
+  } catch (e: any) {
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\BrowseHistoryPage.tsx:89
+  src={product.imgUrl || 'https://picsum.photos/100/100?random=product'}
+[minor] window-dialog @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\CommunityPage.tsx:110
+  if (!window.confirm('本当にこのコメントを削除しますか？')) {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:54
+  const [categories, setCategories] = useState<any[]>([]);
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:55
+  const [dynamicFilters, setDynamicFilters] = useState<any[]>([]);
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:101
+  const ids = res.data.data.map((g: any) => g.goodsId).filter((id: any) => typeof id === 'number');
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:148
+  const payload: any = {
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:175
+  console.log('ensureGoodsIdAndHistory called for goods:', product.goodsName, 'goodsId:', product.goodsId);
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:178
+  console.log('addHistory response:', res.data);
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:181
+  const payload: any = {
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:190
+  console.log('addAndReturn response:', addRes.data);
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:194
+  console.log('addHistory after add response:', res.data);
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:202
+  console.log('searchProducts called with:', searchQuery, 'Current Source:', searchSource);
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:213
+  console.log('Calling API: goodsApi.getGoodsPage', { searchQuery, selectedDynamicFilters, currentCatId, minP, maxP, selectedPlatforms });
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:215
+  console.log('Local API Response:', response.data);
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:220
+  const processedData = records.map((g: any) => ({
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:236
+  let responseData: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:240
+  let cmpProcessed: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:242
+  cmpProcessed = responseData.map((group: any) => {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:247
+  const lowestProduct = goodsList.reduce((lowest: any, current: any) =>
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:254
+  goodsList: goodsList.map((product: any) => ({
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:280
+  let responseData: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:284
+  let processedData: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:286
+  processedData = responseData.map((group: any) => {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:291
+  const lowestProduct = goodsList.reduce((lowest: any, current: any) =>
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:298
+  goodsList: goodsList.map((product: any) => ({
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:320
+  console.log('Calling API: goodsApi.compareGoods with query:', searchQuery); // デバッグ用ログ
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:325
+  console.log('API Response:', response.data); // デバッグ用ログ
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:334
+  console.log('Raw Response Data:', responseData); // デバッグ用ログ
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:337
+  let processedData: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:341
+  processedData = responseData.map((group: any) => {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:351
+  const lowestProduct = goodsList.reduce((lowest: any, current: any) =>
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:360
+  goodsList: goodsList.map((product: any) => ({
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:373
+  console.log('Processed grouped data:', processedData); // デバッグ用ログ
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:392
+  processedData = records.map((g: any) => ({
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:413
+  processedData = list.map((g: any) => ({
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:435
+  console.log('Final processed data:', processedData); // デバッグ用ログ
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:441
+  let processedData: any[] = [];
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:446
+  processedData = list.map((g: any) => ({
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:464
+  processedData = byNameList.map((g: any) => ({
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparePage.tsx:789
+  <img src={product.imgUrl || 'https://placehold.co/120x120'} alt={product.goodsName} onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/120x120'} />
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ComparisonHistoryPage.tsx:45
+  console.log(`再検索: ${query}`);
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:24
+  { key: 'smartphone', name: 'Smartphones / SIM', image: 'https://placehold.co/20x20', query: 'スマートフォン' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:25
+  { key: 'laptop', name: 'PCs / Tablets', image: 'https://placehold.co/20x20', query: 'パソコン' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:26
+  { key: 'camera', name: 'Cameras', image: 'https://placehold.co/20x20', query: 'カメラ' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:27
+  { key: 'appliance', name: 'Home Appliances', image: 'https://placehold.co/20x20', query: '家電' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:28
+  { key: 'audio', name: 'Audio / Headphones', image: 'https://placehold.co/20x20', query: 'イヤホン' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:29
+  { key: 'fashion', name: 'Fashion / Watches', image: 'https://placehold.co/20x20', query: 'ファッション' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:30
+  { key: 'beauty', name: 'Beauty / Health', image: 'https://placehold.co/20x20', query: '美容' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:31
+  { key: 'game', name: 'Games / Toys', image: 'https://placehold.co/20x20', query: 'ゲーム' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:32
+  { key: 'outdoor', name: 'Sports / Outdoor', image: 'https://placehold.co/20x20', query: 'スポーツ' },
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:33
+  { key: 'car', name: 'Cars / Bikes', image: 'https://placehold.co/20x20', query: '車' }
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:54
+  res.data.data.forEach((group: any) => {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:58
+  const cheapest = list.reduce((min: any, cur: any) => {
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:89
+  items.forEach((item: any) => {
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:235
+  src={product.imageUrl || 'https://placehold.co/80x80'}
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\Home.tsx:237
+  onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=NoImg'}
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\LoginPage.tsx:6
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\LoginPage.tsx:6
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\LoginPage.tsx:44
+  console.log('Login response data:', response.data); // 调试日志
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\LoginPage.tsx:58
+  } catch (err: any) {
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\MyCollectionPage.tsx:48
+  console.log(`コレクション解除商品: ${goodsId}`);
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\MyCollectionPage.tsx:89
+  src={product.imgUrl || 'https://picsum.photos/100/100?random=product'}
+[minor] window-dialog @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\MyTipPage.tsx:89
+  if (!window.confirm('本当に削除しますか？この操作は取り消せません。')) {
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\MyTipPage.tsx:173
+  placeholder="https://..."
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ProfilePage.tsx:67
+  const unreadList = notiList.filter((n: any) => n.isRead === 0);
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\ProfilePage.tsx:122
+  <img src={profile?.avatar || 'https://placehold.co/60x60'} alt="アバター" className="avatar" />
+[major] absolute-http-url @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\RegisterPage.tsx:6
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[info] localhost-backend @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\RegisterPage.tsx:6
+  const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+[minor] console-log @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\RegisterPage.tsx:77
+  console.log('Response data:', response.data); // 调试日志
+[minor] ts-any @ C:\Users\3jz\Desktop\HJZDM\frontend\hjzdm-frontend\src\pages\RegisterPage.tsx:97
+  } catch (err: any) {
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\HjzdmApplication.java:33
+  System.out.println("Cleaned up invalid goods data.");
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\AiClient.java:32
+  String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\AmazonServiceImpl.java:42
+  String url = "https://www.amazon.co.jp/s?k=" + encodedKeyword;
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\AmazonServiceImpl.java:76
+  String link = linkEl != null ? "https://www.amazon.co.jp" + linkEl.attr("href") : "";
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\GoodsServiceImpl.java:63
+  "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706"
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\GoodsServiceImpl.java:579
+  System.out.println("DEBUG_SYSOUT: Rakuten URL: " + url);
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\GoodsServiceImpl.java:589
+  System.out.println("DEBUG_SYSOUT: Rakuten Response length: " + (json != null ? json.length() : "null"));
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\service\impl\GoodsServiceImpl.java:743
+  String url = "https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch"
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\config\HandlerConfig.java:64
+  "http://localhost:3000",
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\config\HandlerConfig.java:65
+  "http://127.0.0.1:3000",
+[major] hardcoded-http @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\config\HandlerConfig.java:66
+  "https://hjzdm-front-3jz-20260109.loca.lt"
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\common\HttpClientUtil.java:62
+  System.out.println("HTTP Request Failed: " + statusCode + " URL: " + url);
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\common\HttpClientUtil.java:65
+  System.out.println("Error Body: " + errorBody);
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\common\HttpClientUtil.java:125
+  System.out.println("HTTP Request Failed: " + statusCode + " URL: " + url);
+[minor] system-out @ C:\Users\3jz\Desktop\HJZDM\src\main\java\com\wray\hjzdm\common\HttpClientUtil.java:127
+  System.out.println("Error Body: " + errorBody);
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:51
+  app-id: wx791af01f47f2f70a
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:52
+  secret: f9ff26a80f5a88815470b5523c7886d2
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:56
+  user-secret-key: wray12121212asdhiashdikasbdiasgfiabgfkbaiwfgiwfawfafa
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:58
+  user-token-name: Authorization
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:83
+  app-id: 1065081596741280321
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:84
+  application-secret: d3cea25fd388a80da369ee74a20e67c9c4b00625
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:88
+  client-id: dj00aiZpPVJXRUtpaEVLTmRjQSZzPWNvbnN1bWVyc2VjcmV0Jng9MzQ-
+[major] potential-secret-in-config @ C:\Users\3jz\Desktop\HJZDM\src\main\resources\application.yaml:89
+  secret: 8TwrbIHTWFS5Zk6tyOBQLVHdOQQ6g3XEnQmU70SO
