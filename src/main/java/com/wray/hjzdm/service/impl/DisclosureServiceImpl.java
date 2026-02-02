@@ -143,7 +143,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
             DisclosureLike like = DisclosureLike.builder()
                 .userId(userId)
                 .disclosureId(disclosureId)
-                .createTime(new java.util.Date())
+                .createTime(java.time.LocalDateTime.now())
                 .build();
             disclosureLikeMapper.insert(like);
         }
@@ -186,7 +186,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
             DisclosureCollect collect = DisclosureCollect.builder()
                 .userId(userId)
                 .disclosureId(disclosureId)
-                .createTime(new java.util.Date())
+                .createTime(java.time.LocalDateTime.now())
                 .build();
             disclosureCollectMapper.insert(collect);
             System.out.println("新建收藏记录成功");
