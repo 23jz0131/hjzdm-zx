@@ -1,7 +1,16 @@
 .App {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* 确保模态框始终显示在最上层 */
+* {
+  --modal-z-index: 1100;
+  --header-z-index: 1000;
 }
 
 .App-logo {

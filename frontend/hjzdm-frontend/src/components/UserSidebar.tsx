@@ -20,7 +20,6 @@ const UserSidebar: React.FC = () => {
 
   const menuItems = [
     { path: '/profile', label: 'マイページ', icon: '👤' },
-    { path: '/my-collection', label: 'マイコレクション', icon: '❤️' },
     { path: '/my-tip', label: 'マイ投稿', icon: '📢' },
     ...(isAdmin ? [{ path: '/admin/disclosures', label: '管理者：投稿審査', icon: '🛡️' }] : [])
   ];

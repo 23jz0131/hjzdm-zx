@@ -1,11 +1,12 @@
 package com.wray.hjzdm.service.impl;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -13,8 +14,12 @@ import com.wray.hjzdm.common.BaseContext;
 import com.wray.hjzdm.dto.QueryDTO;
 import com.wray.hjzdm.entity.Comment;
 import com.wray.hjzdm.entity.Disclosure;
+import com.wray.hjzdm.entity.DisclosureLike;
 import com.wray.hjzdm.entity.Goods;
 import com.wray.hjzdm.mapper.CommentMapper;
+import com.wray.hjzdm.mapper.DisclosureLikeMapper;
+import com.wray.hjzdm.mapper.DisclosureCollectMapper;
+import com.wray.hjzdm.entity.DisclosureCollect;
 import com.wray.hjzdm.mapper.DisclosureMapper;
 import com.wray.hjzdm.service.DisclosureService;
 import com.wray.hjzdm.service.GoodsService;
@@ -32,6 +37,12 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
     @Autowired
     private com.wray.hjzdm.mapper.UserMapper userMapper;
+
+    @Autowired
+    private DisclosureLikeMapper disclosureLikeMapper;
+    
+    @Autowired
+    private DisclosureCollectMapper disclosureCollectMapper;
 
     // Redis removed
     // @Autowired
@@ -64,14 +75,33 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
     @Override
     public List<Disclosure> queryDisclosure(Long goodsId) {
-        return this.baseMapper.selectList(new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getGoodsId, goodsId)
+        List<Disclosure> disclosureList = this.baseMapper.selectList(new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getGoodsId, goodsId)
                 .orderByAsc(Disclosure::getCreateTime));
+        
+        // 为每个披露添加点赞和收藏信息
+        Long currentUserId = BaseContext.getCurrentId();
+        return disclosureList.stream().map(disclosure -> {
+            disclosure.setLikeCount(getLikeCount(disclosure.getDisclosureId()));
+            disclosure.setLikedByCurrentUser(currentUserId != null && isLikedByUser(currentUserId, disclosure.getDisclosureId()));
+            disclosure.setCollectCount(getCollectCount(disclosure.getDisclosureId()).longValue());
+            disclosure.setCollectedByCurrentUser(currentUserId != null && isCollectedByUser(currentUserId, disclosure.getDisclosureId()));
+            return disclosure;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     public Disclosure getDisclosure(Long disclosureId) {
-        return this.baseMapper.selectOne(
+        Disclosure disclosure = this.baseMapper.selectOne(
                 new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getDisclosureId, disclosureId));
+        
+        if (disclosure != null) {
+            // 添加点赞信息
+            Long currentUserId = BaseContext.getCurrentId();
+            disclosure.setLikeCount(getLikeCount(disclosureId));
+            disclosure.setLikedByCurrentUser(currentUserId != null && isLikedByUser(currentUserId, disclosureId));
+        }
+        
+        return disclosure;
     }
 
     @Override
@@ -101,22 +131,93 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
     @Override
     public void like(Long userId, Long disclosureId) {
-        // Redis disabled
+        // 检查是否已点赞，避免重复点赞
+        DisclosureLike existingLike = disclosureLikeMapper.selectOne(
+            new QueryWrapper<DisclosureLike>()
+                .eq("USER_ID", userId)
+                .eq("DISCLOSURE_ID", disclosureId)
+        );
+        
+        if (existingLike == null) {
+            // 创建新的点赞记录
+            DisclosureLike like = DisclosureLike.builder()
+                .userId(userId)
+                .disclosureId(disclosureId)
+                .createTime(new java.util.Date())
+                .build();
+            disclosureLikeMapper.insert(like);
+        }
     }
 
     @Override
     public void unlike(Long userId, Long disclosureId) {
-        // Redis disabled
+        // 删除用户的点赞记录
+        disclosureLikeMapper.delete(
+            new QueryWrapper<DisclosureLike>()
+                .eq("USER_ID", userId)
+                .eq("DISCLOSURE_ID", disclosureId)
+        );
+    }
+
+    @Override
+    public boolean isLikedByUser(Long userId, Long disclosureId) {
+        Long likeId = disclosureLikeMapper.selectUserIdByDisclosureId(userId, disclosureId);
+        return likeId != null;
+    }
+
+    @Override
+    public Long getLikeCount(Long disclosureId) {
+        Integer count = disclosureLikeMapper.countLikesByDisclosureId(disclosureId);
+        return count != null ? count.longValue() : 0L;
     }
 
     @Override
     public void collect(Long userId, Long disclosureId) {
-        // Redis disabled
+        System.out.println("收藏操作: userId=" + userId + ", disclosureId=" + disclosureId);
+        // 检查是否已收藏，避免重复收藏
+        DisclosureCollect existingCollect = disclosureCollectMapper.selectOne(
+            new QueryWrapper<DisclosureCollect>()
+                .eq("USER_ID", userId)
+                .eq("DISCLOSURE_ID", disclosureId)
+        );
+        
+        if (existingCollect == null) {
+            // 创建新的收藏记录
+            DisclosureCollect collect = DisclosureCollect.builder()
+                .userId(userId)
+                .disclosureId(disclosureId)
+                .createTime(new java.util.Date())
+                .build();
+            disclosureCollectMapper.insert(collect);
+            System.out.println("新建收藏记录成功");
+        } else {
+            System.out.println("已存在收藏记录");
+        }
     }
 
     @Override
     public void uncollect(Long userId, Long disclosureId) {
-        // Redis disabled
+        System.out.println("取消收藏操作: userId=" + userId + ", disclosureId=" + disclosureId);
+        // 删除用户的收藏记录
+        int result = disclosureCollectMapper.delete(
+            new QueryWrapper<DisclosureCollect>()
+                .eq("USER_ID", userId)
+                .eq("DISCLOSURE_ID", disclosureId)
+        );
+        System.out.println("删除收藏记录结果: " + result);
+    }
+
+    @Override
+    public boolean isCollectedByUser(Long userId, Long disclosureId) {
+        Long collectId = disclosureCollectMapper.selectCollectIdByUserIdAndDisclosureId(userId, disclosureId);
+        return collectId != null;
+    }
+
+    @Override
+    public Long getCollectCount(Long disclosureId) {
+        Integer count = disclosureCollectMapper.countCollectsByDisclosureId(disclosureId);
+        System.out.println("获取投稿 " + disclosureId + " 的收藏数: " + count);
+        return count != null ? count.longValue() : 0L;
     }
 
     @Override
@@ -182,7 +283,16 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                         .eq(Disclosure::getStatus, 0)
                         .orderByDesc(Disclosure::getCreateTime));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        return pageInfo.getList();
+        
+        // 为每个披露添加点赞和收藏信息
+        Long currentUserId = BaseContext.getCurrentId();
+        return pageInfo.getList().stream().map(disclosure -> {
+            disclosure.setLikeCount(getLikeCount(disclosure.getDisclosureId()));
+            disclosure.setLikedByCurrentUser(currentUserId != null && isLikedByUser(currentUserId, disclosure.getDisclosureId()));
+            disclosure.setCollectCount(getCollectCount(disclosure.getDisclosureId()).longValue());
+            disclosure.setCollectedByCurrentUser(currentUserId != null && isCollectedByUser(currentUserId, disclosure.getDisclosureId()));
+            return disclosure;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -193,7 +303,18 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                         .eq(Disclosure::getStatus, 1)
                         .orderByDesc(Disclosure::getCreateTime));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        return pageInfo.getList();
+        
+        // 为每个披露添加点赞和收藏信息
+        Long currentUserId = BaseContext.getCurrentId();
+        List<Disclosure> enhancedList = pageInfo.getList().stream().map(disclosure -> {
+            disclosure.setLikeCount(getLikeCount(disclosure.getDisclosureId()));
+            disclosure.setLikedByCurrentUser(currentUserId != null && isLikedByUser(currentUserId, disclosure.getDisclosureId()));
+            disclosure.setCollectCount(getCollectCount(disclosure.getDisclosureId()).longValue());
+            disclosure.setCollectedByCurrentUser(currentUserId != null && isCollectedByUser(currentUserId, disclosure.getDisclosureId()));
+            return disclosure;
+        }).collect(java.util.stream.Collectors.toList());
+        
+        return enhancedList;
     }
 
     @Override
@@ -206,6 +327,60 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
         List<Disclosure> disclosureList = this.baseMapper.selectList(
                 new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getAuthor, userId));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        return pageInfo.getList();
+        
+        // 为每个披露添加点赞和收藏信息
+        return pageInfo.getList().stream().map(disclosure -> {
+            disclosure.setLikeCount(getLikeCount(disclosure.getDisclosureId()));
+            disclosure.setLikedByCurrentUser(userId != null && isLikedByUser(userId, disclosure.getDisclosureId()));
+            disclosure.setCollectCount(getCollectCount(disclosure.getDisclosureId()).longValue());
+            disclosure.setCollectedByCurrentUser(userId != null && isCollectedByUser(userId, disclosure.getDisclosureId()));
+            return disclosure;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+    
+    @Override
+    public List<Disclosure> queryMyCollect(QueryDTO queryDto) {
+        System.out.println("查询我的收藏: userId=" + queryDto.getUserId());
+        PageHelper.startPage(queryDto.getPageNum(), queryDto.getPageSize());
+        Long userId = queryDto.getUserId();
+        if (userId == null) {
+            System.out.println("用户ID为空");
+            return java.util.Collections.emptyList();
+        }
+        
+        // 查询用户收藏的爆料ID列表
+        List<DisclosureCollect> collectList = disclosureCollectMapper.selectList(
+            new LambdaQueryWrapper<DisclosureCollect>()
+                .eq(DisclosureCollect::getUserId, userId)
+                .orderByDesc(DisclosureCollect::getCreateTime)
+        );
+        
+        System.out.println("找到收藏记录数: " + collectList.size());
+        
+        if (collectList.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        // 获取收藏的爆料ID
+        List<Long> disclosureIds = collectList.stream()
+            .map(DisclosureCollect::getDisclosureId)
+            .collect(java.util.stream.Collectors.toList());
+        
+        System.out.println("收藏的爆料IDs: " + disclosureIds);
+        
+        // 批量查询爆料信息
+        List<Disclosure> disclosureList = this.baseMapper.selectBatchIds(disclosureIds);
+        
+        System.out.println("查询到的爆料数: " + disclosureList.size());
+        
+        // 为每个披露添加点赞和收藏信息
+        Long currentUserId = BaseContext.getCurrentId();
+        return disclosureList.stream().map(disclosure -> {
+            disclosure.setLikeCount(getLikeCount(disclosure.getDisclosureId()));
+            disclosure.setLikedByCurrentUser(currentUserId != null && isLikedByUser(currentUserId, disclosure.getDisclosureId()));
+            disclosure.setCollectCount(getCollectCount(disclosure.getDisclosureId()).longValue());
+            disclosure.setCollectedByCurrentUser(true); // 因为是查询收藏列表，所以都是已收藏
+            return disclosure;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

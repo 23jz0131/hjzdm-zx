@@ -17,23 +17,24 @@ const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
   const navigate = useNavigate();
 
   // Categories (Kakaku style list)
   const categories = [
-    { key: 'smartphone', name: 'Smartphones / SIM', image: 'https://placehold.co/20x20', query: 'スマートフォン' },
-    { key: 'laptop', name: 'PCs / Tablets', image: 'https://placehold.co/20x20', query: 'パソコン' },
-    { key: 'camera', name: 'Cameras', image: 'https://placehold.co/20x20', query: 'カメラ' },
-    { key: 'appliance', name: 'Home Appliances', image: 'https://placehold.co/20x20', query: '家電' },
-    { key: 'audio', name: 'Audio / Headphones', image: 'https://placehold.co/20x20', query: 'イヤホン' },
-    { key: 'fashion', name: 'Fashion / Watches', image: 'https://placehold.co/20x20', query: 'ファッション' },
-    { key: 'beauty', name: 'Beauty / Health', image: 'https://placehold.co/20x20', query: '美容' },
-    { key: 'game', name: 'Games / Toys', image: 'https://placehold.co/20x20', query: 'ゲーム' },
-    { key: 'outdoor', name: 'Sports / Outdoor', image: 'https://placehold.co/20x20', query: 'スポーツ' },
-    { key: 'car', name: 'Cars / Bikes', image: 'https://placehold.co/20x20', query: '車' }
+    { key: 'smartphone', name: 'Smartphones / SIM', query: 'スマートフォン' },
+    { key: 'laptop', name: 'PCs / Tablets', query: 'パソコン' },
+    { key: 'camera', name: 'Cameras', query: 'カメラ' },
+    { key: 'appliance', name: 'Home Appliances', query: '家電' },
+    { key: 'audio', name: 'Audio / Headphones', query: 'イヤホン' },
+    { key: 'fashion', name: 'Fashion / Watches', query: 'ファッション' },
+    { key: 'beauty', name: 'Beauty / Health', query: '美容' },
+    { key: 'game', name: 'Games / Toys', query: 'ゲーム' },
+    { key: 'outdoor', name: 'Sports / Outdoor', query: 'スポーツ' },
+    { key: 'car', name: 'Cars / Bikes', query: '車' }
   ];
 
-  const hotTags = ['iPhone 15', 'MacBook Air', 'Sony WH-1000XM5', 'Nintendo Switch', 'RTX 4070', 'iPad Air'];
+
 
   useEffect(() => {
     fetchRecommendedProducts();
@@ -42,7 +43,7 @@ const Home: React.FC = () => {
   const fetchRecommendedProducts = async () => {
     setLoading(true);
     try {
-      // 优先使用真实平台数据：对热门关键词执行比价搜索并汇总最低价商品
+      // 優先的に実際のプラットフォームデータを使用：人気キーワードに対して価格比較検索を実行し、最安値商品を集計
       const querySeeds = ['iPhone 15', 'MacBook Air', 'Nintendo Switch', 'Sony WH-1000XM5', 'iPad Air'];
       const collected: Product[] = [];
 
@@ -50,7 +51,7 @@ const Home: React.FC = () => {
         try {
           const res = await goodsApi.compareGoods(q);
           if (res.data && res.data.code === 200 && Array.isArray(res.data.data)) {
-            // 展开每个分组的最低价商品
+            // 各グループの最安値商品を展開
             res.data.data.forEach((group: { goodsList: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[] }) => {
               const list = Array.isArray(group.goodsList) ? group.goodsList : [];
               if (list.length > 0) {
@@ -81,7 +82,7 @@ const Home: React.FC = () => {
         if (collected.length >= 10) break;
       }
 
-      // 如果比价数据不足，回退到单平台（乐天）搜索
+      // 価格比較データが不足している場合は、単一プラットフォーム（楽天）検索にフォールバック
       if (collected.length < 5) {
         try {
           const fallbackRes = await goodsApi.searchGoods('iphone');
@@ -108,7 +109,7 @@ const Home: React.FC = () => {
         if (!uniqueByName[p.name]) {
           uniqueByName[p.name] = p;
         } else {
-          // 保留价格更低的
+          // より安い価格を保持
           if (p.price > 0 && (uniqueByName[p.name].price === 0 || p.price < uniqueByName[p.name].price)) {
             uniqueByName[p.name] = p;
           }
@@ -148,6 +149,8 @@ const Home: React.FC = () => {
       default: return 'その他';
     }
   };
+  
+
 
   return (
     <div className="home">
@@ -163,12 +166,6 @@ const Home: React.FC = () => {
                     className="sidebar-menu-item"
                     onClick={() => navigate(`/compare?query=${encodeURIComponent(c.query)}`)}
                   >
-                    {/* Placeholder icon logic */}
-                    <img
-                      src={c.image}
-                      alt=""
-                      onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-                    />
                     {c.name}
                   </div>
                 </li>
@@ -195,19 +192,7 @@ const Home: React.FC = () => {
             </form>
           </div>
 
-          {/* Hot Keywords */}
-          <div className="hot-tags">
-            <strong>注目キーワード: </strong>
-            {hotTags.map(tag => (
-              <a
-                key={tag}
-                href="#"
-                onClick={(e) => { e.preventDefault(); navigate(`/compare?query=${encodeURIComponent(tag)}`); }}
-              >
-                {tag}
-              </a>
-            ))}
-          </div>
+
 
           {/* Ranking / Featured List */}
           <div style={{ marginTop: '20px' }}>
@@ -256,6 +241,7 @@ const Home: React.FC = () => {
                           </span>
                         )}
                       </div>
+
                     </div>
                   </div>
                 ))

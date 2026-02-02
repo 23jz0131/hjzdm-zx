@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Calendar;
 
 @Service
 @Slf4j
@@ -79,12 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getName, username)
                 .one();
 
-        // 如果没找到，尝试按邮箱查找（使用openid字段存储邮箱）
-        if (user == null) {
-            user = this.lambdaQuery()
-                .eq(User::getOpenid, username)
-                .one();
-        }
+
 
         // 如果没找到，尝试按手机号查找
         if (user == null) {
@@ -114,9 +110,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("用户名不能为空");
         }
 
-        if (!StringUtils.hasText(dto.getEmail())) {
-            throw new RuntimeException("邮箱不能为空");
-        }
+
 
         if (!StringUtils.hasText(dto.getPassword()) || dto.getPassword().length() < 6) {
             throw new RuntimeException("密码至少6位");
@@ -131,31 +125,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("用户名已存在");
         }
         
-        // 检查邮箱是否已存在（暂时注释，因为数据库可能没有email字段）
-        // existingUser = this.lambdaQuery()
-        //         .eq(User::getEmail, dto.getEmail())
-        //         .one();
-        // 
-        // if (existingUser != null) {
-        //     throw new RuntimeException("邮箱已被注册");
-        // }
-        
         // 检查密码是否一致
         if (!dto.getPassword().equals(dto.getConfirmPassword())) {
             throw new RuntimeException("两次输入的密码不一致");
         }
 
-        User existingAccount = this.lambdaQuery()
-                .eq(User::getOpenid, dto.getEmail())
-                .one();
-        if (existingAccount != null) {
-            throw new RuntimeException("邮箱已被注册");
-        }
+
         
         // 创建新用户
         User user = User.builder()
                 .name(dto.getUsername())
-                .openid(dto.getEmail())
+                .openid("user_" + System.currentTimeMillis()) // 使用时间戳生成唯一的openid
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .createTime(new Date())
                 .build();
@@ -194,7 +174,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     
     @Override
-    public User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, Integer age, Date birthDate) {
+    public User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, Date birthDate) {
         User user = this.getById(userId);
         if (user != null) {
             if (avatar != null) {
@@ -209,15 +189,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (gender != null) {
                 user.setGender(gender);
             }
-            if (age != null) {
-                user.setAge(age);
-            }
             if (birthDate != null) {
                 user.setBirthDate(birthDate);
+                // 自动计算并设置年龄
+                user.setAge(calculateAge(birthDate));
             }
             
             this.updateById(user);
         }
         return user;
+    }
+    
+    /**
+     * 根据出生日期计算年龄
+     */
+    private Integer calculateAge(Date birthDate) {
+        if (birthDate == null) {
+            return null;
+        }
+        
+        Calendar birth = Calendar.getInstance();
+        birth.setTime(birthDate);
+        
+        Calendar today = Calendar.getInstance();
+        
+        int birthYear = birth.get(Calendar.YEAR);
+        int birthMonth = birth.get(Calendar.MONTH);
+        int birthDay = birth.get(Calendar.DAY_OF_MONTH);
+        
+        int todayYear = today.get(Calendar.YEAR);
+        int todayMonth = today.get(Calendar.MONTH);
+        int todayDay = today.get(Calendar.DAY_OF_MONTH);
+        
+        // 验证年份合理性
+        if (birthYear < 1900 || birthYear > todayYear) {
+            return 0;
+        }
+        
+        int age = todayYear - birthYear;
+        
+        // 检查是否还没过生日
+        if (todayMonth < birthMonth || 
+            (todayMonth == birthMonth && todayDay < birthDay)) {
+            age--;
+        }
+        
+        return age > 0 ? age : 0;
     }
 }

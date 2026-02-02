@@ -31,5 +31,5 @@ public interface UserService extends IService<User> {
     /**
      * 更新用户资料
      */
-    User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, Integer age, java.util.Date birthDate);
+    User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, java.util.Date birthDate);
 }

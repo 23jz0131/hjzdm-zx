@@ -41,7 +41,22 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.warn('API Error:', error);
+    console.error('API Error:', error);
+    
+    // 详细错误信息记录
+    if (error.response) {
+      console.error('Response Error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers
+      });
+    } else if (error.request) {
+      console.error('Request Error:', error.request);
+    } else {
+      console.error('Error Message:', error.message);
+    }
+    
     // 如果需要特定的错误处理逻辑，可以在这里添加
     // 例如：如果 401 未授权，跳转到登录页
     if (error.response && error.response.status === 401) {
@@ -49,6 +64,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('token');
         // window.location.href = '/login'; // 可选：自动跳转
     }
+    
     return Promise.reject(error);
   }
 );
@@ -148,6 +164,11 @@ export const disclosureApi = {
   // 删除爆料 (Delete disclosure)
   delete: (disclosureId: number) => {
     return apiClient.post('/disclosure/delete', { disclosureId });
+  },
+
+  // 获取我的收藏爆料
+  getMyCollect: (page: number = 1, size: number = 20) => {
+    return apiClient.post('/disclosure/myCollect', { pageNum: page, pageSize: size });
   }
 };
 
@@ -194,8 +215,30 @@ export const userApi = {
   localLogin: (loginData: { phone: string; password: string }) => {
     return apiClient.post('/user/localLogin', loginData);
   },
-  updateProfile: (profileData: { avatar?: string; nickname?: string; name?: string; gender?: number; age?: number; birthDate?: string | null }) => {
+  updateProfile: (profileData: { avatar?: string; nickname?: string; name?: string; gender?: number; birthDate?: string | null }) => {
     return apiClient.post('/user/updateProfile', profileData);
+  },
+  // 获取浏览历史
+  getHistory: (pageNum: number, pageSize: number) => {
+    return apiClient.get(`/user/browse-history?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  // 查询浏览历史（POST方式）
+  queryHistory: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/user/queryHistory', queryData);
+  },
+  // 添加浏览历史
+  addHistory: (goodsId: number) => {
+    return apiClient.post('/user/addHistory', { goodsId });
+  },
+  // 清空浏览历史
+  clearHistory: () => {
+    return apiClient.post('/user/clearHistory');
+  },
+  // 删除浏览历史
+  deleteHistory: (goodsId: number) => {
+    return apiClient.post('/user/deleteHistory', { goodsId }, {
+      params: { goodsId }
+    });
   }
 };
 

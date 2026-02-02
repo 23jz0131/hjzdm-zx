@@ -66,7 +66,7 @@ const RegisterPage: React.FC = () => {
     setSuccess(null);
 
     try {
-      // 调用真实API - 注册端点
+      // 実際のAPIを呼び出す - 登録エンドポイント
       const response = await userApi.register({
         username: formData.username,
         email: formData.email,
@@ -85,12 +85,12 @@ const RegisterPage: React.FC = () => {
           password: '',
           confirmPassword: ''
         });
-        // 3秒后跳转到登录页面
+        // 3秒後にログインページにリダイレクト
         setTimeout(() => {
           navigate('/profile-setup');
         }, 3000);
       } else {
-        // 尝试从响应中获取错误消息
+        // 応答からエラーメッセージを取得しようとする
         const errorMessage = response.data?.message || response.data?.msg || '登録に失敗しました。再試行してください。';
         setError(errorMessage);
       }

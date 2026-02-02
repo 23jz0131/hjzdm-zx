@@ -52,8 +52,98 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
 
             // 检查并添加USER表的新字段
             ensureUserTableColumns(conn, meta, dbProductName);
+            
+            // 检查并创建DISCLOSURE_LIKE表
+            ensureDisclosureLikeTable(conn, meta, dbProductName);
         } catch (Exception e) {
             log.error("Failed to update schema", e);
+        }
+    }
+
+    private void ensureDisclosureLikeTable(java.sql.Connection conn, java.sql.DatabaseMetaData meta,
+            String dbProductName) {
+        try {
+            // 检查DISCLOSURE_LIKE表是否存在
+            boolean tableExists = false;
+            try (java.sql.ResultSet tables = meta.getTables(null, null, "DISCLOSURE_LIKE", new String[] { "TABLE" })) {
+                if (tables.next()) {
+                    tableExists = true;
+                }
+            }
+
+            if (!tableExists) {
+                // 如果DISCLOSURE_LIKE表不存在，创建它
+                String createDisclosureLikeTableSql;
+                if ("H2".equalsIgnoreCase(dbProductName)) {
+                    createDisclosureLikeTableSql = "CREATE TABLE \"DISCLOSURE_LIKE\" (\n" +
+                            "    \"ID\" BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    \"USER_ID\" BIGINT NOT NULL,\n" +
+                            "    \"DISCLOSURE_ID\" BIGINT NOT NULL,\n" +
+                            "    \"CREATE_TIME\" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    UNIQUE KEY \"UK_USER_DISCLOSURE\" (\"USER_ID\", \"DISCLOSURE_ID\")\n" +
+                            ");";
+                } else {
+                    // MySQL
+                    createDisclosureLikeTableSql = "CREATE TABLE DISCLOSURE_LIKE (\n" +
+                            "    ID BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    USER_ID BIGINT NOT NULL,\n" +
+                            "    DISCLOSURE_ID BIGINT NOT NULL,\n" +
+                            "    CREATE_TIME TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    UNIQUE KEY UK_USER_DISCLOSURE (USER_ID, DISCLOSURE_ID)\n" +
+                            ");";
+                }
+
+                try (java.sql.Statement stmt = conn.createStatement()) {
+                    stmt.execute(createDisclosureLikeTableSql);
+                    log.info("Created DISCLOSURE_LIKE table");
+                }
+            } else {
+                log.info("DISCLOSURE_LIKE table already exists");
+            }
+        } catch (Exception e) {
+            log.error("Failed to ensure DISCLOSURE_LIKE table", e);
+        }
+        
+        // 确保DISCLOSURE_COLLECT表存在
+        try {
+            boolean collectTableExists = false;
+            try (java.sql.ResultSet tables = meta.getTables(null, null, "DISCLOSURE_COLLECT", new String[]{"TABLE"})) {
+                if (tables.next()) {
+                    collectTableExists = true;
+                }
+            }
+
+            if (!collectTableExists) {
+                // 如果DISCLOSURE_COLLECT表不存在，创建它
+                String createDisclosureCollectTableSql;
+                if ("H2".equalsIgnoreCase(dbProductName)) {
+                    createDisclosureCollectTableSql = "CREATE TABLE \"DISCLOSURE_COLLECT\" (\n" +
+                            "    \"ID\" BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    \"USER_ID\" BIGINT NOT NULL,\n" +
+                            "    \"DISCLOSURE_ID\" BIGINT NOT NULL,\n" +
+                            "    \"CREATE_TIME\" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    UNIQUE KEY \"UK_USER_DISCLOSURE_COLLECT\" (\"USER_ID\", \"DISCLOSURE_ID\")\n" +
+                            ");";
+                } else {
+                    // MySQL
+                    createDisclosureCollectTableSql = "CREATE TABLE DISCLOSURE_COLLECT (\n" +
+                            "    ID BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    USER_ID BIGINT NOT NULL,\n" +
+                            "    DISCLOSURE_ID BIGINT NOT NULL,\n" +
+                            "    CREATE_TIME TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    UNIQUE KEY UK_USER_DISCLOSURE_COLLECT (USER_ID, DISCLOSURE_ID)\n" +
+                            ");";
+                }
+
+                try (java.sql.Statement stmt = conn.createStatement()) {
+                    stmt.execute(createDisclosureCollectTableSql);
+                    log.info("Created DISCLOSURE_COLLECT table");
+                }
+            } else {
+                log.info("DISCLOSURE_COLLECT table already exists");
+            }
+        } catch (Exception e) {
+            log.error("Failed to ensure DISCLOSURE_COLLECT table", e);
         }
     }
 

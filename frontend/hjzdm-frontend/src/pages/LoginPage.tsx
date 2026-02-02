@@ -44,14 +44,14 @@ const LoginPage: React.FC = () => {
       // 调试日志 removed
       
       if (response.data && response.data.code === 200) {
-        // 登录成功，跳转到主页
+        // ログイン成功、ホームページにリダイレクト
         const token = response.data.token || response.data.data?.token;
         if (token) {
           localStorage.setItem('token', token);
         }
         navigate('/');
       } else {
-        // 尝试从响应中获取错误消息
+        // 応答からエラーメッセージを取得しようとする
         const errorMessage = response.data?.message || response.data?.msg || 'ログインに失敗しました。再試行してください。';
         setError(errorMessage);
       }

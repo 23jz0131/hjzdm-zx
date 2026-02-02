@@ -94,6 +94,51 @@ public class Disclosure implements Serializable {
     @Column(name = "STATUS")
     private Integer status;
 
+    // 以下字段用于返回给前端显示
+    @TableField(exist = false)
+    private Long likeCount; // 点赞数
+    
+    @TableField(exist = false)
+    private Boolean likedByCurrentUser; // 当前用户是否点赞
+    
+    @TableField(exist = false)
+    private Long collectCount; // 收藏数
+    
+    @TableField(exist = false)
+    private Boolean collectedByCurrentUser; // 当前用户是否收藏
+
+    // Getter和Setter方法
+    public Long getLikeCount() {
+        return likeCount != null ? likeCount : 0L;
+    }
+
+    public void setLikeCount(Long likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public Boolean getLikedByCurrentUser() {
+        return likedByCurrentUser != null ? likedByCurrentUser : false;
+    }
+
+    public void setLikedByCurrentUser(Boolean likedByCurrentUser) {
+        this.likedByCurrentUser = likedByCurrentUser;
+    }
+    
+    public Long getCollectCount() {
+        return collectCount != null ? collectCount : 0L;
+    }
+
+    public void setCollectCount(Long collectCount) {
+        this.collectCount = collectCount;
+    }
+
+    public Boolean getCollectedByCurrentUser() {
+        return collectedByCurrentUser != null ? collectedByCurrentUser : false;
+    }
+
+    public void setCollectedByCurrentUser(Boolean collectedByCurrentUser) {
+        this.collectedByCurrentUser = collectedByCurrentUser;
+    }
 }
 
 

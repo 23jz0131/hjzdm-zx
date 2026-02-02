@@ -143,4 +143,18 @@ public class DisclosureController {
         disclosureService.uncollect(userId, queryDto.getDisclosureId());
         return Result.success("ok", null);
     }
+
+    /**
+     * 查询我的收藏爆料
+     */
+    @PostMapping("/myCollect")
+    public Result queryMyCollect(@RequestBody QueryDTO queryDto) {
+        Long userId = BaseContext.getCurrentId();
+        if (userId == null) {
+            return Result.error("未登录");
+        }
+        queryDto.setUserId(userId);
+        List<Disclosure> disclosureList = disclosureService.queryMyCollect(queryDto);
+        return Result.success(disclosureList);
+    }
 }

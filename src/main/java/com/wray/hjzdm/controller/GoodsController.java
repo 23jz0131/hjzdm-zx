@@ -45,16 +45,6 @@ public class GoodsController {
         return Result.success(goods);
     }
 
-    @PostMapping("/addAndReturn")
-    public Result<Goods> addAndReturn(@RequestBody Goods goods) {
-        log.info("Received addAndReturn request: {}", JSON.toJSONString(goods));
-        boolean ok = goodsService.add(goods);
-        if (!ok) {
-            return Result.error("新增失败");
-        }
-        return Result.success(goods);
-    }
-
     @PostMapping("/search")
     public Result<List<Goods>> search(@RequestBody QueryDTO queryDto) {
         return Result.success(goodsService.queryGoods(queryDto));

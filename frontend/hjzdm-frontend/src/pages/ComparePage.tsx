@@ -139,10 +139,14 @@ const ComparePage: React.FC = () => {
   });
   
   // Search Source
-  const [searchSource, setSearchSource] = useState<'local' | 'compare'>(() => {
+  const [searchSource, setSearchSource] = useState<'local' | 'compare'>('compare');
+  
+  useEffect(() => {
     const saved = sessionStorage.getItem('comparePage_searchSource');
-    return saved || 'compare';
-  });
+    if (saved === 'local' || saved === 'compare') {
+      setSearchSource(saved);
+    }
+  }, []);
   
   const [executedQuery, setExecutedQuery] = useState(() => {
     const saved = sessionStorage.getItem('comparePage_executedQuery');
@@ -153,6 +157,8 @@ const ComparePage: React.FC = () => {
     const saved = sessionStorage.getItem('comparePage_totalItems');
     return saved ? parseInt(saved) : 0;
   });
+  
+
 
   // Dynamic Filters State
   const [categories, setCategories] = useState<{ catId: number, catName: string, children?: any[] }[]>([]);
@@ -160,7 +166,7 @@ const ComparePage: React.FC = () => {
   const [selectedDynamicFilters, setSelectedDynamicFilters] = useState<Record<string, string>>({});
   const [currentCatId, setCurrentCatId] = useState<number | null>(null);
 
-  // 保存状态到 sessionStorage
+  // 状態をsessionStorageに保存
   useEffect(() => {
     sessionStorage.setItem('comparePage_query', query);
   }, [query]);
@@ -274,7 +280,7 @@ const ComparePage: React.FC = () => {
     }).catch(err => console.warn("Failed to fetch categories", err));
   }, []);
 
-  // 仅在页面加载时，如果有URL参数，则执行搜索
+  // ページ読み込み時にURLパラメータがある場合のみ検索を実行
   useEffect(() => {
     if (query.trim()) {
       searchProducts(query);
@@ -335,7 +341,7 @@ const ComparePage: React.FC = () => {
             return next;
           });
         } else {
-          alert('请先登录');
+          alert('ログインしてください');
         }
       }
     } catch (e) {
@@ -347,7 +353,7 @@ const ComparePage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('请先登录');
+        alert('ログインしてください');
         return;
       }
       if (product.goodsId) {
@@ -367,7 +373,7 @@ const ComparePage: React.FC = () => {
         const newId = addRes.data.data.goodsId as number;
         await toggleCollect(newId);
       } else {
-        alert('新增商品失败');
+        alert('商品追加に失敗しました');
       }
     } catch (e) {
       alert('操作失败');
@@ -872,12 +878,14 @@ const ComparePage: React.FC = () => {
       return '不明な店铺';
     }
   };
+  
+
 
   // 清理函数 - 可选，如果想在页面卸载时清除存储数据
   useEffect(() => {
     return () => {
       // 这里可以选择清除部分存储的数据，或者保留它们以供下次访问
-      // 例如，我们可以保留搜索结果，但清除加载状态
+      // 例えば、検索結果を保持しつつ、読み込み状態をクリアできます
       sessionStorage.setItem('comparePage_loading', 'false');
     };
   }, []);
@@ -890,11 +898,11 @@ const ComparePage: React.FC = () => {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)} // 仅更新状态，不触发搜索
+            onChange={(e) => setQuery(e.target.value)} // 状態のみ更新、検索はトリガーしない
             placeholder="商品名を入力して価格比較..."
             className="search-input"
           />
-          <button type="submit" className="search-button">搜索</button>
+          <button type="submit" className="search-button">検索</button>
         </form>
       </div>
 
@@ -911,7 +919,7 @@ const ComparePage: React.FC = () => {
             {/* Dynamic Filters (Local Mode + Category Selected) */}
             {searchSource === 'local' && dynamicFilters.length > 0 && (
               <div className="sidebar-section dynamic-filters">
-                <h3 className="sidebar-title">属性筛选</h3>
+                <h3 className="sidebar-title">属性フィルター</h3>
                 {dynamicFilters.map(attr => (
                   <div key={attr.id} className="filter-group">
                     <h4>{attr.name}</h4>
@@ -946,7 +954,7 @@ const ComparePage: React.FC = () => {
             {/* Compare mode category filters removed by request */}
 
             <div className="sidebar-section">
-              <h3 className="sidebar-title">价格区间</h3>
+              <h3 className="sidebar-title">価格帯</h3>
               <div className="price-range-inputs">
                 <input type="number" placeholder="¥ min" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
                 <span>-</span>
@@ -966,11 +974,11 @@ const ComparePage: React.FC = () => {
           {/* Main Content Results */}
           <div className="main-content">
             <div className="results-header">
-              <h2>"{query}" 搜索结果 <span>({filteredProducts.length}件)</span></h2>
+              <h2>「{query}」 検索結果 <span>({filteredProducts.length}件)</span></h2>
               <div className="sort-bar">
-                <span className="sort-label">排序:</span>
-                <button className={`sort-tab ${sortOption === 'price_asc' ? 'active' : ''}`} onClick={() => setSortOption('price_asc')}>价格低到高</button>
-                <button className={`sort-tab ${sortOption === 'price_desc' ? 'active' : ''}`} onClick={() => setSortOption('price_desc')}>价格高到低</button>
+                <span className="sort-label">並び替え:</span>
+                <button className={`sort-tab ${sortOption === 'price_asc' ? 'active' : ''}`} onClick={() => setSortOption('price_asc')}>価格: 安い順</button>
+                <button className={`sort-tab ${sortOption === 'price_desc' ? 'active' : ''}`} onClick={() => setSortOption('price_desc')}>価格: 高い順</button>
                 <button className={`sort-tab ${sortOption === 'platform' ? 'active' : ''}`} onClick={() => setSortOption('platform')}>商城</button>
               </div>
             </div>
@@ -1016,7 +1024,8 @@ const ComparePage: React.FC = () => {
                     >
                       前往购买
                     </a>
-                    <button className="btn-trend" onClick={() => { ensureGoodsIdAndCollect(product); }}>{product.goodsId && collectedIds.has(product.goodsId) ? '取消收藏' : '收藏'}</button>
+                    <button className="btn-trend" onClick={() => { ensureGoodsIdAndCollect(product); }}>{product.goodsId && collectedIds.has(product.goodsId) ? 'お気に入り解除' : 'お気に入り'}</button>
+
                     <button className="btn-trend" onClick={() => {
                       const title = product.goodsName;
                       const labels = Array.from({ length: 12 }, (_, i) => {
@@ -1037,7 +1046,7 @@ const ComparePage: React.FC = () => {
                       setTrendLabels(labels);
                       setTrendSeries(series);
                       setTrendOpen(true);
-                    }}>价格走势</button>
+                    }}>価格推移</button>
                     <label className="compare-check">
                       <input type="checkbox" checked={isSelected(getSelectKey(product))} onChange={() => toggleSelect(product)} /> 对比
                     </label>
@@ -1073,7 +1082,7 @@ const ComparePage: React.FC = () => {
                       const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
                       const gridY = [0.25, 0.5, 0.75].map(r => height - padding - r * (height - 2 * padding));
                       return (
-                        <svg width={width} height={height} role="img" aria-label="价格趋势图">
+                        <svg width={width} height={height} role="img" aria-label="価格トレンドチャート">
                           {gridY.map((gy, i) => (
                             <line key={i} x1={padding} y1={gy} x2={width - padding} y2={gy} stroke="#eee" />
                           ))}

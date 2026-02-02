@@ -17,11 +17,16 @@ class WebSocketService {
 
   connect(userId?: number) {
     // 构建WebSocket连接URL
-    // 使用环境变量或默认后端地址，避免直接使用页面host可能导致的问题
+    // 在开发环境中，使用与页面相同的主机和端口，让代理处理转发
+    // 在生产环境中，根据实际部署情况连接到后端WebSocket服务
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const backendHost = process.env.REACT_APP_WS_HOST || 'localhost'; // 使用环境变量或默认localhost
-    const backendPort = process.env.REACT_APP_WS_PORT || 9090; // 使用环境变量或默认端口
-    const wsUrl = `${protocol}//${backendHost}:${backendPort}/ws`;
+    
+    // 使用与当前页面相同的主机和端口，适用于开发环境的代理转发
+    const wsHost = window.location.hostname;
+    const wsPort = window.location.port;
+    
+    // 如果当前页面使用的是HTTP(S)默认端口（80或443），则WebSocket URL中不包含端口
+    const wsUrl = wsPort ? `${protocol}//${wsHost}:${wsPort}/ws` : `${protocol}//${wsHost}/ws`;
     
     console.log('Attempting to connect to WebSocket:', wsUrl);
 

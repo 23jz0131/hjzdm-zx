@@ -16,12 +16,12 @@ const NotificationPage: React.FC = () => {
   const [list, setList] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 使用WebSocket接收实时通知
+  // WebSocketを使用してリアルタイム通知を受信
   useWebSocket({
     onMessage: (message) => {
       console.log('Received WebSocket message:', message);
       if (message.type === 'notification') {
-        // 收到新通知时刷新列表
+        // 新しい通知を受け取ったときにリストを更新
         load();
       }
     },
@@ -36,7 +36,7 @@ const NotificationPage: React.FC = () => {
     },
     onNotification: (notification) => {
       console.log('Received notification via WebSocket:', notification);
-      // 收到实时通知时刷新列表
+      // リアルタイム通知を受け取ったときにリストを更新
       load();
     }
   });
@@ -58,7 +58,7 @@ const NotificationPage: React.FC = () => {
   }, []);
 
   const handleRead = async (id: number) => {
-    // 乐观更新
+    // 楽観的更新
     setList(prev => prev.map(it => it.id === id ? { ...it, isRead: 1 } : it));
     try {
       await notificationApi.markAsRead(id);

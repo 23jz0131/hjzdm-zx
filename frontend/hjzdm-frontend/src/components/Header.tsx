@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { userApi } from '../services/api';
 import './Header.css';
 
 const Header: React.FC = () => {
@@ -7,9 +8,10 @@ const Header: React.FC = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // 检查当前是否在比价页面
+  // 現在価格比較ページかどうかをチェック
   const isComparePage = location.pathname === '/compare';
   const isHomePage = location.pathname === '/';
   const isAdminPage = location.pathname.includes('/admin');
@@ -17,17 +19,20 @@ const Header: React.FC = () => {
   const isLoginPage = location.pathname === '/login' || location.pathname === '/register';
   const isCommunityPage = location.pathname === '/community';
   const isRegisterPage = location.pathname === '/register'; // Also treat register separately for consistency
+  const isDisclosureCollectionPage = location.pathname === '/my-disclosure-collection';
+  const isMyTipPage = location.pathname === '/my-tip';
 
-  // 调试日志
+  // デバッグログ
   useEffect(() => {
     // Debug logs removed
-  }, [location.pathname, isComparePage, isHomePage, isAdminPage, isProfilePage, isLoginPage, isCommunityPage, isRegisterPage]);
+  }, [location.pathname, isComparePage, isHomePage, isAdminPage, isProfilePage, isLoginPage, isCommunityPage, isRegisterPage, isDisclosureCollectionPage, isMyTipPage]);
 
   const syncAuthState = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setIsLoggedIn(false);
       setUsername('');
+      setDisplayName('');
       setIsAdmin(false);
       return;
     }
@@ -37,13 +42,34 @@ const Header: React.FC = () => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const userId = payload?.userId;
-      setUsername(userId ? `ユーザー${userId}` : 'ユーザー');
+      setUsername(userId ? `user${userId}` : 'ユーザー');
 
       const adminStatus = payload?.userId === 1 || payload?.sub === 'admin' || payload?.username === 'admin' || payload?.name === 'admin';
       setIsAdmin(adminStatus);
+      
+      // 获取用户详细信息以显示昵称
+      fetchUserProfile();
     } catch {
       setUsername('ユーザー');
+      setDisplayName('ユーザー');
       setIsAdmin(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await userApi.getProfile();
+      if (response.data.code === 200 && response.data.data) {
+        const userProfile = response.data.data;
+        // 如果设置了昵称，显示昵称；否则显示用户名
+        const displayNameToShow = userProfile.nickname || userProfile.name || username;
+        setDisplayName(displayNameToShow);
+      } else {
+        setDisplayName(username);
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      setDisplayName(username);
     }
   };
 
@@ -51,21 +77,41 @@ const Header: React.FC = () => {
     syncAuthState();
   }, [location.pathname]);
 
+  // 监听localStorage变化，确保用户切换时能及时更新状态
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
+    const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
+        console.log('检测到token变化，重新同步用户状态');
         syncAuthState();
       }
     };
 
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // 定期检查token状态，确保状态同步
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem('token');
+      const storedPayload = currentToken ? JSON.parse(atob(currentToken.split('.')[1])) : null;
+      const currentUserId = storedPayload?.userId;
+      
+      // 如果用户ID发生变化，重新同步
+      if (isLoggedIn && currentUserId && currentUserId !== parseInt(username.replace('user', ''))) {
+        console.log('检测到用户ID变化，重新同步状态');
+        syncAuthState();
+      }
+    }, 1000); // 每秒检查一次
+
+    return () => clearInterval(interval);
+  }, [isLoggedIn, username]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     setUsername('');
+    setDisplayName('');
     setIsAdmin(false);
     navigate('/');
   };
@@ -75,7 +121,7 @@ const Header: React.FC = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const query = formData.get('query')?.toString();
     if (query) {
-      // 可以跳转到比价ページ并传递搜索参数
+      // 価格比較ページにリダイレクトし、検索パラメータを渡すことができます
       navigate(`/compare?query=${encodeURIComponent(query)}`);
     }
   };
@@ -96,7 +142,7 @@ const Header: React.FC = () => {
         <div className="user-actions">
           {isLoggedIn ? (
             <>
-              <span className="user-name">{username}</span>
+              <span className="user-name">{displayName || username}</span>
               <button onClick={handleLogout} className="logout-button">
                 ログアウト
               </button>
@@ -109,7 +155,7 @@ const Header: React.FC = () => {
           )}
         </div>
       </div>
-      {!isComparePage && !isHomePage && !isAdminPage && !isProfilePage && !isLoginPage && !isCommunityPage && !isRegisterPage && (
+      {!isComparePage && !isHomePage && !isAdminPage && !isProfilePage && !isLoginPage && !isCommunityPage && !isRegisterPage && !isDisclosureCollectionPage && !isMyTipPage && (
         <div className="header-search">
           <form onSubmit={handleSearch}>
             <input 

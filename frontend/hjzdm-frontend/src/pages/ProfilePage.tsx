@@ -26,12 +26,10 @@ const ProfilePage: React.FC = () => {
     name: '',
     nickname: '',
     gender: 0,
-    age: 0,
     birthDate: ''
   });
 
   const [featureCounts, setFeatureCounts] = useState([
-    { id: 1, name: 'マイコレクション', icon: '❤️', count: 0 },
     { id: 2, name: '閲覧履歴', icon: '🕒', count: 0 },
     { id: 4, name: 'マイヒント', icon: '📢', count: 0 },
     { id: 5, name: '通知', icon: '🔔', count: 0 }
@@ -76,7 +74,7 @@ const ProfilePage: React.FC = () => {
 
         let notiCount = 0;
         if (unreadList.length > 0) {
-          // 検查最新メッセージ時間是否晚于上次クリック時間
+          // 最新メッセージ時間が前回のクリック時間より新しいかチェック
           const latestMsg = unreadList[0]; // 假设后端已按時間倒序返回
           const latestTime = new Date(latestMsg.createTime).getTime();
           const lastCheck = parseInt(localStorage.getItem('last_notification_check_time') || '0');
@@ -114,42 +112,40 @@ const ProfilePage: React.FC = () => {
         return;
       }
 
+      // 修复日期格式化问题，确保正确显示YYYY-MM-DD格式
+      let formattedBirthDate = '';
+      if (me.birthDate) {
+        const birthDateObj = new Date(me.birthDate);
+        // 确保年份是4位数
+        const year = birthDateObj.getFullYear();
+        const month = String(birthDateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(birthDateObj.getDate()).padStart(2, '0');
+        formattedBirthDate = `${year}-${month}-${day}`;
+      }
+      
       setProfile({
         id: me.id,
         name: me.name || `ユーザー${me.id}`,
         nickname: me.nickname,
         avatar: me.avatar,
         gender: me.gender,
-        age: me.age,
-        birthDate: me.birthDate ? new Date(me.birthDate).toISOString().split('T')[0] : '' // 将日期转换为 YYYY-MM-DD 格式
+        birthDate: formattedBirthDate
       });
+      
       // 初始化编辑表单
       setEditForm({
         name: me.name || `ユーザー${me.id}`,
         nickname: me.nickname || '',
         gender: me.gender || 0,
-        age: me.age || 0,
-        birthDate: me.birthDate ? new Date(me.birthDate).toISOString().split('T')[0] : ''
+        birthDate: formattedBirthDate
+      });
+      
+      console.log('用户数据加载完成:', {
+        profile: me,
+        formattedBirthDate: formattedBirthDate
       });
 
-      // コレクション商品数の取得
-      try {
-        const collectResponse = await goodsApi.getMyCollect(1, 100);
-        if (collectResponse?.data?.code === 200) {
-          const collectData = collectResponse?.data?.data;
-          const collectCount = Array.isArray(collectData) ? collectData.length : (collectData?.records?.length || 0);
 
-          // コレクション数の更新
-          setFeatureCounts(prev =>
-            prev.map(item =>
-              item.id === 1 ? { ...item, count: collectCount } : item
-            )
-          );
-        }
-      } catch (collectError) {
-        console.warn('コレクション情報取得エラー:', collectError);
-        // 不显示收集错误，以免影響主流程
-      }
 
       // 閲覧履歴の取得
       try {
@@ -195,7 +191,7 @@ const ProfilePage: React.FC = () => {
 
           let notiCount = 0;
           if (unreadList.length > 0) {
-            // 検查最新メッセージ時間是否晚于上次クリック時間
+            // 最新メッセージ時間が前回のクリック時間より新しいかチェック
             const latestMsg = unreadList[0]; // 假设后端已按時間倒序返回
             const latestTime = new Date(latestMsg.createTime).getTime();
             const lastCheck = parseInt(localStorage.getItem('last_notification_check_time') || '0');
@@ -247,9 +243,6 @@ const ProfilePage: React.FC = () => {
 
   const handleFeatureClick = (id: number) => {
     switch (id) {
-      case 1:
-        navigate('/my-collection');
-        break;
       case 2:
         navigate('/my-collection');
         break;
@@ -274,9 +267,9 @@ const ProfilePage: React.FC = () => {
           name: profile.name || `ユーザー${profile.id}`,
           nickname: profile.nickname || '',
           gender: profile.gender || 0,
-          age: profile.age || 0,
           birthDate: profile.birthDate || ''
         });
+        setErrorMsg(null); // 清除错误信息
       }
     }
     setIsEditing(!isEditing);
@@ -286,21 +279,61 @@ const ProfilePage: React.FC = () => {
     const { name, value } = e.target;
     setEditForm(prev => ({
       ...prev,
-      [name]: name === 'age' ? Number(value) : value
+      [name]: value
     }));
+  };
+
+  // 计算年龄的辅助函数
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    
+    // 解析日期字符串，确保正确处理格式
+    let birth: Date;
+    if (birthDate.includes('T')) {
+      // ISO格式日期
+      birth = new Date(birthDate);
+    } else {
+      // YYYY-MM-DD格式日期
+      const parts = birthDate.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // 月份从0开始
+        const day = parseInt(parts[2], 10);
+        birth = new Date(year, month, day);
+      } else {
+        birth = new Date(birthDate);
+      }
+    }
+    
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age > 0 ? age : 0;
   };
 
   const handleSave = async () => {
     if (!profile) return;
 
     try {
+      console.log('准备更新用户资料:', {
+        nickname: editForm.nickname,
+        gender: editForm.gender,
+        birthDate: editForm.birthDate
+      });
+
       // 调用API更新用户资料
       const response = await userApi.updateProfile({
         nickname: editForm.nickname,
         gender: editForm.gender,
-        age: editForm.age,
         birthDate: editForm.birthDate
       });
+
+      console.log('API响应:', response);
 
       if (response.data.code === 200) {
         // 更新成功，更新本地状态
@@ -308,125 +341,207 @@ const ProfilePage: React.FC = () => {
           ...profile,
           nickname: editForm.nickname,
           gender: editForm.gender,
-          age: editForm.age,
           birthDate: editForm.birthDate
         });
         setIsEditing(false);
         alert('プロフィールが更新されました！');
+        setErrorMsg(null); // 清除错误信息
       } else {
-        setErrorMsg(response.data.message || '更新に失敗しました');
+        const errorMsg = response.data.message || '更新に失敗しました';
+        setErrorMsg(errorMsg);
+        console.error('更新失败:', errorMsg);
       }
-    } catch (error) {
-      setErrorMsg('プロフィールの更新中にエラーが発生しました');
-      console.error('プロフィール更新エラー:', error);
+    } catch (error: any) {
+      const errorMsg = 'プロフィールの更新中にエラーが発生しました';
+      setErrorMsg(errorMsg);
+      console.error('プロフィール更新错误:', error);
+      
+      // 显示更详细的错误信息
+      if (error.response) {
+        console.error('响应错误:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('请求错误:', error.request);
+      } else {
+        console.error('其他错误:', error.message);
+      }
     }
   };
 
   // 健康检查函数被移除
 
   return (
-    <div className="profile-page-wrapper" style={{ display: 'flex', maxWidth: '1200px', margin: '20px auto', gap: '20px', padding: '0 15px' }}>
-      <UserSidebar />
-      <div className="profile-page" style={{ flex: 1, padding: 0, margin: 0, maxWidth: 'none', minHeight: 'auto' }}>
-        <div className="profile-header">
-          <div className="user-info">
-            {!isEditing ? (
-              <>
-                <h2>{profile?.nickname || profile?.name || 'ユーザー'}</h2>
-                <div className="user-details">
-                  {profile?.gender !== undefined && profile.gender !== null && (
-                    <span>性別: {profile.gender === 1 ? '男性' : profile.gender === 2 ? '女性' : '未設定'}</span>
-                  )}
-                  {profile?.age && <span>, 年齢: {profile.age}</span>}
-                  {profile?.birthDate && <span>, 生年月日: {profile.birthDate}</span>}
-                </div>
-              </>
-            ) : (
-              <div className="edit-form">
-                <input
-                  type="text"
-                  name="nickname"
-                  value={editForm.nickname}
-                  onChange={handleInputChange}
-                  placeholder="ニックネーム"
-                  className="edit-input"
-                />
-                <select
-                  name="gender"
-                  value={editForm.gender}
-                  onChange={handleInputChange}
-                  className="edit-input"
-                >
-                  <option value={0}>未設定</option>
-                  <option value={1}>男性</option>
-                  <option value={2}>女性</option>
-                </select>
-                <input
-                  type="number"
-                  name="age"
-                  value={editForm.age || ''}
-                  onChange={handleInputChange}
-                  placeholder="年齢"
-                  className="edit-input"
-                  min="1"
-                  max="120"
-                />
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={editForm.birthDate}
-                  onChange={handleInputChange}
-                  className="edit-input"
-                />
+    <div className="profile-container">
+      <div className="profile-layout">
+        {/* 主要内容区域 */}
+        <div className="main-content">
+          {/* 用户头部信息 */}
+          <div className="user-header">
+            <div className="user-avatar-section">
+              <div className="avatar-placeholder">
+                <span className="avatar-initials">
+                  {(profile?.nickname?.charAt(0) || profile?.name?.charAt(0) || 'U').toUpperCase()}
+                </span>
               </div>
-            )}
+            </div>
+            
+            <div className="user-info-section">
+              <div className="user-main-info">
+                <h1 className="user-display-name">
+                  {profile?.nickname || profile?.name || 'ユーザー'}
+                </h1>
+                <div className="user-meta">
+                  {profile?.gender !== undefined && profile.gender !== null && (
+                    <span className="meta-item">
+                      {profile.gender === 1 ? '男性' : profile.gender === 2 ? '女性' : '未設定'}
+                    </span>
+                  )}
+                  {profile?.birthDate && (
+                    <span className="meta-item">
+                      {calculateAge(profile.birthDate)}歳
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="edit-action">
+                {!isEditing ? (
+                  <>
+                    <button className="edit-profile-btn" onClick={toggleEdit}>
+                      <span className="btn-icon">✏️</span>
+                      編集
+                    </button>
+                    {/* 测试按钮 - 仅在开发时使用 */}
+                    <button 
+                      className="test-btn" 
+                      onClick={async () => {
+                        try {
+                          const testResponse = await userApi.getProfile();
+                          console.log('测试API连接:', testResponse);
+                          alert('API连接正常');
+                        } catch (error) {
+                          console.error('API连接测试失败:', error);
+                          alert('API连接失败');
+                        }
+                      }}
+                      style={{ marginLeft: '10px', fontSize: '12px', padding: '4px 8px' }}
+                    >
+                      テスト
+                    </button>
+                  </>
+                ) : (
+                  <div className="edit-actions-inline">
+                    <button className="save-btn" onClick={handleSave}>保存</button>
+                    <button className="cancel-btn" onClick={toggleEdit}>キャンセル</button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="edit-button-group">
-            {!isEditing ? (
-              <button className="edit-profile-btn" onClick={toggleEdit}>プロフィールを編集</button>
-            ) : (
-              <>
-                <button className="save-profile-btn" onClick={handleSave}>保存</button>
-                <button className="cancel-edit-btn" onClick={toggleEdit}>キャンセル</button>
-              </>
-            )}
-          </div>
-        </div>
 
-        <div className="profile-features">
-          {errorMsg && (
-            <div style={{ background: '#fff3cd', border: '1px solid #ffeeba', color: '#856404', padding: '10px 12px', marginBottom: '10px', borderRadius: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>{errorMsg}</span>
-              <button
-                onClick={loadUserData}
-                style={{ background: '#ffc107', border: '1px solid #d39e00', color: '#856404', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-              >
-                再読み込み
-              </button>
+          {/* 编辑表单（仅在编辑模式下显示） */}
+          {isEditing && (
+            <div className="edit-form-section">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">ニックネーム</label>
+                  <input
+                    type="text"
+                    name="nickname"
+                    value={editForm.nickname}
+                    onChange={handleInputChange}
+                    placeholder="ニックネーム"
+                    className="form-input"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">性別</label>
+                  <select
+                    name="gender"
+                    value={editForm.gender}
+                    onChange={handleInputChange}
+                    className="form-select"
+                  >
+                    <option value={0}>未設定</option>
+                    <option value={1}>男性</option>
+                    <option value={2}>女性</option>
+                  </select>
+                </div>
+                
+
+                
+                <div className="form-group">
+                  <label className="form-label">生年月日</label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={editForm.birthDate}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    max="2020-12-31"  // 限制最大日期
+                    min="1900-01-01"  // 限制最小日期
+                  />
+                </div>
+              </div>
             </div>
           )}
-          {featureCounts.map(feature => (
-            <div
-              key={feature.id}
-              className="feature-item"
-              onClick={() => handleFeatureClick(feature.id)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="feature-icon">{feature.icon}</div>
-              <div className="feature-name">{feature.name}</div>
-              {feature.id === 5 && feature.count > 0 && <div className="feature-count">{feature.count}</div>}
-            </div>
-          ))}
-        </div>
 
-        {isAdmin && (
-          <div className="settings-section">
-            <div className="setting-item" onClick={() => navigate('/admin/disclosures')} style={{ cursor: 'pointer' }}>
-              <span>管理者：投稿審査</span>
-              <span className="arrow">›</span>
+          {/* 功能统计卡片 */}
+          <div className="stats-section">
+            {errorMsg && (
+              <div className="error-alert">
+                <span className="error-message">{errorMsg}</span>
+                <button className="retry-btn" onClick={loadUserData}>
+                  再読み込み
+                </button>
+              </div>
+            )}
+            
+            <div className="stats-grid">
+              {featureCounts.map(feature => (
+                <div
+                  key={feature.id}
+                  className="stat-card"
+                  onClick={() => handleFeatureClick(feature.id)}
+                >
+                  <div className="stat-icon-wrapper">
+                    <span className="stat-icon">{feature.icon}</span>
+                    {feature.id === 5 && feature.count > 0 && (
+                      <span className="badge-notification">{feature.count}</span>
+                    )}
+                  </div>
+                  <div className="stat-content">
+                    <h3 className="stat-name">{feature.name}</h3>
+                    <div className="stat-value">{feature.count}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* 管理员快捷入口 */}
+          {isAdmin && (
+            <div className="admin-shortcut">
+              <div className="shortcut-card" onClick={() => navigate('/admin/disclosures')}>
+                <div className="shortcut-content">
+                  <div className="shortcut-icon-wrapper">
+                    <span className="shortcut-icon">🛡️</span>
+                  </div>
+                  <div className="shortcut-text">
+                    <h3 className="shortcut-title">管理者パネル</h3>
+                    <p className="shortcut-desc">投稿審査・管理機能</p>
+                  </div>
+                </div>
+                <span className="shortcut-arrow">→</span>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* 侧边栏 */}
+        <div className="sidebar-content">
+          <UserSidebar />
+        </div>
       </div>
     </div>
   );
