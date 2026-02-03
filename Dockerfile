@@ -19,9 +19,56 @@ RUN rm -rf src/main/resources/static/*
 COPY --from=frontend-build /frontend/build ./src/main/resources/static
 RUN mvn -q -DskipTests package
 
-# Stage 3: Runtime
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-COPY --from=backend-build /app/target/HJZDM-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 9090
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Stage 3: Runtime with Nginx for static files
+FROM nginx:alpine AS nginx-runtime
+COPY --from=backend-build /app/target/HJZDM-0.0.1-SNAPSHOT.jar /app/app.jar
+
+# Copy static files to nginx
+COPY --from=frontend-build /frontend/build /usr/share/nginx/html
+
+# Create nginx config
+RUN echo '
+server {
+    listen 80;
+    server_name _;
+    
+    # Serve static files
+    location /static/ {
+        alias /usr/share/nginx/html/static/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location / {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # Proxy API requests to backend
+    location /api/ {
+        proxy_pass http://localhost:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /uploads/ {
+        proxy_pass http://localhost:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}' > /etc/nginx/conf.d/default.conf
+
+# Start both nginx and java backend
+COPY <<'EOF' /start.sh
+#!/bin/sh
+java -jar /app/app.jar &
+nginx -g 'daemon off;'
+EOF
+
+RUN chmod +x /start.sh
+EXPOSE 80 9090
+ENTRYPOINT ["/start.sh"]

@@ -1,9 +1,11 @@
 services:
   - type: web
-    name: hjzdm-frontend
-    env: static
-    buildCommand: echo "Using pre-built files"
-    staticPublishPath: ./frontend/hjzdm-frontend/build
+    name: hjzdm-fullstack
+    env: docker
+    plan: free
+    healthCheckPath: /
     envVars:
+      - key: SERVER_PORT
+        value: 9090
       - key: NODE_ENV
         value: production
