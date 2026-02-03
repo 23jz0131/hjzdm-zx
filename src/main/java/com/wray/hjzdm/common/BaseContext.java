@@ -16,4 +16,11 @@ public class BaseContext {
     public static Long getCurrentId() {
         return threadLocal.get();
     }
+    
+    /**
+     * 移除当前id
+     */
+    public static void removeCurrentId() {
+        threadLocal.remove();
+    }
 }

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserSidebar from '../components/UserSidebar';
 import { disclosureApi } from '../services/api';
+import './AdminDisclosurePage.css';
 
 interface Disclosure {
   disclosureId: number;
@@ -17,13 +18,45 @@ interface Disclosure {
 
 const AdminDisclosurePage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'pending' | 'public'>('pending');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'public'>('pending');
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<Disclosure[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [selectedImages, setSelectedImages] = useState<Record<number, string>>({}); // State to track selected image per item
+
+  // 添加图片URL转换函数
+  const convertImageUrl = (url: string): string => {
+    // 如果URL为空或无效，返回空字符串
+    if (!url) return '';
+    
+    // 如果是相对路径且以 /uploads/ 开头，则转换为完整的后端URL
+    if (url.startsWith('/uploads/')) {
+      // 在开发环境中，使用代理地址；在生产环境中使用绝对URL
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      if (isDevelopment) {
+        // 开发环境：通过代理访问后端的/uploads/路径
+        return url;
+      } else {
+        // 生产环境：使用完整的后端URL
+        return `http://localhost:9090${url}`;
+      }
+    }
+    
+    // 如果是完整的URL（包含http/https），直接返回
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // 其他情况（相对路径但不是/uploads/开头）也使用后端地址
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment) {
+      return url;
+    } else {
+      return `http://localhost:9090${url.startsWith('/') ? url : '/' + url}`;
+    }
+  };
 
   const isAdmin = (() => {
     const token = localStorage.getItem('token');
@@ -44,8 +77,17 @@ const AdminDisclosurePage: React.FC = () => {
       let res;
       if (activeTab === 'pending') {
         res = await disclosureApi.getPendingDisclosure(1, 200);
-      } else {
+      } else if (activeTab === 'public') {
         res = await disclosureApi.getPublicDisclosure(1, 200);
+      } else {
+        // 获取所有投稿
+        const pendingRes = await disclosureApi.getPendingDisclosure(1, 100);
+        const publicRes = await disclosureApi.getPublicDisclosure(1, 100);
+        res = {
+          data: {
+            data: [...(pendingRes.data?.data || []), ...(publicRes.data?.data || [])]
+          }
+        };
       }
       setItems(res.data?.data || []);
     } catch (e: any) {
@@ -96,66 +138,103 @@ const AdminDisclosurePage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', maxWidth: '1200px', margin: '20px auto', gap: '20px', padding: '0 15px' }}>
-      <div style={{ flex: 1, background: '#fff', padding: '20px', border: '1px solid #eee' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <h2 
-              onClick={() => setActiveTab('pending')}
-              style={{ 
-                margin: 0, 
-                cursor: 'pointer', 
-                color: activeTab === 'pending' ? '#333' : '#999',
-                borderBottom: activeTab === 'pending' ? '2px solid #333' : 'none',
-                paddingBottom: 4
-              }}
-            >
-              未承認リスト
-            </h2>
-            <h2 
-              onClick={() => setActiveTab('public')}
-              style={{ 
-                margin: 0, 
-                cursor: 'pointer', 
-                color: activeTab === 'public' ? '#333' : '#999',
-                borderBottom: activeTab === 'public' ? '2px solid #333' : 'none',
-                paddingBottom: 4
-              }}
-            >
-              公開済みリスト
-            </h2>
+    <div className="admin-disclosure-container">
+      <div className="profile-layout">
+        <div className="main-content">
+          {/* 管理员页面头部 - 类似个人页面的用户信息栏 */}
+          <div className="admin-user-header">
+            <div className="admin-avatar-section">
+              <div className="admin-avatar-placeholder">
+                <span className="admin-avatar-initials">🛡️</span>
+              </div>
+            </div>
+            
+            <div className="admin-info-section">
+              <div className="admin-main-info">
+                <h1 className="admin-display-name">
+                  投稿審査パネル
+                </h1>
+                <div className="admin-meta">
+                  <span className="meta-item">管理者専用</span>
+                  <span className="meta-item">コンテンツ監査</span>
+                </div>
+              </div>
+              
+              <div className="admin-actions">
+                <button
+                  onClick={() => navigate('/community')}
+                  className="action-button"
+                >
+                  コミュニティへ
+                </button>
+                <button
+                  onClick={load}
+                  disabled={loading}
+                  className={`action-button refresh-button ${loading ? 'disabled' : ''}`}
+                >
+                  {loading ? '読み込み中...' : '更新'}
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={() => navigate('/community')}
-              style={{ border: '1px solid #ddd', background: '#fff', padding: '8px 12px', cursor: 'pointer' }}
-            >
-              コミュニティへ
-            </button>
-            <button
-              onClick={load}
-              disabled={loading}
-              style={{ border: '1px solid #ddd', background: '#fff', padding: '8px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}
-            >
-              更新
-            </button>
-          </div>
-        </div>
 
-        {error && (
-          <div style={{ background: '#fff2f0', color: '#cf1322', border: '1px solid #ffccc7', padding: 10, marginBottom: 12 }}>
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div>読み込み中...</div>
-        ) : items.length === 0 ? (
-          <div style={{ color: '#666' }}>審査待ちの投稿はありません。</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {items.map((it) => {
+          {/* 统一审查面板 - 状态标签和内容一体化 */}
+          <div className="unified-review-panel">
+            {/* 状态标签栏 */}
+            <div className="status-tabs">
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`status-tab ${activeTab === 'all' ? 'active' : ''}`}
+              >
+                <span className="tab-icon">🏠</span>
+                全ての投稿 ({items.length})
+              </button>
+              <button 
+                onClick={() => setActiveTab('pending')}
+                className={`status-tab ${activeTab === 'pending' ? 'active' : ''}`}
+              >
+                <span className="tab-icon">⏳</span>
+                未承認 ({items.filter(item => item.status === 0).length})
+              </button>
+              <button 
+                onClick={() => setActiveTab('public')}
+                className={`status-tab ${activeTab === 'public' ? 'active' : ''}`}
+              >
+                <span className="tab-icon">✅</span>
+                公開済み ({items.filter(item => item.status === 1).length})
+              </button>
+            </div>
+            
+            {/* 分割线 */}
+            <div className="content-divider"></div>
+            
+            {/* 内容区域 */}
+            <div className="review-content">
+              {error && (
+                <div className="error-alert">
+                  {error}
+                </div>
+              )}
+              
+              {loading ? (
+                <div className="loading-container">読み込み中...</div>
+              ) : items.filter(item => 
+                activeTab === 'all' || 
+                (activeTab === 'pending' && item.status === 0) || 
+                (activeTab === 'public' && item.status === 1)
+              ).length === 0 ? (
+                <div className="empty-state">
+                  {activeTab === 'all' ? '投稿がありません。' : 
+                   activeTab === 'pending' ? '審査待ちの投稿はありません。' : 
+                   '公開済みの投稿はありません。'}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {items.filter(item => 
+                    activeTab === 'all' || 
+                    (activeTab === 'pending' && item.status === 0) || 
+                    (activeTab === 'public' && item.status === 1)
+                  ).map((it) => {
               const isExpanded = expandedId === it.disclosureId;
               return (
                 <div key={it.disclosureId} style={{ border: '1px solid #eee', borderRadius: 6, background: '#fff', overflow: 'hidden' }}>
@@ -226,9 +305,22 @@ const AdminDisclosurePage: React.FC = () => {
                                   }}
                                 >
                                   <img 
-                                    src={url} 
+                                    src={convertImageUrl(url)} 
                                     alt={`thumb-${idx}`} 
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    onError={(e) => {
+                                      console.error('Thumbnail load failed:', (e.target as HTMLImageElement).src);
+                                      const img = e.target as HTMLImageElement;
+                                      img.style.display = 'none';
+                                      const parent = img.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `
+                                          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;color:#ccc;font-size:10px;">
+                                            🖼️
+                                          </div>
+                                        `;
+                                      }
+                                    }}
                                   />
                                 </div>
                               ))}
@@ -311,8 +403,13 @@ const AdminDisclosurePage: React.FC = () => {
             })}
           </div>
         )}
+            </div>
+          </div>
+        </div>
+        <div className="sidebar-content">
+          <UserSidebar />
+        </div>
       </div>
-      <UserSidebar />
     </div>
   );
 };

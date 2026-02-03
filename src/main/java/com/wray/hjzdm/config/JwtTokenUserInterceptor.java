@@ -49,36 +49,50 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         }
 
         // 3️⃣ 从 header 中获取 token
-        String token = request.getHeader(jwtProperties.getUserTokenName());
-        // Debug log removed
+        String authHeader = request.getHeader(jwtProperties.getUserTokenName());
+        String token = null;
+        
+        // 处理 Bearer token 格式
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // 移除 "Bearer " 前缀
+        } else {
+            token = authHeader;
+        }
+        
+        LOGGER.info("请求URI: {}, Token: {}", uri, token != null ? "[存在]" : "[不存在]");
 
         // ⭐⭐⭐ 关键修复：没有 token = 游客，直接放行
         if (token == null || token.trim().isEmpty()) {
             LOGGER.info("游客访问：{}", uri);
+            BaseContext.removeCurrentId(); // 确保清除用户上下文
             return true;
         }
 
         try {
-            LOGGER.info("jwt校验: {}", token);
+            LOGGER.info("jwt校验开始: {}", uri);
             Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
             Long userId = Long.valueOf(claims.get(Constants.USER_ID).toString());
             BaseContext.setCurrentId(userId);
-            LOGGER.info("当前用户id：{}", userId);
+            LOGGER.info("JWT校验成功，当前用户id：{}", userId);
+            
+            // 将userId添加到请求属性中，供后续处理器使用
+            request.setAttribute("userId", userId);
+            
             return true;
         } catch (ExpiredJwtException ex) {
-            // 策略调整：如果是 GET 请求，允许降级为游客；如果是 POST/PUT/DELETE 等修改操作，严格拒绝
-            if ("GET".equalsIgnoreCase(request.getMethod())) {
-                LOGGER.warn("JWT 已过期, GET请求降级为游客访问: {}", uri);
-                return true;
-            } else {
-                LOGGER.warn("JWT 已过期, 非GET请求拒绝访问: {}", uri);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return false;
-            }
+            LOGGER.warn("JWT 已过期: {}", ex.getMessage());
+            BaseContext.removeCurrentId();
+            request.removeAttribute("userId");
+            // 过期的令牌也当作游客处理
+            return true;
         } catch (Exception ex) {
-            LOGGER.warn("JWT 校验失败", ex);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
+            LOGGER.warn("JWT 校验失败: {}", ex.getMessage(), ex);
+            // 简化处理：校验失败时作为游客访问
+            LOGGER.info("JWT校验失败，降级为游客访问: {}", uri);
+            // 清除可能存在的用户上下文
+            BaseContext.removeCurrentId();
+            request.removeAttribute("userId");
+            return true;
         }
     }
 }

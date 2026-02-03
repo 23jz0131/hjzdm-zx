@@ -31,28 +31,21 @@ function App() {
   return (
     <div className="App">
       <Header />
-      <main style={{ flex: 1, overflow: 'auto', zIndex: 1, position: 'relative' }}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/community" element={<CommunityPage />} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          {/* <Route path="/my-disclosure-collection" element={<ProtectedRoute><MyDisclosureCollectionPage /></ProtectedRoute>} /> */}
-          <Route path="/my-tip" element={<ProtectedRoute><MyTipPage /></ProtectedRoute>} />
-          <Route path="/submit-disclosure" element={<ProtectedRoute><SubmitDisclosurePage /></ProtectedRoute>} />
-          <Route path="/admin/disclosures" element={<ProtectedRoute><AdminDisclosurePage /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile-setup" element={<ProfileSetupPage />} />
-          {/* 测试路由已移除 */}
-          {/* <Route path="/test-profile" element={<TestProfileSave />} /> */}
-          {/* <Route path="/user-switch-test" element={<UserSwitchTest />} /> */}
-          {/* <Route path="/collection-count-test" element={<CollectionCountTest />} /> */}
-          {/* <Route path="/date-test" element={<DateTestPage />} /> */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </main>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile-setup" element={<ProfileSetupPage />} />
+        <Route path="/submit-disclosure" element={<ProtectedRoute><SubmitDisclosurePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/my-tip" element={<ProtectedRoute><MyTipPage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+        <Route path="/admin/disclosures" element={<ProtectedRoute><AdminDisclosurePage /></ProtectedRoute>} />
+        {/* 用户管理页面路由已移除 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       <Footer />
     </div>
   );

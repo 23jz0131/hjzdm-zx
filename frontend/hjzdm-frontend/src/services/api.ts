@@ -21,12 +21,13 @@ const apiClient = axios.create({
   },
 });
 
-// 请求拦截器
+// 请求拦截器 - 恢复认证相关代码
 apiClient.interceptors.request.use(
   (config) => {
+    // 添加Authorization header
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -35,35 +36,44 @@ apiClient.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// 响应拦截器 - 增强错误处理
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('API响应成功:', {
+      url: response.config.url,
+      method: response.config.method,
+      status: response.status,
+      data: response.data
+    });
     return response;
   },
   (error) => {
-    console.error('API Error:', error);
+    console.error('=== API请求错误详情 ===');
+    console.error('请求配置:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      headers: error.config?.headers,
+      data: error.config?.data
+    });
     
-    // 详细错误信息记录
     if (error.response) {
-      console.error('Response Error:', {
+      // 服务器响应了错误状态码
+      console.error('服务器响应错误:', {
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
         headers: error.response.headers
       });
     } else if (error.request) {
-      console.error('Request Error:', error.request);
+      // 请求已发出但没有收到响应
+      console.error('网络请求无响应:', error.request);
     } else {
-      console.error('Error Message:', error.message);
+      // 请求配置出错
+      console.error('请求配置错误:', error.message);
     }
     
-    // 如果需要特定的错误处理逻辑，可以在这里添加
-    // 例如：如果 401 未授权，跳转到登录页
-    if (error.response && error.response.status === 401) {
-        // 清除本地存储的令牌
-        localStorage.removeItem('token');
-        // window.location.href = '/login'; // 可选：自动跳转
-    }
+    console.error('完整错误对象:', error);
+    console.error('=======================');
     
     return Promise.reject(error);
   }

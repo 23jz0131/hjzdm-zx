@@ -236,4 +236,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         return age > 0 ? age : 0;
     }
+    
+    @Override
+    public void resetPassword(Long userId, String newPassword) {
+        if (userId == null) {
+            throw new RuntimeException("用户ID不能为空");
+        }
+        
+        if (!StringUtils.hasText(newPassword) || newPassword.length() < 6) {
+            throw new RuntimeException("密码至少6位");
+        }
+        
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        
+        // 加密新密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+        user.setUpdateTime(new Date());
+        
+        this.updateById(user);
+        
+        log.info("用户 {} 的密码已重置", userId);
+    }
 }

@@ -17,6 +17,8 @@ import com.wray.hjzdm.service.UserBrowseHistoryService;
 import com.wray.hjzdm.vo.UserLoginVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +33,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
@@ -99,14 +103,21 @@ public class UserController {
     public Result<?> getMe(HttpServletRequest request) {
         // 从BaseContext获取用户ID
         Long userId = BaseContext.getCurrentId();
+        
+        log.info("获取用户信息请求，用户ID: {}", userId);
+        
         if (userId == null) {
+            log.warn("用户未登录或JWT验证失败");
             return Result.error("未登录");
         }
 
         User user = userService.getUserProfile(userId);
         if (user == null) {
+            log.warn("用户不存在，用户ID: {}", userId);
             return Result.error("用户不存在");
         }
+        
+        log.info("成功获取用户信息，用户ID: {}, 用户名: {}", userId, user.getName());
 
         return Result.success(user);
     }
@@ -127,7 +138,26 @@ public class UserController {
         String avatar = (String) profileData.get("avatar");
         String nickname = (String) profileData.get("nickname");
         String name = (String) profileData.get("name");
-        Integer gender = (Integer) profileData.get("gender");
+        
+        // 安全地处理gender字段类型转换
+        Integer gender = null;
+        Object genderObj = profileData.get("gender");
+        if (genderObj != null) {
+            if (genderObj instanceof Integer) {
+                gender = (Integer) genderObj;
+            } else if (genderObj instanceof String) {
+                try {
+                    gender = Integer.parseInt((String) genderObj);
+                } catch (NumberFormatException e) {
+                    log.warn("性别字段格式错误: {}", genderObj);
+                    return Result.error("性别字段格式错误");
+                }
+            } else {
+                log.warn("性别字段类型错误: {}", genderObj.getClass());
+                return Result.error("性别字段类型错误");
+            }
+        }
+        
         String birthDateStr = (String) profileData.get("birthDate");
         
         Date parsedBirthDate = null;

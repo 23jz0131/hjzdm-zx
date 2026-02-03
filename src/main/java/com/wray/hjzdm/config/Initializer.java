@@ -53,6 +53,9 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
             // 检查并添加USER表的新字段
             ensureUserTableColumns(conn, meta, dbProductName);
             
+            // 创建默认管理员账户
+            createDefaultAdminAccount(conn, dbProductName);
+            
             // 检查并创建DISCLOSURE_LIKE表
             ensureDisclosureLikeTable(conn, meta, dbProductName);
         } catch (Exception e) {
@@ -344,5 +347,41 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
             }
         }
         log.info("=========================================");
+    }
+
+    private void createDefaultAdminAccount(java.sql.Connection conn, String dbProductName) {
+        try {
+            // 检查ID为1的用户是否存在
+            String checkUserSql = "SELECT COUNT(*) FROM USER WHERE ID = 1";
+            try (java.sql.PreparedStatement stmt = conn.prepareStatement(checkUserSql);
+                 java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    // 创建默认管理员账户
+                    String insertAdminSql;
+                    if ("H2".equalsIgnoreCase(dbProductName)) {
+                        insertAdminSql = "INSERT INTO \"USER\" (ID, NAME, PASSWORD, OPENID, CREATE_TIME) VALUES (?, ?, ?, ?, ?)";
+                    } else {
+                        insertAdminSql = "INSERT INTO USER (ID, NAME, PASSWORD, OPENID, CREATE_TIME) VALUES (?, ?, ?, ?, ?)";
+                    }
+                    
+                    // 使用BCrypt加密密码 "admin123"
+                    String encryptedPassword = "$2a$10$N.zmdr9KweCj85j6SSUSzuERH5/FjBGf4yEaArRLniRBjHkj0Piti";
+                    
+                    try (java.sql.PreparedStatement insertStmt = conn.prepareStatement(insertAdminSql)) {
+                        insertStmt.setLong(1, 1L); // 固定ID
+                        insertStmt.setString(2, "admin"); // 用户名
+                        insertStmt.setString(3, encryptedPassword); // 加密后的密码
+                        insertStmt.setString(4, "admin_openid"); // openid
+                        insertStmt.setTimestamp(5, new java.sql.Timestamp(System.currentTimeMillis())); // 创建时间
+                        insertStmt.executeUpdate();
+                        log.info("Created default admin account (username: admin, password: admin123)");
+                    }
+                } else {
+                    log.info("Admin account already exists");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to create default admin account", e);
+        }
     }
 }

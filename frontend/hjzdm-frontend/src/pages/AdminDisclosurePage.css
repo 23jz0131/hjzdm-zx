@@ -1,0 +1,378 @@
+.admin-disclosure-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.profile-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-content {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+/* 管理员页面头部 - 类似个人页面用户信息栏 */
+.admin-user-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-user-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.admin-avatar-section {
+  flex-shrink: 0;
+}
+
+.admin-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.admin-info-section {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-display-name {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+.admin-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* 统一审查面板 - 包含状态标签和内容的一体化设计 */
+.unified-review-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+/* 状态标签栏 */
+.status-tabs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 20px 20px 0 20px;
+}
+
+.status-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(241, 245, 249, 0.7);
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0;
+}
+
+/* 分割线 */
+.content-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+  margin: 15px 20px;
+  opacity: 0.6;
+}
+
+/* 内容区域 */
+.review-content {
+  padding: 0 20px 20px 20px;
+}
+
+.status-tab:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+.status-tab.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.tab-icon {
+  font-size: 18px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.action-button {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.refresh-button:hover {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.error-alert {
+  background: #fff2f0;
+  color: #cf1322;
+  border: 1px solid #ffccc7;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(255, 204, 199, 0.3);
+}
+
+.loading-container {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .profile-layout {
+    gap: 20px;
+  }
+  
+  .sidebar-content {
+    width: 240px;
+  }
+  
+  .status-tabs {
+    gap: 12px;
+  }
+  
+  .status-tab {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 992px) {
+  .admin-disclosure-container {
+    padding: 16px;
+  }
+  
+  .profile-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar-content {
+    width: 100%;
+    order: -1;
+  }
+  
+  .admin-user-header {
+    padding: 24px;
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .admin-info-section {
+    width: 100%;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .admin-meta {
+    justify-content: center;
+  }
+  
+  .review-status-bar {
+    padding: 16px;
+  }
+  
+  .status-tabs {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .admin-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-disclosure-container {
+    padding: 12px;
+  }
+  
+  .admin-user-header {
+    padding: 20px;
+  }
+  
+  .admin-avatar-placeholder {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+  
+  .admin-display-name {
+    font-size: 24px;
+  }
+  
+  .admin-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .meta-item {
+    font-size: 13px;
+    padding: 3px 10px;
+  }
+  
+  .review-status-bar {
+    padding: 16px;
+  }
+  
+  .status-tabs {
+    gap: 10px;
+  }
+  
+  .status-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .action-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-disclosure-container {
+    padding: 8px;
+  }
+  
+  .admin-user-header {
+    padding: 16px;
+  }
+  
+  .admin-avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+  
+  .admin-display-name {
+    font-size: 20px;
+  }
+  
+  .review-status-bar {
+    padding: 12px;
+  }
+  
+  .status-tabs {
+    gap: 8px;
+    flex-direction: column;
+  }
+  
+  .status-tab {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .admin-actions {
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .action-button {
+    padding: 8px 16px;
+    font-size: 12px;
+    flex: 1;
+    max-width: 150px;
+  }
+}

@@ -9,12 +9,12 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface DisclosureCollectMapper extends MyMapper<DisclosureCollect> {
     
-    @Select("SELECT COUNT(1) > 0 FROM disclosure_collect WHERE user_id = #{userId} AND disclosure_id = #{disclosureId}")
+    @Select("SELECT COUNT(1) > 0 FROM DISCLOSURE_COLLECT WHERE USER_ID = #{userId} AND DISCLOSURE_ID = #{disclosureId}")
     boolean existsByUserIdAndDisclosureId(@Param("userId") Long userId, @Param("disclosureId") Long disclosureId);
     
-    @Select("SELECT id FROM disclosure_collect WHERE user_id = #{userId} AND disclosure_id = #{disclosureId}")
+    @Select("SELECT ID FROM DISCLOSURE_COLLECT WHERE USER_ID = #{userId} AND DISCLOSURE_ID = #{disclosureId}")
     Long selectCollectIdByUserIdAndDisclosureId(@Param("userId") Long userId, @Param("disclosureId") Long disclosureId);
     
-    @Select("SELECT COUNT(*) FROM disclosure_collect WHERE disclosure_id = #{disclosureId}")
+    @Select("SELECT COUNT(*) FROM DISCLOSURE_COLLECT WHERE DISCLOSURE_ID = #{disclosureId}")
     Integer countCollectsByDisclosureId(@Param("disclosureId") Long disclosureId);
 }

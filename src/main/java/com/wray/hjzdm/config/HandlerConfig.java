@@ -114,6 +114,7 @@ public class HandlerConfig implements WebMvcConfigurer {
                         "/",
                         "/index.html",
                         "/static/**"
+                        // 移除了不再需要的auth路径排除
                 );
     }
 

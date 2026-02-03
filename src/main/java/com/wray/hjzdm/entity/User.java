@@ -101,6 +101,12 @@ public class User implements Serializable {
      */
     @Column(name = "BIRTH_DATE")
     private Date birthDate;
+    
+    /**
+     * 更新时间
+     */
+    @Column(name = "UPDATE_TIME")
+    private Date updateTime;
 
 }
 

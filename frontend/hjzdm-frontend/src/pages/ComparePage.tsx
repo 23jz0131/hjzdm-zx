@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './ComparePage.css';
-import { goodsApi, categoryApi, userApi, goodsOperateApi } from '../services/api';
+import { goodsApi, categoryApi, userApi } from '../services/api';
 
 interface Product {
   goodsId?: number;
@@ -78,6 +78,12 @@ const ComparePage: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
+  // 对比商品状态
+  const [compareProducts, setCompareProducts] = useState<Product[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_compareProducts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
     const saved = sessionStorage.getItem('comparePage_selectedBrands');
     return saved ? JSON.parse(saved) : [];
@@ -133,10 +139,7 @@ const ComparePage: React.FC = () => {
     return saved || '';
   });
   
-  const [collectedIds, setCollectedIds] = useState<Set<number>>(() => {
-    const saved = sessionStorage.getItem('comparePage_collectedIds');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+
   
   // Search Source
   const [searchSource, setSearchSource] = useState<'local' | 'compare'>('compare');
@@ -212,6 +215,10 @@ const ComparePage: React.FC = () => {
   }, [selectedKeys]);
   
   useEffect(() => {
+    sessionStorage.setItem('comparePage_compareProducts', JSON.stringify(compareProducts));
+  }, [compareProducts]);
+  
+  useEffect(() => {
     sessionStorage.setItem('comparePage_selectedBrands', JSON.stringify(selectedBrands));
   }, [selectedBrands]);
   
@@ -255,9 +262,7 @@ const ComparePage: React.FC = () => {
     sessionStorage.setItem('comparePage_trendTitle', trendTitle);
   }, [trendTitle]);
   
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_collectedIds', JSON.stringify(Array.from(collectedIds)));
-  }, [collectedIds]);
+
   
   useEffect(() => {
     sessionStorage.setItem('comparePage_searchSource', searchSource);
@@ -308,77 +313,11 @@ const ComparePage: React.FC = () => {
     }
   }, [selectedDynamicFilters, currentCatId, currentPage, pageSize, searchSource, selectedPlatforms]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await goodsApi.getMyCollect(1, 500);
-        if (res.data && res.data.code === 200 && Array.isArray(res.data.data)) {
-          const ids = res.data.data.map((g: { goodsId: number }) => g.goodsId).filter((id: number) => typeof id === 'number');
-          setCollectedIds(new Set(ids));
-        }
-      } catch (e) {
-      }
-    })();
-  }, []);
 
-  const toggleCollect = async (goodsId: number) => {
-    try {
-      if (collectedIds.has(goodsId)) {
-        const res = await goodsOperateApi.cancelCollect(goodsId);
-        if (res.data && res.data.code === 200) {
-          setCollectedIds(prev => {
-            const next = new Set(prev);
-            next.delete(goodsId);
-            return next;
-          });
-        }
-      } else {
-        const res = await goodsOperateApi.collect(goodsId);
-        if (res.data && res.data.code === 200) {
-          setCollectedIds(prev => {
-            const next = new Set(prev);
-            next.add(goodsId);
-            return next;
-          });
-        } else {
-          alert('ログインしてください');
-        }
-      }
-    } catch (e) {
-      alert('操作失败');
-    }
-  };
 
-  const ensureGoodsIdAndCollect = async (product: Product) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('ログインしてください');
-        return;
-      }
-      if (product.goodsId) {
-        await toggleCollect(product.goodsId);
-        return;
-      }
-      const payload: { goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number, status: number } = {
-        goodsName: product.goodsName,
-        goodsPrice: product.goodsPrice,
-        goodsLink: product.goodsLink,
-        imgUrl: product.imgUrl || '',
-        mallType: product.mallType,
-        status: 1
-      };
-      const addRes = await goodsApi.addAndReturn(payload);
-      if (addRes.data && addRes.data.code === 200 && addRes.data.data && addRes.data.data.goodsId) {
-        const newId = addRes.data.data.goodsId as number;
-        await toggleCollect(newId);
-      } else {
-        alert('商品追加に失敗しました');
-      }
-    } catch (e) {
-      alert('操作失败');
-    }
-  };
+
+
+
 
   const ensureGoodsIdAndHistory = async (product: Product, event?: React.MouseEvent) => {
     // 直接跳转，不再记录浏览历史
@@ -1024,7 +963,7 @@ const ComparePage: React.FC = () => {
                     >
                       前往购买
                     </a>
-                    <button className="btn-trend" onClick={() => { ensureGoodsIdAndCollect(product); }}>{product.goodsId && collectedIds.has(product.goodsId) ? 'お気に入り解除' : 'お気に入り'}</button>
+
 
                     <button className="btn-trend" onClick={() => {
                       const title = product.goodsName;
@@ -1060,6 +999,171 @@ const ComparePage: React.FC = () => {
               <span className="page-info">{currentPage} / {totalPages}</span>
               <button type="button" onClick={goNext} disabled={currentPage === totalPages}>下一页</button>
             </div>
+            
+            {/* 对比面板 */}
+            {compareProducts.length > 0 && (
+              <div className="compare-panel">
+                <div className="compare-panel-header">
+                  <h3>商品对比 ({compareProducts.length}/4)</h3>
+                  <button className="btn-clear-compare" onClick={() => {
+                    setSelectedKeys([]);
+                    setCompareProducts([]);
+                  }}>
+                    清空对比
+                  </button>
+                </div>
+                <div className="compare-products-grid">
+                  {compareProducts.map((product, index) => (
+                    <div key={index} className="compare-product-card">
+                      <button 
+                        className="btn-remove-compare" 
+                        onClick={() => toggleSelect(product)}
+                      >
+                        ×
+                      </button>
+                      <div className="compare-product-image">
+                        <img 
+                          src={product.imgUrl || '/images/default-product.png'} 
+                          alt={product.goodsName} 
+                          onError={(e) => (e.target as HTMLImageElement).src = '/images/default-product.png'} 
+                        />
+                      </div>
+                      <div className="compare-product-info">
+                        <h4 className="compare-product-name">{product.goodsName}</h4>
+                        <div className="compare-product-price">¥{product.goodsPrice.toLocaleString()}</div>
+                        <div className="compare-product-platform">
+                          <span className={`mall-tag mall-${product.mallType}`}>
+                            {getPlatformName(product.mallType)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {/* 占位符 */}
+                  {Array.from({ length: 4 - compareProducts.length }).map((_, index) => (
+                    <div key={`placeholder-${index}`} className="compare-product-placeholder">
+                      <div className="placeholder-content">
+                        等待添加商品
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 详细对比表格 */}
+                <div className="compare-details">
+                  <h4>详细参数对比</h4>
+                  <div className="compare-table-wrapper">
+                    <table className="compare-table">
+                      <thead>
+                        <tr>
+                          <th>参数</th>
+                          {compareProducts.map((product, index) => (
+                            <th key={index}>{product.goodsName.substring(0, 20)}...</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* 品牌 */}
+                        <tr>
+                          <td>品牌</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.brand || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 系列 */}
+                        <tr>
+                          <td>系列</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.series || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 型号 */}
+                        <tr>
+                          <td>型号</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.model || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 存储容量 */}
+                        <tr>
+                          <td>存储容量</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.storage || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 颜色 */}
+                        <tr>
+                          <td>颜色</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.color || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 尺寸 */}
+                        <tr>
+                          <td>尺寸</td>
+                          {compareProducts.map((product: Product, index: number) => {
+                            const facets = parseFacets(product.goodsName);
+                            return <td key={index}>{facets.size || '未知'}</td>;
+                          })}
+                        </tr>
+                        {/* 价格 */}
+                        <tr>
+                          <td>价格</td>
+                          {compareProducts.map((product: Product, index: number) => (
+                            <td key={index} className="price-cell">
+                              <span className="price-value">¥{product.goodsPrice.toLocaleString()}</span>
+                              {index === 0 && compareProducts.length > 1 && (
+                                <span className="price-diff">
+                                  (最低价)
+                                </span>
+                              )}
+                              {index > 0 && (
+                                <span className="price-diff">
+                                  (+¥{(product.goodsPrice - compareProducts[0].goodsPrice).toLocaleString()})
+                                </span>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                        {/* 平台 */}
+                        <tr>
+                          <td>销售平台</td>
+                          {compareProducts.map((product: Product, index: number) => (
+                            <td key={index}>
+                              <span className={`mall-tag mall-${product.mallType}`}>
+                                {getPlatformName(product.mallType)}
+                              </span>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* 购买链接 */}
+                        <tr>
+                          <td>购买操作</td>
+                          {compareProducts.map((product: Product, index: number) => (
+                            <td key={index}>
+                              <a
+                                href={product.goodsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-buy-small"
+                                onClick={(e) => { ensureGoodsIdAndHistory(product, e); }}
+                              >
+                                前往购买
+                              </a>
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {trendOpen && (

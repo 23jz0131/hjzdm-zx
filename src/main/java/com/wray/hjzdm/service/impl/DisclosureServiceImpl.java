@@ -66,9 +66,12 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
         Long currentId = BaseContext.getCurrentId();
         if (currentId == null)
             return false;
-        if (ADMIN_USER_ID.equals(currentId))
+        
+        // 检查是否为管理员ID
+        if (currentId.equals(ADMIN_USER_ID))
             return true;
 
+        // 检查用户名是否为admin
         com.wray.hjzdm.entity.User user = userMapper.selectById(currentId);
         return user != null && "admin".equals(user.getName());
     }
@@ -130,13 +133,17 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
     }
 
     @Override
-    public void like(Long userId, Long disclosureId) {
+    public boolean like(Long userId, Long disclosureId) {
+        System.out.println("开始点赞操作: userId=" + userId + ", disclosureId=" + disclosureId);
+        
         // 检查是否已点赞，避免重复点赞
         DisclosureLike existingLike = disclosureLikeMapper.selectOne(
             new QueryWrapper<DisclosureLike>()
                 .eq("USER_ID", userId)
                 .eq("DISCLOSURE_ID", disclosureId)
         );
+        
+        System.out.println("查询现有点赞记录结果: " + (existingLike != null ? "已存在" : "不存在"));
         
         if (existingLike == null) {
             // 创建新的点赞记录
@@ -145,24 +152,55 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                 .disclosureId(disclosureId)
                 .createTime(java.time.LocalDateTime.now())
                 .build();
-            disclosureLikeMapper.insert(like);
+            
+            System.out.println("准备插入新点赞记录: " + like);
+            int result = disclosureLikeMapper.insert(like);
+            System.out.println("插入结果: " + result);
+            
+            // 验证插入是否成功
+            DisclosureLike verifyLike = disclosureLikeMapper.selectOne(
+                new QueryWrapper<DisclosureLike>()
+                    .eq("USER_ID", userId)
+                    .eq("DISCLOSURE_ID", disclosureId)
+            );
+            System.out.println("验证查询结果: " + (verifyLike != null ? "成功" : "失败"));
+            
+            return result > 0; // 返回true表示确实进行了点赞操作
         }
+        System.out.println("用户已点赞，无需重复操作");
+        return false; // 已经点赞过，没有进行操作
     }
 
     @Override
-    public void unlike(Long userId, Long disclosureId) {
-        // 删除用户的点赞记录
-        disclosureLikeMapper.delete(
+    public boolean unlike(Long userId, Long disclosureId) {
+        // 检查是否存在点赞记录
+        DisclosureLike existingLike = disclosureLikeMapper.selectOne(
             new QueryWrapper<DisclosureLike>()
                 .eq("USER_ID", userId)
                 .eq("DISCLOSURE_ID", disclosureId)
         );
+        
+        if (existingLike != null) {
+            // 删除用户的点赞记录
+            int result = disclosureLikeMapper.delete(
+                new QueryWrapper<DisclosureLike>()
+                    .eq("USER_ID", userId)
+                    .eq("DISCLOSURE_ID", disclosureId)
+            );
+            System.out.println("取消点赞删除结果: " + result);
+            return result > 0; // 返回true表示确实进行了取消点赞操作
+        }
+        System.out.println("用户未点赞，无法取消");
+        return false; // 没有点赞记录，没有进行操作
     }
 
     @Override
     public boolean isLikedByUser(Long userId, Long disclosureId) {
+        System.out.println("检查用户点赞状态: userId=" + userId + ", disclosureId=" + disclosureId);
         Long likeId = disclosureLikeMapper.selectUserIdByDisclosureId(userId, disclosureId);
-        return likeId != null;
+        boolean result = likeId != null;
+        System.out.println("点赞状态检查结果: " + result + ", likeId=" + likeId);
+        return result;
     }
 
     @Override
@@ -172,7 +210,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
     }
 
     @Override
-    public void collect(Long userId, Long disclosureId) {
+    public boolean collect(Long userId, Long disclosureId) {
         System.out.println("收藏操作: userId=" + userId + ", disclosureId=" + disclosureId);
         // 检查是否已收藏，避免重复收藏
         DisclosureCollect existingCollect = disclosureCollectMapper.selectOne(
@@ -188,23 +226,37 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                 .disclosureId(disclosureId)
                 .createTime(java.time.LocalDateTime.now())
                 .build();
-            disclosureCollectMapper.insert(collect);
-            System.out.println("新建收藏记录成功");
+            int result = disclosureCollectMapper.insert(collect);
+            System.out.println("新建收藏记录结果: " + result);
+            return result > 0; // 返回true表示确实进行了收藏操作
         } else {
             System.out.println("已存在收藏记录");
+            return false; // 已经收藏过，没有进行操作
         }
     }
 
     @Override
-    public void uncollect(Long userId, Long disclosureId) {
+    public boolean uncollect(Long userId, Long disclosureId) {
         System.out.println("取消收藏操作: userId=" + userId + ", disclosureId=" + disclosureId);
-        // 删除用户的收藏记录
-        int result = disclosureCollectMapper.delete(
+        // 检查是否存在收藏记录
+        DisclosureCollect existingCollect = disclosureCollectMapper.selectOne(
             new QueryWrapper<DisclosureCollect>()
                 .eq("USER_ID", userId)
                 .eq("DISCLOSURE_ID", disclosureId)
         );
-        System.out.println("删除收藏记录结果: " + result);
+        
+        if (existingCollect != null) {
+            // 删除用户的收藏记录
+            int result = disclosureCollectMapper.delete(
+                new QueryWrapper<DisclosureCollect>()
+                    .eq("USER_ID", userId)
+                    .eq("DISCLOSURE_ID", disclosureId)
+            );
+            System.out.println("删除收藏记录结果: " + result);
+            return result > 0; // 返回true表示确实进行了取消收藏操作
+        }
+        System.out.println("用户未收藏，无法取消");
+        return false; // 没有收藏记录，没有进行操作
     }
 
     @Override

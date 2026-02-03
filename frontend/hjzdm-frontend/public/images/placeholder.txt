@@ -1,0 +1,7 @@
+图片资源目录
+请在此目录下放置以下图片文件：
+- dianzan.png (未点赞图标)
+- yidianzan.png (已点赞图标)  
+- shoucang.png (未收藏图标)
+- yishoucang.png (已收藏图标)
+- pinglun.png (评论图标)

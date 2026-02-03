@@ -1,6 +1,8 @@
 package com.wray.hjzdm.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -110,8 +112,10 @@ public class DisclosureController {
         if (userId == null) {
             return Result.error("未登录");
         }
-        disclosureService.like(userId, queryDto.getDisclosureId());
-        return Result.success("ok", null);
+        boolean changed = disclosureService.like(userId, queryDto.getDisclosureId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("changed", changed);
+        return Result.success("ok", result);
     }
 
     @PostMapping("/unlike")
@@ -120,8 +124,10 @@ public class DisclosureController {
         if (userId == null) {
             return Result.error("未登录");
         }
-        disclosureService.unlike(userId, queryDto.getDisclosureId());
-        return Result.success("ok", null);
+        boolean changed = disclosureService.unlike(userId, queryDto.getDisclosureId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("changed", changed);
+        return Result.success("ok", result);
     }
 
     @PostMapping("/collect")
@@ -130,8 +136,10 @@ public class DisclosureController {
         if (userId == null) {
             return Result.error("未登录");
         }
-        disclosureService.collect(userId, queryDto.getDisclosureId());
-        return Result.success("ok", null);
+        boolean changed = disclosureService.collect(userId, queryDto.getDisclosureId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("changed", changed);
+        return Result.success("ok", result);
     }
 
     @PostMapping("/uncollect")
@@ -140,8 +148,10 @@ public class DisclosureController {
         if (userId == null) {
             return Result.error("未登录");
         }
-        disclosureService.uncollect(userId, queryDto.getDisclosureId());
-        return Result.success("ok", null);
+        boolean changed = disclosureService.uncollect(userId, queryDto.getDisclosureId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("changed", changed);
+        return Result.success("ok", result);
     }
 
     /**

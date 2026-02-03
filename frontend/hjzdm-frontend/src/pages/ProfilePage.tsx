@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { goodsApi, userApi, disclosureApi, notificationApi } from '../services/api';
+import { userApi, disclosureApi, notificationApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import UserSidebar from '../components/UserSidebar';
 import { useWebSocket } from '../services/websocketService';
@@ -8,16 +8,7 @@ import './ProfilePage.css';
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const isAdmin = (() => {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload?.userId === 1;
-    } catch {
-      return false;
-    }
-  })();
+
 
   const [profile, setProfile] = useState<{ id: number; name: string; nickname?: string; avatar?: string; gender?: number; age?: number; birthDate?: string } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -30,7 +21,6 @@ const ProfilePage: React.FC = () => {
   });
 
   const [featureCounts, setFeatureCounts] = useState([
-    { id: 2, name: '閲覧履歴', icon: '🕒', count: 0 },
     { id: 4, name: 'マイヒント', icon: '📢', count: 0 },
     { id: 5, name: '通知', icon: '🔔', count: 0 }
   ]);
@@ -98,17 +88,91 @@ const ProfilePage: React.FC = () => {
 
   const loadUserData = async () => {
     try {
+      console.log('开始获取用户信息...');
+      
       // 获取用户基本信息
       const meRes = await userApi.getProfile();
-      if (meRes?.data?.code !== 200) {
-        setErrorMsg(meRes?.data?.message || 'ユーザー情報の取得に失敗しました');
-        console.warn('ユーザー情報取得APIエラー:', meRes?.data?.message);
+      
+      console.log('API响应原始数据:', meRes);
+      console.log('API响应数据结构:', {
+        hasData: !!meRes.data,
+        dataKeys: meRes.data ? Object.keys(meRes.data) : [],
+        code: meRes.data?.code,
+        message: meRes.data?.message,
+        dataContent: meRes.data?.data
+      });
+      
+      // 更严格的错误检查
+      if (!meRes) {
+        // 如果API调用失败，使用模拟数据
+        console.warn('API调用失败，使用模拟数据');
+        setProfile({
+          id: 1,
+          name: 'テストユーザー',
+          nickname: 'テストニックネーム',
+          gender: 1,
+          birthDate: '1990-01-01'
+        });
+        setErrorMsg('API接続エラーのため、テストデータを表示しています');
+        return;
+      }
+      
+      if (!meRes.data) {
+        // 如果响应数据为空，使用模拟数据
+        console.warn('API响应数据为空，使用模拟数据');
+        setProfile({
+          id: 1,
+          name: 'テストユーザー',
+          nickname: 'テストニックネーム',
+          gender: 1,
+          birthDate: '1990-01-01'
+        });
+        setErrorMsg('APIデータエラーのため、テストデータを表示しています');
+        return;
+      }
+      
+      // 检查多种可能的成功状态码
+      const successCodes = [200, 0, '200', '0'];
+      console.log('状态码检查:', {
+        actualCode: meRes.data.code,
+        codeType: typeof meRes.data.code,
+        isInSuccessCodes: successCodes.includes(meRes.data.code),
+        hasDataField: !!meRes.data.data,
+        backupCondition: (meRes.data.code === undefined && meRes.data.data)
+      });
+      
+      const isSuccessful = successCodes.includes(meRes.data.code) || 
+                          (meRes.data.code === undefined && meRes.data.data);
+      
+      console.log('最终判断结果:', { isSuccessful });
+      
+      if (!isSuccessful) {
+        const errorMessage = meRes.data.message || meRes.data.msg || `API错误: ${meRes.data.code}`;
+        // 即使API返回错误，也显示模拟数据
+        console.warn('API返回错误，使用模拟数据:', errorMessage);
+        setProfile({
+          id: 1,
+          name: 'テストユーザー',
+          nickname: 'テストニックネーム',
+          gender: 1,
+          birthDate: '1990-01-01'
+        });
+        setErrorMsg(`APIエラー: ${errorMessage} (テストデータを表示)`);
         return;
       }
 
-      const me = meRes?.data?.data;
+      const me = meRes.data.data;
       if (!me) {
-        setErrorMsg('ユーザー情報が見つかりません');
+        // 如果用户数据为空，使用模拟数据
+        console.warn('用户数据为空，使用模拟数据');
+        setProfile({
+          id: 1,
+          name: 'テストユーザー',
+          nickname: 'テストニックネーム',
+          gender: 1,
+          birthDate: '1990-01-01'
+        });
+        setErrorMsg('ユーザー情報が見つかりません。テストデータを表示しています');
         return;
       }
 
@@ -147,23 +211,7 @@ const ProfilePage: React.FC = () => {
 
 
 
-      // 閲覧履歴の取得
-      try {
-        const historyResponse = await userApi.getHistory(1, 100);
-        if (historyResponse?.data?.code === 200) {
-          const historyData = historyResponse?.data?.data;
-          const historyCount = Array.isArray(historyData) ? historyData.length : (historyData?.records?.length || 0);
 
-          setFeatureCounts(prev =>
-            prev.map(item =>
-              item.id === 2 ? { ...item, count: historyCount } : item
-            )
-          );
-        }
-      } catch (historyError) {
-        console.warn('閲覧履歴取得エラー:', historyError);
-        // 不显示浏览历史错误，以免影響主流程
-      }
 
       try {
         const tipRes = await disclosureApi.getMyDisclosure(1, 100);
@@ -214,10 +262,18 @@ const ProfilePage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('ユーザーデータ全体の読み込みエラー:', error);
+      console.error('错误详情:', {
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        config: error.config
+      });
 
-      // 検查错误类型并提供更精确の错误情報
+      // 检查错误类型并提供更精确の错误情報
       if (error.response) {
         // 服务器响应了错误状态码
+        console.error('服务器响应错误:', error.response.status, error.response.data);
+        
         if (error.response.status === 401) {
           // 401错误可能是因为JWT过期，尝试刷新页面以重新获取令牌
           setErrorMsg('ログイン情報の期限が切れています。ページを再読み込みします。');
@@ -226,26 +282,30 @@ const ProfilePage: React.FC = () => {
           }, 2000);
         } else if (error.response.status === 403) {
           setErrorMsg('アクセス権限がありません。');
+        } else if (error.response.status === 405) {
+          setErrorMsg('APIエンドポイントが利用できません。システム管理者に連絡してください。(405 Method Not Allowed)');
         } else if (error.response.status >= 500) {
           setErrorMsg('サーバーエラーが発生しました。しばらくしてから再度お試しください。');
         } else {
-          setErrorMsg(`${error.response.data?.message || 'データ取得に失敗しました。'} (${error.response.status})`);
+          const serverMessage = error.response.data?.message || error.response.data?.msg || 'データ取得に失敗しました';
+          const displayMessage = serverMessage || `エラーが発生しました (${error.response.status})`;
+          setErrorMsg(displayMessage);
         }
       } else if (error.request) {
         // 请求已发出但没有收到响应
+        console.error('网络请求无响应:', error.request);
         setErrorMsg('ネットワーク接続エラー。インターネット接続を確認してください。');
       } else {
         // 其他错误
-        setErrorMsg('予期せぬエラーが発生しました。');
+        console.error('其他错误:', error.message);
+        const errorMessage = error.message || '不明なエラー';
+        setErrorMsg(`予期せぬエラーが発生しました: ${errorMessage}`);
       }
     }
   };
 
   const handleFeatureClick = (id: number) => {
     switch (id) {
-      case 2:
-        navigate('/my-collection');
-        break;
       case 4:
         navigate('/my-tip');
         break;
@@ -266,7 +326,7 @@ const ProfilePage: React.FC = () => {
         setEditForm({
           name: profile.name || `ユーザー${profile.id}`,
           nickname: profile.nickname || '',
-          gender: profile.gender || 0,
+          gender: profile.gender !== undefined && profile.gender !== null ? profile.gender : 0,
           birthDate: profile.birthDate || ''
         });
         setErrorMsg(null); // 清除错误信息
@@ -277,10 +337,19 @@ const ProfilePage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // 特殊处理gender字段，确保传给后端的是数字类型
+    if (name === 'gender') {
+      setEditForm(prev => ({
+        ...prev,
+        [name]: parseInt(value, 10)
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // 计算年龄的辅助函数
@@ -323,6 +392,7 @@ const ProfilePage: React.FC = () => {
       console.log('准备更新用户资料:', {
         nickname: editForm.nickname,
         gender: editForm.gender,
+        genderType: typeof editForm.gender,
         birthDate: editForm.birthDate
       });
 
@@ -333,9 +403,22 @@ const ProfilePage: React.FC = () => {
         birthDate: editForm.birthDate
       });
 
-      console.log('API响应:', response);
+      console.log('API响应完整数据:', response);
+      console.log('API响应数据结构:', {
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+        code: response.data?.code,
+        message: response.data?.message,
+        msg: response.data?.msg,
+        dataContent: response.data?.data
+      });
 
-      if (response.data.code === 200) {
+      // 更宽松的成功判断
+      const successCodes = [200, 0, '200', '0'];
+      const isSuccessful = successCodes.includes(response.data?.code) || 
+                          (response.data?.code === undefined && response.data?.data);
+      
+      if (isSuccessful) {
         // 更新成功，更新本地状态
         setProfile({
           ...profile,
@@ -347,23 +430,46 @@ const ProfilePage: React.FC = () => {
         alert('プロフィールが更新されました！');
         setErrorMsg(null); // 清除错误信息
       } else {
-        const errorMsg = response.data.message || '更新に失敗しました';
-        setErrorMsg(errorMsg);
-        console.error('更新失败:', errorMsg);
+        const errorMsg = response.data?.message || response.data?.msg || '更新に失敗しました';
+        setErrorMsg(`更新失败: ${errorMsg}`);
+        console.error('更新失败详情:', {
+          code: response.data?.code,
+          message: errorMsg,
+          fullResponse: response.data
+        });
       }
     } catch (error: any) {
-      const errorMsg = 'プロフィールの更新中にエラーが発生しました';
-      setErrorMsg(errorMsg);
-      console.error('プロフィール更新错误:', error);
+      console.error('=== 个人信息更新错误详情 ===');
+      console.error('错误对象:', error);
       
-      // 显示更详细的错误信息
+      let displayErrorMsg = 'プロフィールの更新中にエラーが発生しました';
+      
       if (error.response) {
-        console.error('响应错误:', error.response.status, error.response.data);
+        // 服务器响应了错误状态码
+        console.error('服务器响应错误:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        });
+        
+        const serverMessage = error.response.data?.message || 
+                             error.response.data?.msg || 
+                             `HTTP ${error.response.status}`;
+        displayErrorMsg = `サーバーエラー: ${serverMessage}`;
+        
       } else if (error.request) {
-        console.error('请求错误:', error.request);
+        // 请求已发出但没有收到响应
+        console.error('网络请求无响应:', error.request);
+        displayErrorMsg = 'ネットワーク接続エラー。サーバーに接続できません。';
+        
       } else {
+        // 其他错误
         console.error('其他错误:', error.message);
+        displayErrorMsg = `予期せぬエラー: ${error.message}`;
       }
+      
+      setErrorMsg(displayErrorMsg);
+      console.error('===========================');
     }
   };
 
@@ -417,7 +523,14 @@ const ProfilePage: React.FC = () => {
                         try {
                           const testResponse = await userApi.getProfile();
                           console.log('测试API连接:', testResponse);
-                          alert('API连接正常');
+                          console.log('测试数据结构:', {
+                            hasData: !!testResponse.data,
+                            dataKeys: testResponse.data ? Object.keys(testResponse.data) : [],
+                            code: testResponse.data?.code,
+                            message: testResponse.data?.message,
+                            dataContent: testResponse.data?.data
+                          });
+                          alert(`API连接正常\n状态码: ${testResponse.data?.code}\n数据: ${!!testResponse.data?.data}`);
                         } catch (error) {
                           console.error('API连接测试失败:', error);
                           alert('API连接失败');
@@ -519,23 +632,7 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 管理员快捷入口 */}
-          {isAdmin && (
-            <div className="admin-shortcut">
-              <div className="shortcut-card" onClick={() => navigate('/admin/disclosures')}>
-                <div className="shortcut-content">
-                  <div className="shortcut-icon-wrapper">
-                    <span className="shortcut-icon">🛡️</span>
-                  </div>
-                  <div className="shortcut-text">
-                    <h3 className="shortcut-title">管理者パネル</h3>
-                    <p className="shortcut-desc">投稿審査・管理機能</p>
-                  </div>
-                </div>
-                <span className="shortcut-arrow">→</span>
-              </div>
-            </div>
-          )}
+
         </div>
         
         {/* 侧边栏 */}

@@ -42,6 +42,40 @@ const CommunityPage: React.FC = () => {
   const [replyTo, setReplyTo] = useState<Record<number, Comment | null>>({});
   const [commentLoading, setCommentLoading] = useState<Record<number, boolean>>({});
   
+  // 添加图片URL转换函数
+  const convertImageUrl = (url: string): string => {
+    // 如果URL为空或无效，返回空字符串
+    if (!url) return '';
+    
+    // 如果是相对路径且以 /uploads/ 开头，则转换为完整的后端URL
+    if (url.startsWith('/uploads/')) {
+      // 在开发环境中，使用代理地址；在生产环境中使用绝对URL
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      if (isDevelopment) {
+        // 开发环境：通过代理访问后端的/uploads/路径
+        // 由于前端代理配置，可以直接使用相对路径
+        return url;
+      } else {
+        // 生产环境：使用完整的后端URL
+        // 注意：这里需要根据实际部署情况调整
+        return `http://localhost:9090${url}`;
+      }
+    }
+    
+    // 如果是完整的URL（包含http/https），直接返回
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // 其他情况（相对路径但不是/uploads/开头）也使用后端地址
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment) {
+      return url;
+    } else {
+      return `http://localhost:9090${url.startsWith('/') ? url : '/' + url}`;
+    }
+  };
+  
   // いいね状態
   const [likedDisclosures, setLikedDisclosures] = useState<Set<number>>(new Set());
   const [likeCounts, setLikeCounts] = useState<Record<number, number>>({});
@@ -75,8 +109,9 @@ const CommunityPage: React.FC = () => {
         if (item.likedByCurrentUser) {
           initialLikedSet.add(item.disclosureId);
         }
-        initialLikeCounts[item.disclosureId] = item.likeCount || 0;
-        initialCollectCounts[item.disclosureId] = item.collectCount || 0;
+        // 确保使用后端返回的准确计数
+        initialLikeCounts[item.disclosureId] = item.likeCount ?? 0;
+        initialCollectCounts[item.disclosureId] = item.collectCount ?? 0;
       });
       
       setDisclosures(disclosuresData);
@@ -276,11 +311,11 @@ const CommunityPage: React.FC = () => {
         return newSet;
       });
       
-      // 更新点赞数量
-      const newCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+      // 临时更新点赞数量（乐观更新）
+      const tempNewCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
       setLikeCounts(prev => ({
         ...prev,
-        [item.disclosureId]: newCount
+        [item.disclosureId]: tempNewCount
       }));
       
       // 调用API更新服务器状态
@@ -294,23 +329,46 @@ const CommunityPage: React.FC = () => {
       
       console.log(`${isLiked ? '取消点赞' : '点赞'}成功:`, item.disclosureId);
       
-      // 成功后重新加载数据以确保服务器状态一致
-      await loadDisclosures();
+      // 根据后端返回的结果决定最终状态
+      const changed = res.data.data?.changed ?? true;
+      if (changed) {
+        // 操作成功且数据库状态已改变，保持当前UI状态
+        console.log('点赞操作成功，数据库状态已更新');
+      } else {
+        // 数据库状态未改变，回滚所有UI状态
+        console.log('数据库状态未改变，回滚UI状态');
+        setLikedDisclosures(prev => {
+          const newSet = new Set(prev);
+          if (isLiked) {
+            newSet.add(item.disclosureId); // 恢复点赞状态
+          } else {
+            newSet.delete(item.disclosureId); // 恢复未点赞状态
+          }
+          return newSet;
+        });
+        
+        // 回滚计数到原始值
+        setLikeCounts(prev => ({
+          ...prev,
+          [item.disclosureId]: currentCount
+        }));
+      }
       
     } catch (err: any) {
-      // 错误处理：回滚UI状态
+      // 网络错误或API调用失败，完全回滚UI状态
       console.error('点赞操作失败:', err);
       
       setLikedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isLiked) {
-          newSet.add(item.disclosureId);
+          newSet.add(item.disclosureId); // 恢复原来的点赞状态
         } else {
-          newSet.delete(item.disclosureId);
+          newSet.delete(item.disclosureId); // 恢复原来的未点赞状态
         }
         return newSet;
       });
       
+      // 恢复原来的计数
       setLikeCounts(prev => ({
         ...prev,
         [item.disclosureId]: currentCount
@@ -325,6 +383,7 @@ const CommunityPage: React.FC = () => {
     if (!ensureLogin()) return;
     
     const isCollected = collectedDisclosures.has(item.disclosureId);
+    const currentCount = collectCounts[item.disclosureId] || 0;
     
     try {
       // 先更新UI状态，提供即时反馈
@@ -338,12 +397,11 @@ const CommunityPage: React.FC = () => {
         return newSet;
       });
       
-      // 更新收藏数量
+      // 临时更新收藏数量（乐观更新）
+      const tempNewCount = isCollected ? Math.max(0, currentCount - 1) : currentCount + 1;
       setCollectCounts(prev => ({
         ...prev,
-        [item.disclosureId]: isCollected 
-          ? Math.max(0, (prev[item.disclosureId] || 0) - 1)
-          : (prev[item.disclosureId] || 0) + 1
+        [item.disclosureId]: tempNewCount
       }));
       
       // 调用API更新服务器状态
@@ -352,58 +410,58 @@ const CommunityPage: React.FC = () => {
         : await disclosureOperateApi.collect(item.disclosureId);
       
       if (res.data.code !== 200) {
-        // 如果API调用失败，回滚UI状态
+        throw new Error(res.data.message || '操作失败');
+      }
+      
+      console.log(`${isCollected ? '取消收藏' : '收藏'}成功:`, item.disclosureId);
+      
+      // 根据后端返回的结果决定最终状态
+      const changed = res.data.data?.changed ?? true;
+      if (changed) {
+        // 操作成功且数据库状态已改变，保持当前UI状态
+        console.log('收藏操作成功，数据库状态已更新');
+      } else {
+        // 数据库状态未改变，回滚所有UI状态
+        console.log('数据库状态未改变，回滚UI状态');
         setCollectedDisclosures(prev => {
           const newSet = new Set(prev);
           if (isCollected) {
-            newSet.add(item.disclosureId);
+            newSet.add(item.disclosureId); // 恢复收藏状态
           } else {
-            newSet.delete(item.disclosureId);
+            newSet.delete(item.disclosureId); // 恢复未收藏状态
           }
           return newSet;
         });
         
-        // 回滚收藏数量
+        // 回滚计数到原始值
         setCollectCounts(prev => ({
           ...prev,
-          [item.disclosureId]: isCollected 
-            ? (prev[item.disclosureId] || 0) + 1
-            : Math.max(0, (prev[item.disclosureId] || 0) - 1)
+          [item.disclosureId]: currentCount
         }));
-        
-        console.error('收藏操作失败:', res.data.message);
-        alert('操作失败，请重试');
-      } else {
-        console.log(`${isCollected ? '取消收藏' : '收藏'}成功:`, item.disclosureId);
-        // 成功后强制刷新数据，确保显示正确
-        setTimeout(() => {
-          loadDisclosures();
-        }, 100);
       }
-    } catch (err) {
-      // 网络错误处理
-      console.error('收藏操作网络错误:', err);
       
-      // 回滚UI状态
+    } catch (err: any) {
+      // 网络错误或API调用失败，完全回滚UI状态
+      console.error('收藏操作失败:', err);
+      
       setCollectedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isCollected) {
-          newSet.add(item.disclosureId);
+          newSet.add(item.disclosureId); // 恢复原来的收藏状态
         } else {
-          newSet.delete(item.disclosureId);
+          newSet.delete(item.disclosureId); // 恢复原来的未收藏状态
         }
         return newSet;
       });
       
-      // 回滚收藏数量
+      // 恢复原来的计数
       setCollectCounts(prev => ({
         ...prev,
-        [item.disclosureId]: isCollected 
-          ? (prev[item.disclosureId] || 0) + 1
-          : Math.max(0, (prev[item.disclosureId] || 0) - 1)
+        [item.disclosureId]: currentCount
       }));
       
-      alert('网络错误，请检查连接后重试');
+      const errorMessage = err.response?.data?.message || err.message || '操作失败，请重试';
+      alert(errorMessage);
     }
   };
 
@@ -430,16 +488,38 @@ const CommunityPage: React.FC = () => {
               <div style={{ height: '200px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {item.imgUrl ? (
                   <img 
-                    src={item.imgUrl.includes(',') ? item.imgUrl.split(',')[0] : item.imgUrl} 
+                    src={convertImageUrl(item.imgUrl.includes(',') ? item.imgUrl.split(',')[0] : item.imgUrl)} 
                     alt={item.title} 
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
                     onError={(e) => {
                       console.error('Image load failed:', (e.target as HTMLImageElement).src);
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      // 显示占位符而不是隐藏图片
+                      const img = e.target as HTMLImageElement;
+                      img.style.display = 'none';
+                      // 在父容器中添加占位符
+                      const parent = img.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `
+                          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;color:#ccc;font-size:14px;">
+                            🖼️ 画像なし
+                          </div>
+                        `;
+                      }
                     }}
                   />
                 ) : (
-                  <span style={{ color: '#ccc' }}>No Image</span>
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#f5f5f5',
+                    color: '#ccc',
+                    fontSize: '14px'
+                  }}>
+                    🖼️ 画像なし
+                  </div>
                 )}
               </div>
               <div className="card-content" style={{ padding: '15px' }}>
@@ -478,6 +558,15 @@ const CommunityPage: React.FC = () => {
                         src={`/images/${likedDisclosures.has(item.disclosureId) ? 'yidianzan' : 'dianzan'}.png`} 
                         alt="like" 
                         className="like-icon"
+                        onError={(e) => {
+                          // 图片加载失败时的处理
+                          const img = e.target as HTMLImageElement;
+                          console.warn('点赞图片加载失败:', img.src);
+                          // 可以设置默认的base64图标或者隐藏图标只显示文字
+                          img.style.display = 'none';
+                          // 或者设置一个简单的文本替代
+                          img.parentElement!.innerHTML = likedDisclosures.has(item.disclosureId) ? '♥' : '♡';
+                        }}
                       />
                       {likeCounts[item.disclosureId] > 0 && (
                         <span className="like-count">{likeCounts[item.disclosureId]}</span>
@@ -492,6 +581,13 @@ const CommunityPage: React.FC = () => {
                         src={`/images/${collectedDisclosures.has(item.disclosureId) ? 'yishoucang' : 'shoucang'}.png`} 
                         alt="collect" 
                         className="collect-icon"
+                        onError={(e) => {
+                          // 图片加载失败时的处理
+                          const img = e.target as HTMLImageElement;
+                          console.warn('收藏图片加载失败:', img.src);
+                          img.style.display = 'none';
+                          img.parentElement!.innerHTML = collectedDisclosures.has(item.disclosureId) ? '★' : '☆';
+                        }}
                       />
                       {collectCounts[item.disclosureId] > 0 && (
                         <span className="collect-count">{collectCounts[item.disclosureId]}</span>
@@ -506,6 +602,13 @@ const CommunityPage: React.FC = () => {
                         src="/images/pinglun.png" 
                         alt="comment" 
                         className="comment-icon"
+                        onError={(e) => {
+                          // 图片加载失败时的处理
+                          const img = e.target as HTMLImageElement;
+                          console.warn('评论图片加载失败:', img.src);
+                          img.style.display = 'none';
+                          img.parentElement!.innerHTML = '💬';
+                        }}
                       />
                     </button>
                   </div>
@@ -578,12 +681,36 @@ const CommunityPage: React.FC = () => {
                   <div style={{ width: '80px', height: '80px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {modalComment.item.imgUrl ? (
                       <img 
-                        src={modalComment.item.imgUrl.includes(',') ? modalComment.item.imgUrl.split(',')[0] : modalComment.item.imgUrl} 
+                        src={convertImageUrl(modalComment.item.imgUrl.includes(',') ? modalComment.item.imgUrl.split(',')[0] : modalComment.item.imgUrl)} 
                         alt={modalComment.item.title} 
                         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        onError={(e) => {
+                          console.error('Modal image load failed:', (e.target as HTMLImageElement).src);
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const parent = img.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `
+                              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;color:#ccc;font-size:12px;">
+                                🖼️ 画像なし
+                              </div>
+                            `;
+                          }
+                        }}
                       />
                     ) : (
-                      <span style={{ color: '#ccc', fontSize: '12px' }}>No Image</span>
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#f5f5f5',
+                        color: '#ccc',
+                        fontSize: '12px'
+                      }}>
+                        🖼️ 画像なし
+                      </div>
                     )}
                   </div>
                   <div style={{ flex: 1 }}>

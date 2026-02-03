@@ -2,14 +2,12 @@ package com.wray.hjzdm.controller;
 
 import com.wray.hjzdm.common.Result;
 import com.wray.hjzdm.entity.User;
+import com.wray.hjzdm.mapper.UserMapper;
 import com.wray.hjzdm.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +23,9 @@ public class DatabaseTestController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserMapper userMapper;
 
     @GetMapping("/test-connection")
     @ApiOperation("测试数据库连接")
@@ -79,4 +80,19 @@ public class DatabaseTestController {
             return Result.error("查询用户失败: " + e.getMessage());
         }
     }
+    
+    // 管理员管理功能已移除
+    
+    @GetMapping("/all-users")
+    @ApiOperation("获取所有用户列表")
+    public Result<List<User>> getAllUsers() {
+        try {
+            List<User> users = userMapper.selectList(null);
+            return Result.success(users);
+        } catch (Exception e) {
+            return Result.error("获取用户列表失败: " + e.getMessage());
+        }
+    }
+    
+    // set-admin 和 create-admin 端点已移除
 }

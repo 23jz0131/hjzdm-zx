@@ -87,8 +87,13 @@ public class CloudStorageService {
         // 使用 getCanonicalPath 防止路径遍历，并确保是绝对路径
         File dest = new File(dir, fileName);
         log.info("Saving file to local path: {}", dest.getAbsolutePath());
+        log.info("Upload directory path: {}", dir.getAbsolutePath());
+        log.info("Upload directory exists: {}", dir.exists());
         
         file.transferTo(dest);
+        
+        log.info("File saved successfully: {}", dest.getAbsolutePath());
+        log.info("File size: {} bytes", dest.length());
         
         return "/uploads/" + fileName; 
     }

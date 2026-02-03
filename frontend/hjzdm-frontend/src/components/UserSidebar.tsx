@@ -21,7 +21,10 @@ const UserSidebar: React.FC = () => {
   const menuItems = [
     { path: '/profile', label: 'マイページ', icon: '👤' },
     { path: '/my-tip', label: 'マイ投稿', icon: '📢' },
-    ...(isAdmin ? [{ path: '/admin/disclosures', label: '管理者：投稿審査', icon: '🛡️' }] : [])
+    ...(isAdmin ? [
+      { path: '/admin/disclosures', label: '管理者：投稿審査', icon: '🛡️' }
+      // 用户管理菜单项已移除
+    ] : [])
   ];
 
   const handleLogout = () => {
@@ -31,8 +34,7 @@ const UserSidebar: React.FC = () => {
 
   return (
     <div className="user-sidebar">
-      <div className="sidebar-menu">
-        <h3 className="sidebar-title">マイメニュー</h3>
+      <nav className="sidebar-menu">
         <ul>
           {menuItems.map((item) => (
             <li key={item.path} className={currentPath === item.path ? 'active' : ''}>
@@ -42,14 +44,13 @@ const UserSidebar: React.FC = () => {
               </Link>
             </li>
           ))}
-          <li className="logout-item">
-            <button onClick={handleLogout} className="sidebar-logout-btn">
-              <span className="menu-icon">🚪</span>
-              <span className="menu-label">ログアウト</span>
-            </button>
-          </li>
         </ul>
-      </div>
+      </nav>
+      
+      <button onClick={handleLogout} className="sidebar-logout-btn">
+        <span className="menu-icon">🚪</span>
+        <span className="menu-label">ログアウト</span>
+      </button>
     </div>
   );
 };
