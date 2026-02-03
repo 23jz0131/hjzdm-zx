@@ -41,8 +41,6 @@ const LoginPage: React.FC = () => {
         password: formData.password
       });
 
-      // 调试日志 removed
-      
       if (response.data && response.data.code === 200) {
         // ログイン成功、ホームページにリダイレクト
         const token = response.data.token || response.data.data?.token;

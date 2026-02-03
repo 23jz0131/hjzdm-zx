@@ -74,8 +74,6 @@ const RegisterPage: React.FC = () => {
         confirmPassword: formData.confirmPassword
       });
 
-      // 调试日志 removed
-      
       if (response.data && response.data.code === 200) {
         setSuccess('登録が完了しました！ログインしてください。');
         // 重置表单

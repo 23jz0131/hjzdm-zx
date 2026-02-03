@@ -209,7 +209,6 @@ const CommunityPage: React.FC = () => {
         await loadComments(disclosureId);
         
         // コメント追加後のUI更新
-        console.log('コメント投稿成功');
       } else {
         alert(res.data.msg || 'コメントの投稿に失敗しました');
       }
@@ -279,14 +278,10 @@ const CommunityPage: React.FC = () => {
       console.log('開始読み込み...');
       // 取得
       const res = await disclosureApi.getMyCollect(1, 100);
-      console.log('APIレスポンス:', res);
       if (res.data.code === 200) {
         const collectedList = res.data.data?.records || res.data.data || [];
-        console.log('元データ:', collectedList);
         const collectedIds = new Set<number>(collectedList.map((item: any) => item.disclosureId || item.id));
         setCollectedDisclosures(collectedIds);
-        console.log('読み込み成功:', collectedIds.size, '個');
-        console.log('IDリスト:', Array.from(collectedIds));
       } else {
         console.error('読み込み失敗:', res.data.message);
       }
@@ -335,10 +330,8 @@ const CommunityPage: React.FC = () => {
       const changed = res.data.data?.changed ?? true;
       if (changed) {
         // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
-        console.log('いいね操作成功、データベース状態が更新されました');
       } else {
         // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
-        console.log('データベース状態が変わらなかったため、UI状態をロールバックします');
         setLikedDisclosures(prev => {
           const newSet = new Set(prev);
           if (isLiked) {
@@ -421,10 +414,8 @@ const CommunityPage: React.FC = () => {
       const changed = res.data.data?.changed ?? true;
       if (changed) {
         // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
-        console.log('お気に入り操作成功、データベース状態が更新されました');
       } else {
         // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
-        console.log('データベース状態が変わらなかったため、UI状態をロールバックします');
         setCollectedDisclosures(prev => {
           const newSet = new Set(prev);
           if (isCollected) {

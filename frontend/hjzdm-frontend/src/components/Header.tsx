@@ -81,7 +81,6 @@ const Header: React.FC = () => {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
-        console.log('检测到token变化，重新同步用户状态');
         syncAuthState();
       }
     };
@@ -99,7 +98,6 @@ const Header: React.FC = () => {
       
       // 如果用户ID发生变化，重新同步
       if (isLoggedIn && currentUserId && currentUserId !== parseInt(username.replace('user', ''))) {
-        console.log('检测到用户ID变化，重新同步状态');
         syncAuthState();
       }
     }, 1000); // 每秒检查一次

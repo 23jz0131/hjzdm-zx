@@ -88,19 +88,8 @@ const ProfilePage: React.FC = () => {
 
   const loadUserData = async () => {
     try {
-      console.log('开始获取用户信息...');
-      
       // 获取用户基本信息
       const meRes = await userApi.getProfile();
-      
-      console.log('API响应原始数据:', meRes);
-      console.log('API响应数据结构:', {
-        hasData: !!meRes.data,
-        dataKeys: meRes.data ? Object.keys(meRes.data) : [],
-        code: meRes.data?.code,
-        message: meRes.data?.message,
-        dataContent: meRes.data?.data
-      });
       
       // 更严格的错误检查
       if (!meRes) {
@@ -133,18 +122,8 @@ const ProfilePage: React.FC = () => {
       
       // 检查多种可能的成功状态码
       const successCodes = [200, 0, '200', '0'];
-      console.log('状态码检查:', {
-        actualCode: meRes.data.code,
-        codeType: typeof meRes.data.code,
-        isInSuccessCodes: successCodes.includes(meRes.data.code),
-        hasDataField: !!meRes.data.data,
-        backupCondition: (meRes.data.code === undefined && meRes.data.data)
-      });
-      
       const isSuccessful = successCodes.includes(meRes.data.code) || 
                           (meRes.data.code === undefined && meRes.data.data);
-      
-      console.log('最终判断结果:', { isSuccessful });
       
       if (!isSuccessful) {
         const errorMessage = meRes.data.message || meRes.data.msg || `API错误: ${meRes.data.code}`;
@@ -204,10 +183,7 @@ const ProfilePage: React.FC = () => {
         birthDate: formattedBirthDate
       });
       
-      console.log('用户数据加载完成:', {
-        profile: me,
-        formattedBirthDate: formattedBirthDate
-      });
+
 
 
 
@@ -226,7 +202,6 @@ const ProfilePage: React.FC = () => {
           );
         }
       } catch (tipError) {
-        console.warn('投稿情報取得エラー:', tipError);
         // 不显示投稿情報错误，以免影響主流程
       }
 
@@ -257,18 +232,9 @@ const ProfilePage: React.FC = () => {
           );
         }
       } catch (notiError) {
-        console.warn('通知情報取得エラー:', notiError);
         // 不显示通知错误，以免影響主流程
       }
     } catch (error: any) {
-      console.error('ユーザーデータ全体の読み込みエラー:', error);
-      console.error('错误详情:', {
-        message: error.message,
-        response: error.response,
-        request: error.request,
-        config: error.config
-      });
-
       // 检查错误类型并提供更精确の错误情報
       if (error.response) {
         // 服务器响应了错误状态码

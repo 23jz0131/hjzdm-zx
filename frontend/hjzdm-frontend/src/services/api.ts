@@ -36,45 +36,12 @@ apiClient.interceptors.request.use(
   }
 );
 
-// 响应拦截器 - 增强错误处理
+// 响应拦截器 - 错误处理
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('API响应成功:', {
-      url: response.config.url,
-      method: response.config.method,
-      status: response.status,
-      data: response.data
-    });
     return response;
   },
   (error) => {
-    console.error('=== API请求错误详情 ===');
-    console.error('请求配置:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      headers: error.config?.headers,
-      data: error.config?.data
-    });
-    
-    if (error.response) {
-      // 服务器响应了错误状态码
-      console.error('服务器响应错误:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        headers: error.response.headers
-      });
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
-      console.error('网络请求无响应:', error.request);
-    } else {
-      // 请求配置出错
-      console.error('请求配置错误:', error.message);
-    }
-    
-    console.error('完整错误对象:', error);
-    console.error('=======================');
-    
     return Promise.reject(error);
   }
 );

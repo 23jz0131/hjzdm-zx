@@ -69,7 +69,6 @@ const MyTipPage: React.FC = () => {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
-        console.log('检测到用户切换，重新加载投稿数据');
         loadDisclosures();
       }
     };
@@ -97,7 +96,7 @@ const MyTipPage: React.FC = () => {
       const res = await disclosureApi.getMyDisclosure(1, 100);
       setDisclosures(res.data.data || []);
     } catch (err) {
-      console.error(err);
+      // 处理错误
     } finally {
       setLoading(false);
     }
