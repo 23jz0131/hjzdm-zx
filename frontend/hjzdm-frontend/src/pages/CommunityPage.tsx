@@ -44,21 +44,22 @@ const CommunityPage: React.FC = () => {
   
   // 添加图片URL转换函数
   const convertImageUrl = (url: string): string => {
-    // 如果URL为空或无效，返回空字符串
-    if (!url) return '';
+    // 如果URL为空或无效，返回占位符
+    if (!url || url.trim() === '') {
+      return '/images/placeholder.png';
+    }
     
     // 如果是相对路径且以 /uploads/ 开头，则转换为完整的后端URL
     if (url.startsWith('/uploads/')) {
       // 在开发环境中，使用代理地址；在生产环境中使用绝对URL
       const isDevelopment = process.env.NODE_ENV === 'development';
       if (isDevelopment) {
-        // 开发环境：通过代理访问后端的/uploads/路径
-        // 由于前端代理配置，可以直接使用相对路径
+        // 開発環境：通過代理アクセス後端の/uploads/パス
         return url;
       } else {
-        // 生产环境：使用完整的后端URL
-        // 注意：这里需要根据实际部署情况调整
-        return `http://localhost:9090${url}`;
+        // 生産環境：使用固定的後端URL（硬コード，但避免環境変数）
+        const backendUrl = 'https://hjzdm-zx.onrender.com';
+        return `${backendUrl}${url}`;
       }
     }
     
@@ -72,7 +73,8 @@ const CommunityPage: React.FC = () => {
     if (isDevelopment) {
       return url;
     } else {
-      return `http://localhost:9090${url.startsWith('/') ? url : '/' + url}`;
+      const backendUrl = 'https://hjzdm-zx.onrender.com';
+      return `${backendUrl}${url.startsWith('/') ? url : '/' + url}`;
     }
   };
   
@@ -274,22 +276,22 @@ const CommunityPage: React.FC = () => {
     if (!token) return;
     
     try {
-      console.log('开始加载收藏状态...');
-      // 获取用户收藏的爆料列表
+      console.log('開始読み込み...');
+      // 取得
       const res = await disclosureApi.getMyCollect(1, 100);
-      console.log('收藏API响应:', res);
+      console.log('APIレスポンス:', res);
       if (res.data.code === 200) {
         const collectedList = res.data.data?.records || res.data.data || [];
-        console.log('收藏列表原始数据:', collectedList);
+        console.log('元データ:', collectedList);
         const collectedIds = new Set<number>(collectedList.map((item: any) => item.disclosureId || item.id));
         setCollectedDisclosures(collectedIds);
-        console.log('加载收藏状态成功，已收藏:', collectedIds.size, '个项目');
-        console.log('收藏的ID列表:', Array.from(collectedIds));
+        console.log('読み込み成功:', collectedIds.size, '個');
+        console.log('IDリスト:', Array.from(collectedIds));
       } else {
-        console.error('获取收藏状态失败:', res.data.message);
+        console.error('読み込み失敗:', res.data.message);
       }
     } catch (err) {
-      console.error('获取收藏状态失败:', err);
+      console.error('読み込み失敗:', err);
     }
   };
 
@@ -300,7 +302,7 @@ const CommunityPage: React.FC = () => {
     const currentCount = likeCounts[item.disclosureId] || 0;
     
     try {
-      // 先更新UI状态，提供即时反馈
+      // 先更新UI状態，提供即時フィードバック
       setLikedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isLiked) {
@@ -311,43 +313,43 @@ const CommunityPage: React.FC = () => {
         return newSet;
       });
       
-      // 临时更新点赞数量（乐观更新）
+      // 一時的にいいね数を更新（楽観的更新）
       const tempNewCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
       setLikeCounts(prev => ({
         ...prev,
         [item.disclosureId]: tempNewCount
       }));
       
-      // 调用API更新服务器状态
+      // APIを呼び出してサーバー状態を更新
       const res = isLiked 
         ? await disclosureOperateApi.unlike(item.disclosureId)
         : await disclosureOperateApi.like(item.disclosureId);
       
       if (res.data.code !== 200) {
-        throw new Error(res.data.message || '操作失败');
+        throw new Error(res.data.message || '操作失敗');
       }
       
-      console.log(`${isLiked ? '取消点赞' : '点赞'}成功:`, item.disclosureId);
+      console.log(`${isLiked ? 'いいね解除' : 'いいね'}成功:`, item.disclosureId);
       
-      // 根据后端返回的结果决定最终状态
+      // 後端からの結果に基づいて最終状態を決定
       const changed = res.data.data?.changed ?? true;
       if (changed) {
-        // 操作成功且数据库状态已改变，保持当前UI状态
-        console.log('点赞操作成功，数据库状态已更新');
+        // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
+        console.log('いいね操作成功、データベース状態が更新されました');
       } else {
-        // 数据库状态未改变，回滚所有UI状态
-        console.log('数据库状态未改变，回滚UI状态');
+        // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
+        console.log('データベース状態が変わらなかったため、UI状態をロールバックします');
         setLikedDisclosures(prev => {
           const newSet = new Set(prev);
           if (isLiked) {
-            newSet.add(item.disclosureId); // 恢复点赞状态
+            newSet.add(item.disclosureId); // いいね状態を復元
           } else {
-            newSet.delete(item.disclosureId); // 恢复未点赞状态
+            newSet.delete(item.disclosureId); // いいね解除状態を復元
           }
           return newSet;
         });
         
-        // 回滚计数到原始值
+        // カウントを元の値に戻す
         setLikeCounts(prev => ({
           ...prev,
           [item.disclosureId]: currentCount
@@ -355,26 +357,26 @@ const CommunityPage: React.FC = () => {
       }
       
     } catch (err: any) {
-      // 网络错误或API调用失败，完全回滚UI状态
-      console.error('点赞操作失败:', err);
+      // ネットワークエラーまたはAPI呼び出し失敗の場合、完全にUI状態をロールバック
+      console.error('いいね操作失敗:', err);
       
       setLikedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isLiked) {
-          newSet.add(item.disclosureId); // 恢复原来的点赞状态
+          newSet.add(item.disclosureId); // 元のいいね状態を復元
         } else {
-          newSet.delete(item.disclosureId); // 恢复原来的未点赞状态
+          newSet.delete(item.disclosureId); // 元のいいね解除状態を復元
         }
         return newSet;
       });
       
-      // 恢复原来的计数
+      // カウントを元の値に戻す
       setLikeCounts(prev => ({
         ...prev,
         [item.disclosureId]: currentCount
       }));
       
-      const errorMessage = err.response?.data?.message || err.message || '操作失败，请重试';
+      const errorMessage = err.response?.data?.message || err.message || '操作失敗、もう一度お試しください';
       alert(errorMessage);
     }
   };
@@ -386,7 +388,7 @@ const CommunityPage: React.FC = () => {
     const currentCount = collectCounts[item.disclosureId] || 0;
     
     try {
-      // 先更新UI状态，提供即时反馈
+      // 先更新UI状態，提供即時フィードバック
       setCollectedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isCollected) {
@@ -397,43 +399,43 @@ const CommunityPage: React.FC = () => {
         return newSet;
       });
       
-      // 临时更新收藏数量（乐观更新）
+      // 一時的にお気に入り数を更新（楽観的更新）
       const tempNewCount = isCollected ? Math.max(0, currentCount - 1) : currentCount + 1;
       setCollectCounts(prev => ({
         ...prev,
         [item.disclosureId]: tempNewCount
       }));
       
-      // 调用API更新服务器状态
+      // APIを呼び出してサーバー状態を更新
       const res = isCollected 
         ? await disclosureOperateApi.uncollect(item.disclosureId)
         : await disclosureOperateApi.collect(item.disclosureId);
       
       if (res.data.code !== 200) {
-        throw new Error(res.data.message || '操作失败');
+        throw new Error(res.data.message || '操作失敗');
       }
       
-      console.log(`${isCollected ? '取消收藏' : '收藏'}成功:`, item.disclosureId);
+      console.log(`${isCollected ? 'お気に入り解除' : 'お気に入り'}成功:`, item.disclosureId);
       
-      // 根据后端返回的结果决定最终状态
+      // 後端からの結果に基づいて最終状態を決定
       const changed = res.data.data?.changed ?? true;
       if (changed) {
-        // 操作成功且数据库状态已改变，保持当前UI状态
-        console.log('收藏操作成功，数据库状态已更新');
+        // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
+        console.log('お気に入り操作成功、データベース状態が更新されました');
       } else {
-        // 数据库状态未改变，回滚所有UI状态
-        console.log('数据库状态未改变，回滚UI状态');
+        // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
+        console.log('データベース状態が変わらなかったため、UI状態をロールバックします');
         setCollectedDisclosures(prev => {
           const newSet = new Set(prev);
           if (isCollected) {
-            newSet.add(item.disclosureId); // 恢复收藏状态
+            newSet.add(item.disclosureId); // お気に入り状態を復元
           } else {
-            newSet.delete(item.disclosureId); // 恢复未收藏状态
+            newSet.delete(item.disclosureId); // お気に入り解除状態を復元
           }
           return newSet;
         });
         
-        // 回滚计数到原始值
+        // カウントを元の値に戻す
         setCollectCounts(prev => ({
           ...prev,
           [item.disclosureId]: currentCount
@@ -441,26 +443,26 @@ const CommunityPage: React.FC = () => {
       }
       
     } catch (err: any) {
-      // 网络错误或API调用失败，完全回滚UI状态
-      console.error('收藏操作失败:', err);
+      // ネットワークエラーまたはAPI呼び出し失敗の場合、完全にUI状態をロールバック
+      console.error('お気に入り操作失敗:', err);
       
       setCollectedDisclosures(prev => {
         const newSet = new Set(prev);
         if (isCollected) {
-          newSet.add(item.disclosureId); // 恢复原来的收藏状态
+          newSet.add(item.disclosureId); // 元のお気に入り状態を復元
         } else {
-          newSet.delete(item.disclosureId); // 恢复原来的未收藏状态
+          newSet.delete(item.disclosureId); // 元のお気に入り解除状態を復元
         }
         return newSet;
       });
       
-      // 恢复原来的计数
+      // カウントを元の値に戻す
       setCollectCounts(prev => ({
         ...prev,
         [item.disclosureId]: currentCount
       }));
       
-      const errorMessage = err.response?.data?.message || err.message || '操作失败，请重试';
+      const errorMessage = err.response?.data?.message || err.message || '操作失敗、もう一度お試しください';
       alert(errorMessage);
     }
   };
@@ -582,9 +584,9 @@ const CommunityPage: React.FC = () => {
                         alt="collect" 
                         className="collect-icon"
                         onError={(e) => {
-                          // 图片加载失败时的处理
+                          // 图片加载失败时的処理
                           const img = e.target as HTMLImageElement;
-                          console.warn('收藏图片加载失败:', img.src);
+                          console.warn('收藏图片読み込み失敗:', img.src);
                           img.style.display = 'none';
                           img.parentElement!.innerHTML = collectedDisclosures.has(item.disclosureId) ? '★' : '☆';
                         }}
@@ -603,9 +605,9 @@ const CommunityPage: React.FC = () => {
                         alt="comment" 
                         className="comment-icon"
                         onError={(e) => {
-                          // 图片加载失败时的处理
+                          // 图片加载失败时の処理
                           const img = e.target as HTMLImageElement;
-                          console.warn('评论图片加载失败:', img.src);
+                          console.warn('コメント画像読み込み失敗:', img.src);
                           img.style.display = 'none';
                           img.parentElement!.innerHTML = '💬';
                         }}
@@ -622,7 +624,7 @@ const CommunityPage: React.FC = () => {
       {/* コメントモーダル */}
       {modalComment && (
         <div className="comment-modal-overlay" onClick={() => setModalComment(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
-          {/* 独立的关闭按钮，确保不会被遮挡 */}
+          {/* 独立の閉じるボタン，確保不会被遮挡 */}
           <button 
             className="modal-close-btn-floating"
             onClick={() => setModalComment(null)}
@@ -664,7 +666,7 @@ const CommunityPage: React.FC = () => {
           <div className="comment-modal" onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)', animation: 'modalSlideIn 0.3s ease-out', position: 'relative', zIndex: 1101 }}>
             <div className="comment-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #f0f0f0' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#111' }}>コメント</h3>
-              {/* 原来的关闭按钮保持但降低优先级 */}
+              {/* 原来的閉じるボタン保持但降低優先度 */}
               <button 
                 className="modal-close-btn"
                 onClick={() => setModalComment(null)}
