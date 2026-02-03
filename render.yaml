@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: hjzdm-frontend
+    env: static
+    buildCommand: echo "Using pre-built files"
+    staticPublishPath: ./frontend/hjzdm-frontend/build
+    envVars:
+      - key: NODE_ENV
+        value: production
