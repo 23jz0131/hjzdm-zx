@@ -1,11 +1,46 @@
 services:
   - type: web
-    name: hjzdm-fullstack
-    env: docker
+    name: hjzdm-backend
+    env: java
     plan: free
-    healthCheckPath: /
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/HJZDM-0.0.1-SNAPSHOT.jar
+    healthCheckPath: /actuator/health
     envVars:
       - key: SERVER_PORT
         value: 9090
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/test?sslMode=VERIFY_IDENTITY&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      - key: SPRING_DATASOURCE_USERNAME
+        value: 2eXmMXiGeCt9iz7.root
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: FPpKFpms5hDXtOuF
       - key: NODE_ENV
         value: production
+      - key: JWT_USER_SECRET_KEY
+        value: wray12121212asdhiashdikasbdiasgfiabgfkbaiwfgiwfawfafa
+      - key: RAKUTEN_APP_ID
+        value: 1065081596741280321
+      - key: RAKUTEN_APPLICATION_SECRET
+        value: d3cea25fd388a80da369ee74a20e67c9c4b00625
+      - key: RAKUTEN_AFFILIATE_ID
+        value: 4f0e084a.2fb02d14.4f0e084b.3ecf281e
+      - key: AMAZON_ACCESS_KEY
+        value: YOUR_ACCESS_KEY
+      - key: AMAZON_SECRET_KEY
+        value: YOUR_SECRET_KEY
+      - key: AMAZON_PARTNER_TAG
+        value: YOUR_PARTNER_TAG
+      - key: AMAZON_REGION
+        value: us-west-2
+      - key: UPLOAD_PATH
+        value: ./uploads/
+
+  - type: static-site
+    name: hjzdm-frontend
+    buildCommand: cd frontend/hjzdm-frontend && npm run build
+    publicDir: frontend/hjzdm-frontend/build
+    plan: free
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        value: https://hjzdm-backend.onrender.com/api
