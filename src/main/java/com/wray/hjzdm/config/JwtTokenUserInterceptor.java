@@ -44,7 +44,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         }
 
         // 2️⃣ 登录接口放行
-        if (uri.contains("/user/localLogin") || uri.contains("/user/login")) {
+        if (uri.contains("/user/login")) {
             return true;
         }
 
@@ -96,4 +96,3 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         }
     }
 }
-

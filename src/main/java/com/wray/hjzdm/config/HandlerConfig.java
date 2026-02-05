@@ -1,29 +1,25 @@
 package com.wray.hjzdm.config;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-/**
- * 拦截器
- */
-@Configuration
-public class HandlerConfig implements WebMvcConfigurer {
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HandlerConfig.class);
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+@Configuration
+public class HandlerConfig extends WebMvcConfigurationSupport {
 
     @Autowired
     private JwtTokenUserInterceptor jwtTokenUserInterceptor;
@@ -86,49 +82,33 @@ public class HandlerConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         // ===== 登录相关 =====
-                        "/user/localLogin",
                         "/user/login",
 
                         // ===== 游客可访问接口（关键）=====
                         "/goods/search",
-                        "/goods/compare", // Add compare endpoint
-                        "/goods/detail/**",
-                        "/goods/page",
-                        "/goods/pageAll",
+                        "/goods/searchByName",
+                        "/goods/compare",
+                        "/goods/detail",
                         "/category/list",
                         "/category/attributes",
+                        "/disclosure/queryPublicList",
+                        "/disclosure/queryDisclosure",
+                        "/disclosure/getDisclosure",
+                        "/comment/queryComment",
 
-                        // ===== WebSocket =====
-                        "/ws/**",
-                        "/ws",
-                        "/websocket",
-                        "/websocket/**",
-
-                        // ===== Swagger / 基础 =====
-                        "/swagger-resources/**",
+                        // ===== Swagger/Knife4j 文档 =====
+                        "/doc.html",
                         "/webjars/**",
-                        "/v2/**",
-                        "/swagger-ui.html/**",
-                        "/doc.html/**",
+                        "/swagger-resources/**",
+                        "/v2/api-docs",
+                        "/v3/api-docs",
+                        
+                        // ===== 静态资源 =====
+                        "/favicon.ico",
                         "/error",
-                        "/",
-                        "/index.html",
-                        "/static/**"
-                        // 移除了不再需要的auth路径排除
+                        
+                        // ===== 文件上传 =====
+                        "/upload/**"
                 );
     }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath);
-
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("doc.html")
-                .addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/");
-    }
-
 }

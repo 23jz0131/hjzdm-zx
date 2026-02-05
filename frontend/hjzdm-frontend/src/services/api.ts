@@ -1,180 +1,70 @@
 import axios from 'axios';
 
-// 创建axios实例
-// 修改说明：
-// 1. 移除了硬编码的 localBase 和 tunnelBase
-// 2. 依赖 package.json 中的 "proxy": "http://localhost:9090" 配置
-// 3. 在开发环境中，API 请求将发送到前端服务器（如 localhost:3000），然后被代理转发到后端（localhost:9090）
-// 4. 这解决了跨域问题（CORS）以及云端预览环境下的地址访问问题
+/**
+ * API服务模块
+ * 封装所有前端与后端的HTTP通信接口
+ * 提供统一的错误处理和认证机制
+ */
 
+/**
+ * 获取API基础URL
+ * 根据环境变量配置返回相应的API地址
+ * @returns {string} API基础URL
+ */
 const getApiBaseUrl = () => {
+  // 优先使用环境变量配置的API地址，否则使用空字符串
   return process.env.REACT_APP_API_BASE_URL || '';
 };
 
+// 获取API基础URL
 const apiBaseUrl = getApiBaseUrl();
 
+/**
+ * 创建axios实例
+ * 配置基础URL、超时时间和默认请求头
+ */
 const apiClient = axios.create({
-  baseURL: apiBaseUrl,
-  timeout: 15000, // Increase timeout to 15s
+  baseURL: apiBaseUrl,           // API基础地址
+  timeout: 15000,               // 请求超时时间15秒
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json',  // 默认请求头
   },
 });
 
-// 请求拦截器 - 恢复认证相关代码
+/**
+ * 请求拦截器
+ * 在每个请求发送前自动添加认证信息
+ */
 apiClient.interceptors.request.use(
   (config) => {
-    // 添加Authorization header
+    // 从localStorage获取JWT token
     const token = localStorage.getItem('token');
     if (token) {
+      // 在请求头中添加认证信息
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => {
+    // 请求错误处理
     return Promise.reject(error);
   }
 );
 
-// 响应拦截器 - 错误处理
+/**
+ * 响应拦截器
+ * 统一处理API响应和错误
+ */
 apiClient.interceptors.response.use(
   (response) => {
+    // 直接返回成功的响应
     return response;
   },
   (error) => {
+    // 响应错误处理
     return Promise.reject(error);
   }
 );
-
-// API接口定义
-export const goodsApi = {
-  // 搜索商品
-  searchGoods: (query: string, attrFilters?: Record<string, string>, catId?: number) => {
-    return apiClient.post('/goods/search', { query, attrFilters, catId });
-  },
-
-  // 比价搜索
-  compareGoods: (query: string) => {
-    return apiClient.post('/goods/compare', { query });
-  },
-
-  // 按名称搜索商品
-  searchGoodsByName: (query: string) => {
-    return apiClient.get(`/goods/searchByName?query=${encodeURIComponent(query)}`);
-  },
-
-  // 获取商品详情
-  getGoodsDetail: (goodsId: number) => {
-    return apiClient.get(`/goods/detail?goodsId=${goodsId}`);
-  },
-
-  // 获取所有商品（分页）
-  getAllGoods: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/goods/pageAll', { pageNum: page, pageSize: size });
-  },
-
-  // 新增商品并返回
-  addAndReturn: (data: any) => {
-    return apiClient.post('/goods/addAndReturn', data);
-  },
-
-
-  
-  // 获取本地商品（支持动态属性筛选）
-  getGoodsPage: (query: string, attrFilters?: Record<string, string>, catId?: number, page: number = 1, size: number = 20, minPrice?: number, maxPrice?: number, mallTypes?: number[]) => {
-    return apiClient.post('/goods/page', { query, attrFilters, catId, pageNum: page, pageSize: size, minPrice, maxPrice, mallTypes });
-  },
-  
-  // 获取我的收藏
-  getMyCollect: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/goods/myCollect', { pageNum: page, pageSize: size });
-  },
-  
-  // 获取我的商品
-  getMyGoods: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/goods/myGoods', { pageNum: page, pageSize: size });
-  }
-};
-
-export const categoryApi = {
-  getAttributes: (catId: number) => {
-    return apiClient.get(`/category/attributes?catId=${catId}`);
-  },
-  
-  getList: () => {
-    return apiClient.post('/category/list');
-  },
-  
-  // 获取分类树
-  getTree: () => {
-      // 假设有一个获取分类树的接口，如果没有，可以用 getList 代替
-      return apiClient.post('/category/list'); 
-  }
-};
-
-export const disclosureApi = {
-  // 新增爆料 (Add new disclosure)
-  add: (data: { title: string; content: string; link: string; disclosurePrice: number; imgUrl?: string }) => {
-    return apiClient.post('/disclosure/add', data);
-  },
-  
-  // 我的爆料 (My disclosures)
-  getMyDisclosure: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/disclosure/queryMyDisclosure', { pageNum: page, pageSize: size });
-  },
-
-  // 公开爆料 (Public disclosures)
-  getPublicDisclosure: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/disclosure/queryPublicList', { pageNum: page, pageSize: size });
-  },
-
-  // 审核爆料 (Audit)
-  audit: (disclosureId: number, status: number) => {
-    return apiClient.post('/disclosure/audit', { disclosureId, status });
-  },
-
-  // 待审核爆料列表 (Admin pending)
-  getPendingDisclosure: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/disclosure/queryPendingList', { pageNum: page, pageSize: size });
-  },
-
-  // 删除爆料 (Delete disclosure)
-  delete: (disclosureId: number) => {
-    return apiClient.post('/disclosure/delete', { disclosureId });
-  },
-
-  // 获取我的收藏爆料
-  getMyCollect: (page: number = 1, size: number = 20) => {
-    return apiClient.post('/disclosure/myCollect', { pageNum: page, pageSize: size });
-  }
-};
-
-export const notificationApi = {
-  getMyNotifications: () => {
-    return apiClient.get('/notification/my');
-  },
-  markAsRead: (id: number) => {
-    return apiClient.post('/notification/read', { id });
-  },
-  markAllAsRead: () => {
-    return apiClient.post('/notification/readAll');
-  },
-  deleteNotification: (id: number) => {
-    return apiClient.post('/notification/delete', { id });
-  }
-};
-
-export const commonApi = {
-  upload: (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return apiClient.post('/common/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-  }
-};
 
 export const userApi = {
   getProfile: () => {
@@ -188,12 +78,6 @@ export const userApi = {
   },
   login: (loginData: { username: string; password: string }) => {
     return apiClient.post('/user/login', loginData);
-  },
-  localLogin: (loginData: { phone: string; password: string }) => {
-    return apiClient.post('/user/localLogin', loginData);
-  },
-  updateProfile: (profileData: { avatar?: string; nickname?: string; name?: string; gender?: number; birthDate?: string | null }) => {
-    return apiClient.post('/user/updateProfile', profileData);
   },
   // 获取浏览历史
   getHistory: (pageNum: number, pageSize: number) => {
@@ -219,7 +103,124 @@ export const userApi = {
   }
 };
 
-// 商品点赞/收藏相关
+// 商品相关API接口（移除点赞/收藏功能）
+export const goodsApi = {
+  /**
+   * 搜索商品
+   * @param query - 搜索关键词
+   * @param attrFilters - 属性筛选条件（可选）
+   * @param catId - 分类ID（可选）
+   * @returns Promise<ApiResponse>
+   */
+  searchGoods: (query: string, attrFilters?: Record<string, string>, catId?: number) => {
+    return apiClient.post('/goods/search', { query, attrFilters, catId });
+  },
+
+  /**
+   * 商品比价搜索
+   * @param query - 搜索关键词
+   * @returns Promise<ApiResponse>
+   */
+  compareGoods: (query: string) => {
+    return apiClient.post('/goods/compare', { query });
+  },
+
+  /**
+   * 按名称搜索商品
+   * @param query - 商品名称
+   * @returns Promise<ApiResponse>
+   */
+  searchGoodsByName: (query: string) => {
+    return apiClient.get(`/goods/searchByName?query=${encodeURIComponent(query)}`);
+  },
+
+  /**
+   * 获取商品详情
+   * @param goodsId - 商品ID
+   * @returns Promise<ApiResponse>
+   */
+  getGoodsDetail: (goodsId: number) => {
+    return apiClient.get(`/goods/detail?goodsId=${goodsId}`);
+  },
+
+  /**
+   * 获取喜欢该商品的用户列表
+   * @param goodsId - 商品ID
+   * @returns Promise<ApiResponse>
+   */
+  getGoodsLikeUsers: (goodsId: number) => {
+    return apiClient.get(`/goods/likeUsers?goodsId=${goodsId}`);
+  },
+
+  /**
+   * マイ商品を検索
+   * @param queryData - 検索パラメータ
+   * @returns Promise<ApiResponse>
+   */
+  getMyGoods: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/goods/myGoods', queryData);
+  },
+
+  /**
+   * お気に入り商品を検索
+   * @param queryData - 検索パラメータ
+   * @returns Promise<ApiResponse>
+   */
+  getMyCollect: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/goods/myCollect', queryData);
+  },
+
+  /**
+   * 商品を削除
+   * @param goodsId - 商品ID
+   * @returns Promise<ApiResponse>
+   */
+  deleteGoods: (goodsId: number) => {
+    return apiClient.delete(`/goods/delete?goodsId=${goodsId}`);
+  },
+  
+  /**
+   * 商品のページ分割検索
+   * @param query - 検索キーワード
+   * @param attrFilters - 属性フィルター条件
+   * @param catId - カテゴリーID
+   * @param pageNum - ページ番号
+   * @param pageSize - 1ページのサイズ
+   * @param minPrice - 最低価格
+   * @param maxPrice - 最高価格
+   * @param platforms - プラットフォームフィルター
+   * @returns Promise<ApiResponse>
+   */
+  getGoodsPage: (
+    query: string, 
+    attrFilters: Record<string, string> | undefined, 
+    catId: number | undefined, 
+    pageNum: number, 
+    pageSize: number,
+    minPrice?: number,
+    maxPrice?: number,
+    platforms?: string[] | number[]
+  ) => {
+    // プラットフォームパラメータの型を処理
+    const platformValues = platforms ? 
+      platforms.map(p => typeof p === 'number' ? p.toString() : p) : 
+      undefined;
+    
+    return apiClient.post('/goods/page', {
+      query,
+      attrFilters,
+      catId,
+      pageNum,
+      pageSize,
+      minPrice,
+      maxPrice,
+      platforms: platformValues
+    });
+  }
+};
+
+// 商品のいいね/お気に入り関連インターフェースは削除済み
+/*
 export const goodsOperateApi = {
   like: (goodsId: number) => {
     return apiClient.post('/goods/like', { goodsId });
@@ -234,20 +235,167 @@ export const goodsOperateApi = {
     return apiClient.post('/goods/cancelCollect', { goodsId });
   }
 };
+*/
 
-// 爆料点赞/收藏相关
-export const disclosureOperateApi = {
-  like: (disclosureId: number) => {
-    return apiClient.post('/disclosure/like', { disclosureId });
+// 投稿関連APIインターフェース
+export const disclosureApi = {
+  // 投稿を提出
+  submit: (data: { title: string; content: string; images?: string[]; categoryId?: number }) => {
+    return apiClient.post('/disclosure/submit', data);
   },
-  unlike: (disclosureId: number) => {
-    return apiClient.post('/disclosure/unlike', { disclosureId });
+  
+// 公開投稿リストを検索（上記で定義済み）
+  
+  // マイ投稿を検索
+  queryMyList: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/disclosure/queryMyList', queryData);
   },
+  
+  // お気に入り投稿を検索
+  queryMyCollection: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/disclosure/queryMyCollection', queryData);
+  },
+  
+  // 投稿をお気に入りに追加
   collect: (disclosureId: number) => {
     return apiClient.post('/disclosure/collect', { disclosureId });
   },
-  uncollect: (disclosureId: number) => {
-    return apiClient.post('/disclosure/uncollect', { disclosureId });
+  
+  // 投稿のお気に入りを解除
+  cancelCollect: (disclosureId: number) => {
+    return apiClient.post('/disclosure/cancelCollect', { disclosureId });
+  },
+  
+  // 投稿の詳細を取得
+  getDetail: (disclosureId: number) => {
+    return apiClient.get(`/disclosure/detail?disclosureId=${disclosureId}`);
+  },
+  
+  // 投稿を削除
+  delete: (disclosureId: number) => {
+    return apiClient.post('/disclosure/delete', { disclosureId });
+  },
+  
+  // 審査待ち投稿を取得
+  getPendingDisclosure: (pageNum: number, pageSize: number) => {
+    return apiClient.get(`/disclosure/pending?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  
+  // 審査待ち投稿リストを検索（POSTメソッド）
+  queryPendingList: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/disclosure/queryPendingList', queryData);
+  },
+  
+  // 公開投稿を取得
+  getPublicDisclosure: (pageNum: number, pageSize: number) => {
+    return apiClient.get(`/disclosure/public?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  
+  // 公開投稿リストを検索（POSTメソッド）
+  queryPublicList: (queryData: { pageNum: number; pageSize: number }) => {
+    return apiClient.post('/disclosure/queryPublicList', queryData);
+  },
+  
+  // 投稿を審査
+  review: (disclosureId: number, status: 'approved' | 'rejected', reason?: string) => {
+    return apiClient.post('/disclosure/review', { disclosureId, status, reason });
+  },
+  
+  // 審査操作（別名）
+  audit: (disclosureId: number, status: 'approved' | 'rejected' | 1 | 2) => {
+    // ステータス値を直接渡し、バックエンドで型変換を処理
+    return apiClient.post('/disclosure/audit', { disclosureId, status: status });
+  },
+  
+  // マイ投稿を取得
+  getMyDisclosure: (pageNum: number, pageSize: number) => {
+    return apiClient.get(`/disclosure/my?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  
+  // 投稿を追加（別名）
+  add: (data: { title: string; content: string; link?: string; images?: string[]; categoryId?: number; disclosurePrice?: number; imgUrl?: string }) => {
+    return apiClient.post('/disclosure/add', data);
+  }
+};
+
+// 通知相关API接口
+export const notificationApi = {
+  // 获取通知列表
+  getList: (pageNum: number, pageSize: number) => {
+    return apiClient.get(`/notification/list?pageNum=${pageNum}&pageSize=${pageSize}`);
+  },
+  
+  // 获取我的通知（别名）
+  getMyNotifications: () => {
+    return apiClient.get('/notification/my');
+  },
+  
+  // 标记通知为已读
+  markAsRead: (notificationId: number) => {
+    return apiClient.post('/notification/markAsRead', { notificationId });
+  },
+  
+  // 标记所有通知为已读
+  markAllAsRead: () => {
+    return apiClient.post('/notification/markAllAsRead');
+  },
+  
+  // 获取未读通知数量
+  getUnreadCount: () => {
+    return apiClient.get('/notification/unreadCount');
+  },
+  
+  // 删除通知
+  delete: (notificationId: number) => {
+    return apiClient.post('/notification/delete', { notificationId });
+  },
+  
+  // 通知を削除（別名）
+  deleteNotification: (notificationId: number) => {
+    return apiClient.post('/notification/delete', { notificationId });
+  }
+};
+
+// カテゴリー関連APIインターフェース
+export const categoryApi = {
+  // カテゴリーリストを取得
+  getList: () => {
+    return apiClient.get('/category/list');
+  },
+  
+  // カテゴリー属性を取得
+  getAttributes: (catId: number) => {
+    return apiClient.get(`/category/attributes?catId=${catId}`);
+  }
+};
+
+// 一般的なAPIインターフェース
+export const commonApi = {
+  // ファイルをアップロード
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/common/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  
+  // ファイルをアップロード（別名）
+  upload: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/common/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  
+  // システム設定を取得
+  getConfig: () => {
+    return apiClient.get('/common/config');
   }
 };
 

@@ -21,6 +21,7 @@ const Header: React.FC = () => {
   const isRegisterPage = location.pathname === '/register'; // Also treat register separately for consistency
   const isDisclosureCollectionPage = location.pathname === '/my-disclosure-collection';
   const isMyTipPage = location.pathname === '/my-tip';
+  const isMemberBPage = location.pathname === '/member-b';
 
   // デバッグログ
   useEffect(() => {
@@ -47,7 +48,7 @@ const Header: React.FC = () => {
       const adminStatus = payload?.userId === 1 || payload?.sub === 'admin' || payload?.username === 'admin' || payload?.name === 'admin';
       setIsAdmin(adminStatus);
       
-      // 获取用户详细信息以显示昵称
+      // ユーザーの詳細情報を取得してニックネームを表示
       fetchUserProfile();
     } catch {
       setUsername('ユーザー');
@@ -68,7 +69,7 @@ const Header: React.FC = () => {
         setDisplayName(username);
       }
     } catch (error) {
-      console.error('获取用户信息失败:', error);
+      console.error('ユーザー情報の取得に失敗:', error);
       setDisplayName(username);
     }
   };
@@ -77,7 +78,7 @@ const Header: React.FC = () => {
     syncAuthState();
   }, [location.pathname]);
 
-  // 监听localStorage变化，确保用户切换时能及时更新状态
+  // localStorageの変化を監視し、ユーザー切り替え時に状態を適時更新
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
@@ -89,18 +90,18 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // 定期检查token状态，确保状态同步
+  // トークン状態を定期的にチェックし、状態同期を確保
   useEffect(() => {
     const interval = setInterval(() => {
       const currentToken = localStorage.getItem('token');
       const storedPayload = currentToken ? JSON.parse(atob(currentToken.split('.')[1])) : null;
       const currentUserId = storedPayload?.userId;
       
-      // 如果用户ID发生变化，重新同步
+      // ユーザーIDが変化した場合、再同期
       if (isLoggedIn && currentUserId && currentUserId !== parseInt(username.replace('user', ''))) {
         syncAuthState();
       }
-    }, 1000); // 每秒检查一次
+    }, 1000); // 1秒ごとにチェック
 
     return () => clearInterval(interval);
   }, [isLoggedIn, username]);
@@ -134,6 +135,7 @@ const Header: React.FC = () => {
           <Link to="/">ホーム</Link>
           <Link to="/compare">価格比較</Link>
           <Link to="/community">みんなの投稿</Link>
+
           {isAdmin && <Link to="/admin/disclosures" style={{ color: '#ff4d4f' }}>投稿審査</Link>}
           <Link to={isLoggedIn ? '/profile' : '/login'}>マイページ</Link>
         </nav>

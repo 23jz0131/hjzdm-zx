@@ -66,52 +66,6 @@ public class GoodsController {
         return Result.success(goodsService.queryGoodsLike(goodsId));
     }
 
-    /* ================= 点赞 / 收藏 ================= */
-
-    @PostMapping("/like")
-    public Result<Boolean> like(@RequestBody OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        goodsService.like(dto);
-        return Result.success(true);
-    }
-
-    @PostMapping("/dislike")
-    public Result<Boolean> dislike(@RequestBody OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        goodsService.dislike(dto);
-        return Result.success(true);
-    }
-
-    @PostMapping("/collect")
-    public Result<Boolean> collect(@RequestBody OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        goodsService.collect(dto);
-        return Result.success(true);
-    }
-
-    @PostMapping("/cancelCollect")
-    public Result<Boolean> cancelCollect(@RequestBody OperateDTO dto) {
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        dto.setUserId(userId);
-        goodsService.cancelCollect(dto);
-        return Result.success(true);
-    }
-
     /* ================= 我的 ================= */
 
     @PostMapping("/myGoods")

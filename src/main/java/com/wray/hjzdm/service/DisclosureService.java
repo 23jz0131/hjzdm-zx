@@ -22,13 +22,5 @@ public interface DisclosureService extends IService<Disclosure> {
 
     List<Disclosure> queryPublicDisclosure(QueryDTO queryDto);
 
-    boolean like(Long userId, Long disclosureId);
-    boolean unlike(Long userId, Long disclosureId);
-    boolean isLikedByUser(Long userId, Long disclosureId);
-    Long getLikeCount(Long disclosureId);
-    boolean collect(Long userId, Long disclosureId);
-    boolean uncollect(Long userId, Long disclosureId);
-    boolean isCollectedByUser(Long userId, Long disclosureId);
-    Long getCollectCount(Long disclosureId);
-    List<Disclosure> queryMyCollect(QueryDTO queryDto);
+    // 点赞收藏相关方法已删除
 }

@@ -13,7 +13,7 @@ import AdminDisclosurePage from './pages/AdminDisclosurePage';
 import NotificationPage from './pages/NotificationPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import ProfileSetupPage from './pages/ProfileSetupPage';
+
 import SubmitDisclosurePage from './pages/SubmitDisclosurePage';
 // 测试组件已移除
 // import CollectionCountTest from './components/CollectionCountTest';
@@ -37,7 +37,7 @@ function App() {
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile-setup" element={<ProfileSetupPage />} />
+
         <Route path="/submit-disclosure" element={<ProtectedRoute><SubmitDisclosurePage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/my-tip" element={<ProtectedRoute><MyTipPage /></ProtectedRoute>} />

@@ -11,6 +11,7 @@ interface Product {
   platform: string;
   originalPrice?: number;
   link?: string;
+  mallType?: number;
 }
 
 const Home: React.FC = () => {
@@ -69,14 +70,15 @@ const Home: React.FC = () => {
                     imageUrl: typeof (cheapest as any).imgUrl === 'string' ? (cheapest as any).imgUrl : '',
                     platform: getPlatformName((cheapest as any).mallType || 0),
                     originalPrice: cheapest.goodsPrice ? Math.floor(cheapest.goodsPrice * 1.1) : undefined,
-                    link: cheapest.goodsLink
+                    link: cheapest.goodsLink,
+                    mallType: (cheapest as any).mallType || 0
                   });
                 }
               }
             });
           }
         } catch (e) {
-          // 单个关键词失败时继续其他关键词
+          // 単個キーワード失敗時他のキーワードにフォールバック
           console.warn('compareGoods failed for', q, e);
         }
         if (collected.length >= 10) break;
@@ -95,7 +97,8 @@ const Home: React.FC = () => {
               imageUrl: typeof item.imgUrl === 'string' ? item.imgUrl : '',
               platform: getPlatformName(item.mallType),
               originalPrice: item.goodsPrice ? Math.floor(item.goodsPrice * 1.1) : undefined,
-              link: item.goodsLink
+              link: item.goodsLink,
+              mallType: item.mallType || 0
             });
           });
         } catch (e) {
@@ -103,7 +106,7 @@ const Home: React.FC = () => {
         }
       }
 
-      // 去重（按名称），并限制前 10
+      // 重複を削除（名前で）、最初の10件に制限
       const uniqueByName: Record<string, Product> = {};
       collected.forEach(p => {
         if (!uniqueByName[p.name]) {
@@ -118,15 +121,16 @@ const Home: React.FC = () => {
       const finalList = Object.values(uniqueByName).slice(0, 10);
       setProducts(finalList);
     } catch (err) {
-      console.error('Failed to load products:', err);
-      // Fallback data
+      console.error('商品の読み込みに失敗:', err);
+      // フォールバックデータ
       setProducts(Array(5).fill(0).map((_, i) => ({
         id: i,
         name: 'Sample Product ' + (i + 1),
         price: 10000 + i * 500,
         imageUrl: '',
         platform: 'Demo',
-        originalPrice: 12000
+        originalPrice: 12000,
+        mallType: 10
       })));
     } finally {
       setLoading(false);
@@ -140,12 +144,10 @@ const Home: React.FC = () => {
     }
   };
 
-  const getPlatformName = (mallType: number): string => {
+  const getPlatformName = (mallType: number) => {
     switch (mallType) {
-      case 10: return '楽天';
+      case 10: return '楽天市場';
       case 20: return 'Yahoo!ショッピング';
-      case 30: return 'タオバオ';
-      case 40: return 'Amazon';
       default: return 'その他';
     }
   };
@@ -198,7 +200,6 @@ const Home: React.FC = () => {
           <div style={{ marginTop: '20px' }}>
             <div className="section-header">
               <h3 className="section-title">人気商品ランキング</h3>
-              <Link to="/compare" style={{ fontSize: '12px', color: '#0033cc' }}>すべて見る &gt;&gt;</Link>
             </div>
 
             <div className="ranking-list">
@@ -231,15 +232,12 @@ const Home: React.FC = () => {
                         </Link>
                       )}
                       <div className="rank-meta">
-                        {product.platform} | 評価: ★★★★☆ ({(Math.random() * 100).toFixed(0)})
+                        <span className={`mall-tag mall-${product.mallType || 10}`}>
+                          {getPlatformName(product.mallType || 10)}
+                        </span>
                       </div>
                       <div className="rank-price">
                         ¥{product.price.toLocaleString()}
-                        {product.originalPrice && (
-                          <span className="rank-price-sub">
-                            ({Math.round((1 - product.price / product.originalPrice) * 100)}% OFF)
-                          </span>
-                        )}
                       </div>
 
                     </div>

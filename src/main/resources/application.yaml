@@ -1,36 +1,42 @@
 server:
-  port: ${PORT:9090}
+  port: 8080
 
 spring:
-  main:
-    banner-mode: off
-
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
-
   datasource:
-    # 优先使用环境变量中的 MySQL 配置，默认使用 TiDB Cloud
-    # 在 Environment 中配置 SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fortune500?serverTimezone=Asia/Tokyo&useUnicode=true&characterEncoding=utf8&useSSL=true&requireSSL=true}
-    username: ${SPRING_DATASOURCE_USERNAME:2eXmMXiGeCt9iz7.root}
-    password: ${SPRING_DATASOURCE_PASSWORD:FPpKFpms5hDXtOuF}
-    # 强制指定 Druid 的驱动类，防止自动推断为 H2
-    druid:
-      driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
-
+    url: jdbc:mysql://localhost:3306/hjzdm?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-test-query: SELECT 1
   jpa:
-    # database-platform: org.hibernate.dialect.H2Dialect
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
     hibernate:
       ddl-auto: update
-    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
-
-  cache:
-    type: simple
-    # redis: removed
+logging:
+  level:
+    com.wray.hjzdm: debug
+    org.springframework.web: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # 文件上传路径配置
 file:

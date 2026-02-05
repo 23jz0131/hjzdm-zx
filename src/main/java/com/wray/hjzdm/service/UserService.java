@@ -9,11 +9,6 @@ import com.wray.hjzdm.entity.User;
 public interface UserService extends IService<User> {
 
     /**
-     * 本地手机号登录
-     */
-    User localLogin(LocalLoginDTO dto);
-    
-    /**
      * 用户名或邮箱登录
      */
     User login(UserLoginDTO dto);
@@ -29,9 +24,9 @@ public interface UserService extends IService<User> {
     User getUserProfile(Long userId);
     
     /**
-     * 更新用户资料
+     * 移除更新用户资料方法
+     * 个人信息编辑功能已被删除
      */
-    User updateUserProfile(Long userId, String avatar, String nickname, String name, Integer gender, java.util.Date birthDate);
     
     /**
      * 重置用户密码

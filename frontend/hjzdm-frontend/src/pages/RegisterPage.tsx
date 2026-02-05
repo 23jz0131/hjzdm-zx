@@ -83,9 +83,9 @@ const RegisterPage: React.FC = () => {
           password: '',
           confirmPassword: ''
         });
-        // 3秒後にログインページにリダイレクト
+        // 3秒後にホームページにリダイレクト
         setTimeout(() => {
-          navigate('/profile-setup');
+          navigate('/');
         }, 3000);
       } else {
         // 応答からエラーメッセージを取得しようとする

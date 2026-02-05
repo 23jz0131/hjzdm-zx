@@ -1,174 +1,268 @@
 import React, { useState, useEffect } from 'react';
+// 导入必要的React Router导航钩子
 import { useNavigate } from 'react-router-dom';
-import { disclosureApi, disclosureOperateApi, commentApi } from '../services/api';
+// 导入API服务模块
+import { disclosureApi, commentApi } from '../services/api';
+// 导入页面样式文件
 import './CommunityPage.css';
 
+/**
+ * 披露内容接口定义
+ * 定义社区页面中每条披露内容的数据结构
+ */
 interface Disclosure {
-  disclosureId: number;
-  title: string;
-  content: string;
-  link: string;
-  disclosurePrice: number;
-  imgUrl?: string;
-  createTime: string;
-  authorName?: string;
-  likeCount?: number;
-  collectCount?: number;
-  likedByCurrentUser?: boolean;
+  disclosureId: number;        // 披露内容唯一标识
+  title: string;              // 披露标题
+  content: string;            // 披露内容描述
+  link: string;               // 商品链接
+  disclosurePrice: number;    // 披露价格
+  imgUrl?: string;            // 图片URL（可选）
+  createTime: string;         // 创建时间
+  authorName?: string;        // 作者名称（可选）
+  likeCount?: number;         // 点赞数量（可选）
+  collectCount?: number;      // 收藏数量（可选）
+  likedByCurrentUser?: boolean; // 当前用户是否已点赞（可选）
 }
 
+/**
+ * 评论接口定义
+ * 定义评论数据结构
+ */
 interface Comment {
-  id: number;
-  parentId?: number;
-  disclosureId: number;
-  content: string;
-  createTime: string;
-  owner?: boolean;
-  avatarUrl?: string;
-  nickName?: string;
-  hasLike?: boolean;
-  status: number;
-  publisher?: boolean;
-  likeCount?: number;
-  likedByCurrentUser?: boolean;
+  id: number;                 // 评论唯一标识
+  parentId?: number;          // 父评论ID（用于回复功能，可选）
+  disclosureId: number;       // 关联的披露内容ID
+  content: string;            // 评论内容
+  createTime: string;         // 创建时间
+  owner?: boolean;            // 是否为评论所有者（可选）
+  avatarUrl?: string;         // 用户头像URL（可选）
+  nickName?: string;          // 用户昵称（可选）
+  hasLike?: boolean;          // 是否有点赞（可选）
+  status: number;             // 评论状态
+  publisher?: boolean;        // 是否为发布者（可选）
+  likeCount?: number;         // 点赞数量（可选）
+  likedByCurrentUser?: boolean; // 当前用户是否已点赞（可选）
 }
 
+/**
+ * 社区页面核心组件
+ * 实现用户浏览披露内容、点赞、收藏、评论等社交互动功能
+ */
 const CommunityPage: React.FC = () => {
+  // 导航钩子，用于页面跳转
   const navigate = useNavigate();
+  
+  // 披露内容列表状态
   const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
+  
+  // 页面加载状态
   const [loading, setLoading] = useState(true);
+  
+  // 评论映射状态，存储每个披露内容的评论列表
   const [commentMap, setCommentMap] = useState<Record<number, Comment[]>>({});
+  
+  // 评论输入框内容状态
   const [commentInput, setCommentInput] = useState<Record<number, string>>({});
+  
+  // 回复目标评论状态
   const [replyTo, setReplyTo] = useState<Record<number, Comment | null>>({});
+  
+  // 评论加载状态
   const [commentLoading, setCommentLoading] = useState<Record<number, boolean>>({});
   
-  // 添加图片URL转换函数
+  /**
+   * 图片URL转换函数
+   * 根据不同的环境和URL格式，将相对路径转换为可访问的完整URL
+   * @param url - 原始图片URL
+   * @returns 转换后的完整图片URL
+   */
   const convertImageUrl = (url: string): string => {
-    // 如果URL为空或无效，返回占位符
+    // 如果URL为空或无效，返回默认占位符图片
     if (!url || url.trim() === '') {
       return '/images/placeholder.png';
     }
     
-    // 如果是相对路径且以 /uploads/ 开头，则转换为完整的后端URL
+    // 处理以 /uploads/ 开头的相对路径
     if (url.startsWith('/uploads/')) {
-      // 在开发环境中，使用代理地址；在生产环境中使用绝对URL
+      // 判断当前运行环境
       const isDevelopment = process.env.NODE_ENV === 'development';
       if (isDevelopment) {
-        // 開発環境：通過代理アクセス後端の/uploads/パス
+        // 开发环境：通过代理访问后端的/uploads/路径
         return url;
       } else {
-        // 生産環境：使用固定的後端URL（硬コード，但避免環境変数）
+        // 生产环境：使用固定的后端URL（硬编码方式避免环境变量依赖）
         const backendUrl = 'https://hjzdm-zx.onrender.com';
         return `${backendUrl}${url}`;
       }
     }
     
-    // 如果是完整的URL（包含http/https），直接返回
+    // 处理完整的HTTP/HTTPS URL
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // 其他情况（相对路径但不是/uploads/开头）也使用后端地址
+    // 处理其他相对路径情况
     const isDevelopment = process.env.NODE_ENV === 'development';
     if (isDevelopment) {
       return url;
     } else {
       const backendUrl = 'https://hjzdm-zx.onrender.com';
+      // 确保路径以/开头
       return `${backendUrl}${url.startsWith('/') ? url : '/' + url}`;
     }
   };
   
-  // いいね状態
-  const [likedDisclosures, setLikedDisclosures] = useState<Set<number>>(new Set());
-  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({});
+  /**
+   * 点赞状态管理
+   * 使用Set数据结构存储用户已点赞的披露内容ID，提高查找效率
+   */
+  // 点赞功能已删除
   
-  // お気に入り状態
-  const [collectedDisclosures, setCollectedDisclosures] = useState<Set<number>>(new Set());
-  const [collectCounts, setCollectCounts] = useState<Record<number, number>>({});
+  /**
+   * 点赞数量统计
+   * 记录每个披露内容的点赞总数
+   */
+  // 点赞计数功能已删除
   
-  // コメントソート状態
+  /**
+   * 收藏状态管理
+   * 使用Set数据结构存储用户已收藏的披露内容ID
+   */
+  // 收藏功能已删除
+  
+  /**
+   * 收藏数量统计
+   * 记录每个披露内容的收藏总数
+   */
+  // 收藏計数機能已削除
+  
+  /**
+   * 评论排序状态
+   * 控制每个披露内容下评论的显示顺序（最新/最旧）
+   */
   const [commentSortOrder, setCommentSortOrder] = useState<Record<number, 'latest' | 'oldest'>>({});
   
-  // コメントエリアの高さ固定関連状態
+  /**
+   * 评论显示数量控制
+   * 限制初始显示的评论数量，提供"查看更多"功能
+   */
   const [maxCommentsToShow, setMaxCommentsToShow] = useState(5);
 
+  /**
+   * 组件挂载时加载披露内容
+   * 在组件初始化时自动获取社区披露内容列表
+   */
   useEffect(() => {
     loadDisclosures();
   }, []);
 
+  /**
+   * 加载披露内容列表
+   * 从后端API获取公开的披露内容并初始化组件状态
+   * @async
+   * @returns {Promise<void>}
+   */
   const loadDisclosures = async () => {
     try {
+      // 设置加载状态
       setLoading(true);
-      const res = await disclosureApi.getPublicDisclosure(1, 100);
+      
+      // 调用API获取披露内容列表
+      const res = await disclosureApi.queryPublicList({ pageNum: 1, pageSize: 100 });
       const disclosuresData = res.data.data || [];
       
-      // いいね状態とカウントを初期化
-      const initialLikedSet = new Set<number>();
-      const initialLikeCounts: Record<number, number> = {};
-      const initialCollectCounts: Record<number, number> = {};
-      
-      disclosuresData.forEach((item: Disclosure) => {
-        if (item.likedByCurrentUser) {
-          initialLikedSet.add(item.disclosureId);
-        }
-        // 确保使用后端返回的准确计数
-        initialLikeCounts[item.disclosureId] = item.likeCount ?? 0;
-        initialCollectCounts[item.disclosureId] = item.collectCount ?? 0;
-      });
-      
+      // 更新组件状态
       setDisclosures(disclosuresData);
-      setLikedDisclosures(initialLikedSet);
-      setLikeCounts(initialLikeCounts);
-      setCollectCounts(initialCollectCounts);
       
-      // 加载用户的收藏状态
-      await loadInitialCollectStatus();
+      // 初始化状态已完成
+      // 点赞和收藏機能已削除
+      
     } catch (err) {
-      console.error(err);
+      // 错误处理：记录错误日志
+      console.error('加载披露内容失败:', err);
     } finally {
+      // 无论成功与否，都要结束加载状态
       setLoading(false);
     }
   };
 
+  /**
+   * 用户登录状态验证
+   * 检查用户是否已登录，未登录则跳转到登录页面
+   * @returns {boolean} 返回用户登录状态
+   */
   const ensureLogin = () => {
     const token = localStorage.getItem('token');
     if (!token) {
+      // 未登录，跳转到登录页面
       navigate('/login');
       return false;
     }
     return true;
   };
 
+  /**
+   * 加载指定披露内容的评论
+   * @param disclosureId - 披露内容ID
+   * @async
+   * @returns {Promise<void>}
+   */
   const loadComments = async (disclosureId: number) => {
     try {
+      // 设置该披露内容的评论加载状态
       setCommentLoading(prev => ({ ...prev, [disclosureId]: true }));
+      
+      // 调用API获取评论列表
       const res = await commentApi.list(disclosureId);
+      
+      // 检查API响应状态
       if (res.data.code !== 200) {
-        console.error('コメントの読み込みに失敗しました:', res.data.msg);
+        console.error('评论加载失败:', res.data.msg);
+        // 加载失败时设置空数组
         setCommentMap(prev => ({ ...prev, [disclosureId]: [] }));
         return;
       }
+      
+      // 处理成功响应的数据
       const list: Comment[] = res.data.data || [];
       setCommentMap(prev => ({ ...prev, [disclosureId]: list }));
+      
     } catch (e: any) {
-      console.error(e);
+      // 异常处理
+      console.error('评论加载异常:', e);
       setCommentMap(prev => ({ ...prev, [disclosureId]: [] }));
+      
+      // 显示具体的错误情報
       if (e.response?.data?.msg) {
-        console.error('コメントの読み込みに失敗しました:', e.response.data.msg);
+        console.error('评论加载失敗:', e.response.data.msg);
       }
+      
     } finally {
+      // 无论成功与否，都要結束加载状態
       setCommentLoading(prev => ({ ...prev, [disclosureId]: false }));
     }
   };
 
-  // モーダル表示を制御
+  /**
+   * 评论模态框状态管理
+   * 控制评论详情弹窗的显示与隐藏
+   */
   const [modalComment, setModalComment] = useState<{disclosureId: number, item: Disclosure} | null>(null);
   
-  // 入力フィールドのフォーカス状態を制御
+  /**
+   * 入力ボックスフォーカス状態管理
+   * コメント入力ボックスがフォーカスを得たときに全体レイアウトの調整を制御
+   */
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  /**
+   * 切換コメント表示/非表示
+   * 指定された披露内容のコメント詳細ポップアップを制御
+   * @param disclosureId - 披露内容ID
+   * @param item - 披露内容オブジェクト
+   */
   const toggleComments = (disclosureId: number, item: Disclosure) => {
-    // すでに開いている場合は閉じる
+    // すでに該当の披露内容のコメントが開かれている場合は閉じる
     if (modalComment?.disclosureId === disclosureId) {
       setModalComment(null);
       return;
@@ -177,47 +271,70 @@ const CommunityPage: React.FC = () => {
     // 新しいコメントモーダルを開く
     setModalComment({ disclosureId, item });
     
-    // コメントデータを読み込む
+    // まだ該当の披露内容のコメントが読み込まれていない場合はコメントデータを読み込む
     if (!commentMap[disclosureId]) {
       loadComments(disclosureId);
     }
   };
 
+  /**
+   * コメントの送信
+   * ユーザーログイン状態の検証
+   * @param disclosureId - 披露内容ID
+   * @async
+   * @returns {Promise<void>}
+   */
   const handleSubmitComment = async (disclosureId: number) => {
+    // ユーザーログイン状態の検証
     if (!ensureLogin()) return;
+    
+    // コメント内容の取得と検証
     const text = (commentInput[disclosureId] || '').trim();
     if (!text) {
-      alert('コメントを入力してください');
+      alert('コメント内容を入力してください');
       return;
     }
     if (text.length > 500) {
-      alert('コメントは500文字以内で入力してください');
+      alert('コメント内容は500文字以内で入力してください');
       return;
     }
+    
+    // 返信先の取得（コメントへの返信の場合）
     const replyTarget = replyTo[disclosureId];
+    
     try {
+      // APIにコメントを送信
       const res = await commentApi.add({
         disclosureId,
         content: text,
         parentId: replyTarget ? replyTarget.id : undefined
       });
       
+      // APIレスポンスの処理
       if (res.data.code === 200) {
+        // 送信成功、入力ボックスと返信状態をクリア
         setCommentInput(prev => ({ ...prev, [disclosureId]: '' }));
         setReplyTo(prev => ({ ...prev, [disclosureId]: null }));
-        // コメントリストを強制的に再読み込み
+        
+        // 新しいコメントを表示するためにコメントリストを再読み込み
         await loadComments(disclosureId);
         
-        // コメント追加後のUI更新
+        // ここに他のUI更新ロジックを追加できる
+        
       } else {
-        alert(res.data.msg || 'コメントの投稿に失敗しました');
+        // APIがエラーを返した場合
+        alert(res.data.msg || 'コメントの送信に失敗しました');
       }
+      
     } catch (e: any) {
-      console.error(e);
+      // 例外処理
+      console.error('コメントの送信中にエラーが発生しました:', e);
+      
+      // 具体的なエラーメッセージを表示
       if (e.response?.data?.msg) {
         alert(e.response.data.msg);
       } else {
-        alert('コメントの投稿に失敗しました');
+        alert('コメントの送信に失敗しました');
       }
     }
   };
@@ -269,194 +386,7 @@ const CommunityPage: React.FC = () => {
     setReplyTo(prev => ({ ...prev, [disclosureId]: comment }));
   };
 
-  const loadInitialCollectStatus = async () => {
-    // 如果用户已登录，获取用户的收藏状态
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    try {
-      console.log('開始読み込み...');
-      // 取得
-      const res = await disclosureApi.getMyCollect(1, 100);
-      if (res.data.code === 200) {
-        const collectedList = res.data.data?.records || res.data.data || [];
-        const collectedIds = new Set<number>(collectedList.map((item: any) => item.disclosureId || item.id));
-        setCollectedDisclosures(collectedIds);
-      } else {
-        console.error('読み込み失敗:', res.data.message);
-      }
-    } catch (err) {
-      console.error('読み込み失敗:', err);
-    }
-  };
-
-  const handleLike = async (item: Disclosure) => {
-    if (!ensureLogin()) return;
-    
-    const isLiked = likedDisclosures.has(item.disclosureId);
-    const currentCount = likeCounts[item.disclosureId] || 0;
-    
-    try {
-      // 先更新UI状態，提供即時フィードバック
-      setLikedDisclosures(prev => {
-        const newSet = new Set(prev);
-        if (isLiked) {
-          newSet.delete(item.disclosureId);
-        } else {
-          newSet.add(item.disclosureId);
-        }
-        return newSet;
-      });
-      
-      // 一時的にいいね数を更新（楽観的更新）
-      const tempNewCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
-      setLikeCounts(prev => ({
-        ...prev,
-        [item.disclosureId]: tempNewCount
-      }));
-      
-      // APIを呼び出してサーバー状態を更新
-      const res = isLiked 
-        ? await disclosureOperateApi.unlike(item.disclosureId)
-        : await disclosureOperateApi.like(item.disclosureId);
-      
-      if (res.data.code !== 200) {
-        throw new Error(res.data.message || '操作失敗');
-      }
-      
-      console.log(`${isLiked ? 'いいね解除' : 'いいね'}成功:`, item.disclosureId);
-      
-      // 後端からの結果に基づいて最終状態を決定
-      const changed = res.data.data?.changed ?? true;
-      if (changed) {
-        // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
-      } else {
-        // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
-        setLikedDisclosures(prev => {
-          const newSet = new Set(prev);
-          if (isLiked) {
-            newSet.add(item.disclosureId); // いいね状態を復元
-          } else {
-            newSet.delete(item.disclosureId); // いいね解除状態を復元
-          }
-          return newSet;
-        });
-        
-        // カウントを元の値に戻す
-        setLikeCounts(prev => ({
-          ...prev,
-          [item.disclosureId]: currentCount
-        }));
-      }
-      
-    } catch (err: any) {
-      // ネットワークエラーまたはAPI呼び出し失敗の場合、完全にUI状態をロールバック
-      console.error('いいね操作失敗:', err);
-      
-      setLikedDisclosures(prev => {
-        const newSet = new Set(prev);
-        if (isLiked) {
-          newSet.add(item.disclosureId); // 元のいいね状態を復元
-        } else {
-          newSet.delete(item.disclosureId); // 元のいいね解除状態を復元
-        }
-        return newSet;
-      });
-      
-      // カウントを元の値に戻す
-      setLikeCounts(prev => ({
-        ...prev,
-        [item.disclosureId]: currentCount
-      }));
-      
-      const errorMessage = err.response?.data?.message || err.message || '操作失敗、もう一度お試しください';
-      alert(errorMessage);
-    }
-  };
-
-  const handleCollect = async (item: Disclosure) => {
-    if (!ensureLogin()) return;
-    
-    const isCollected = collectedDisclosures.has(item.disclosureId);
-    const currentCount = collectCounts[item.disclosureId] || 0;
-    
-    try {
-      // 先更新UI状態，提供即時フィードバック
-      setCollectedDisclosures(prev => {
-        const newSet = new Set(prev);
-        if (isCollected) {
-          newSet.delete(item.disclosureId);
-        } else {
-          newSet.add(item.disclosureId);
-        }
-        return newSet;
-      });
-      
-      // 一時的にお気に入り数を更新（楽観的更新）
-      const tempNewCount = isCollected ? Math.max(0, currentCount - 1) : currentCount + 1;
-      setCollectCounts(prev => ({
-        ...prev,
-        [item.disclosureId]: tempNewCount
-      }));
-      
-      // APIを呼び出してサーバー状態を更新
-      const res = isCollected 
-        ? await disclosureOperateApi.uncollect(item.disclosureId)
-        : await disclosureOperateApi.collect(item.disclosureId);
-      
-      if (res.data.code !== 200) {
-        throw new Error(res.data.message || '操作失敗');
-      }
-      
-      console.log(`${isCollected ? 'お気に入り解除' : 'お気に入り'}成功:`, item.disclosureId);
-      
-      // 後端からの結果に基づいて最終状態を決定
-      const changed = res.data.data?.changed ?? true;
-      if (changed) {
-        // 操作成功でデータベース状態が変わった場合、現在のUI状態を維持
-      } else {
-        // データベース状態が変わらなかった場合、すべてのUI状態をロールバック
-        setCollectedDisclosures(prev => {
-          const newSet = new Set(prev);
-          if (isCollected) {
-            newSet.add(item.disclosureId); // お気に入り状態を復元
-          } else {
-            newSet.delete(item.disclosureId); // お気に入り解除状態を復元
-          }
-          return newSet;
-        });
-        
-        // カウントを元の値に戻す
-        setCollectCounts(prev => ({
-          ...prev,
-          [item.disclosureId]: currentCount
-        }));
-      }
-      
-    } catch (err: any) {
-      // ネットワークエラーまたはAPI呼び出し失敗の場合、完全にUI状態をロールバック
-      console.error('お気に入り操作失敗:', err);
-      
-      setCollectedDisclosures(prev => {
-        const newSet = new Set(prev);
-        if (isCollected) {
-          newSet.add(item.disclosureId); // 元のお気に入り状態を復元
-        } else {
-          newSet.delete(item.disclosureId); // 元のお気に入り解除状態を復元
-        }
-        return newSet;
-      });
-      
-      // カウントを元の値に戻す
-      setCollectCounts(prev => ({
-        ...prev,
-        [item.disclosureId]: currentCount
-      }));
-      
-      const errorMessage = err.response?.data?.message || err.message || '操作失敗、もう一度お試しください';
-      alert(errorMessage);
-    }
-  };
+  // 收藏状態読み込み機能は削除されました
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
@@ -486,10 +416,10 @@ const CommunityPage: React.FC = () => {
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
                     onError={(e) => {
                       console.error('Image load failed:', (e.target as HTMLImageElement).src);
-                      // 显示占位符而不是隐藏图片
+                      // 显示占位符而不是隐藏画像
                       const img = e.target as HTMLImageElement;
                       img.style.display = 'none';
-                      // 在父容器中添加占位符
+                      // 親コンテナに占位符を追加
                       const parent = img.parentElement;
                       if (parent) {
                         parent.innerHTML = `
@@ -542,50 +472,6 @@ const CommunityPage: React.FC = () => {
                     詳細へ
                   </a>
                   <div className="interaction-buttons">
-                    <button 
-                      className={`btn-interaction like ${likedDisclosures.has(item.disclosureId) ? 'liked' : ''}`}
-                      onClick={() => handleLike(item)}
-                      title="いいね"
-                    >
-                      <img 
-                        src={`/images/${likedDisclosures.has(item.disclosureId) ? 'yidianzan' : 'dianzan'}.png`} 
-                        alt="like" 
-                        className="like-icon"
-                        onError={(e) => {
-                          // 图片加载失败时的处理
-                          const img = e.target as HTMLImageElement;
-                          console.warn('点赞图片加载失败:', img.src);
-                          // 可以设置默认的base64图标或者隐藏图标只显示文字
-                          img.style.display = 'none';
-                          // 或者设置一个简单的文本替代
-                          img.parentElement!.innerHTML = likedDisclosures.has(item.disclosureId) ? '♥' : '♡';
-                        }}
-                      />
-                      {likeCounts[item.disclosureId] > 0 && (
-                        <span className="like-count">{likeCounts[item.disclosureId]}</span>
-                      )}
-                    </button>
-                    <button 
-                      className={`btn-interaction collect ${collectedDisclosures.has(item.disclosureId) ? 'collected' : ''}`}
-                      onClick={() => handleCollect(item)}
-                      title="お気に入り"
-                    >
-                      <img 
-                        src={`/images/${collectedDisclosures.has(item.disclosureId) ? 'yishoucang' : 'shoucang'}.png`} 
-                        alt="collect" 
-                        className="collect-icon"
-                        onError={(e) => {
-                          // 图片加载失败时的処理
-                          const img = e.target as HTMLImageElement;
-                          console.warn('收藏图片読み込み失敗:', img.src);
-                          img.style.display = 'none';
-                          img.parentElement!.innerHTML = collectedDisclosures.has(item.disclosureId) ? '★' : '☆';
-                        }}
-                      />
-                      {collectCounts[item.disclosureId] > 0 && (
-                        <span className="collect-count">{collectCounts[item.disclosureId]}</span>
-                      )}
-                    </button>
                     <button
                       className={`btn-interaction comment ${modalComment?.disclosureId === item.disclosureId ? 'comment-open' : ''}`}
                       onClick={() => toggleComments(item.disclosureId, item)}

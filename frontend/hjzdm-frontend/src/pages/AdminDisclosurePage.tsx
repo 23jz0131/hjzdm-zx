@@ -76,13 +76,13 @@ const AdminDisclosurePage: React.FC = () => {
       setError(null);
       let res;
       if (activeTab === 'pending') {
-        res = await disclosureApi.getPendingDisclosure(1, 200);
+        res = await disclosureApi.queryPendingList({ pageNum: 1, pageSize: 200 });
       } else if (activeTab === 'public') {
-        res = await disclosureApi.getPublicDisclosure(1, 200);
+        res = await disclosureApi.queryPublicList({ pageNum: 1, pageSize: 200 });
       } else {
         // 获取所有投稿
-        const pendingRes = await disclosureApi.getPendingDisclosure(1, 100);
-        const publicRes = await disclosureApi.getPublicDisclosure(1, 100);
+        const pendingRes = await disclosureApi.queryPendingList({ pageNum: 1, pageSize: 100 });
+        const publicRes = await disclosureApi.queryPublicList({ pageNum: 1, pageSize: 100 });
         res = {
           data: {
             data: [...(pendingRes.data?.data || []), ...(publicRes.data?.data || [])]

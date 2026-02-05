@@ -1,3 +1,5 @@
+// 个人资料页面组件
+// 负责展示和管理用户的个人信息、功能统计等
 import React, { useState, useEffect } from 'react';
 import { userApi, disclosureApi, notificationApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -8,24 +10,22 @@ import './ProfilePage.css';
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
-
-
+  // 用户基本信息状态
   const [profile, setProfile] = useState<{ id: number; name: string; nickname?: string; avatar?: string; gender?: number; age?: number; birthDate?: string } | null>(null);
+  
+  // 错误信息状态
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false); // 控制编辑状态
-  const [editForm, setEditForm] = useState({
-    name: '',
-    nickname: '',
-    gender: 0,
-    birthDate: ''
-  });
+  
+  // 移除编辑模式状态
 
+  // 功能统计计数状态
   const [featureCounts, setFeatureCounts] = useState([
     { id: 4, name: 'マイヒント', icon: '📢', count: 0 },
     { id: 5, name: '通知', icon: '🔔', count: 0 }
   ]);
 
-  // 使用WebSocket接收实时通知
+  // 使用WebSocket服务接收实时通知
+  // 监听消息事件并相应地更新UI
   useWebSocket({
     onMessage: (message) => {
       console.log('Received WebSocket message in Profile:', message);
@@ -50,11 +50,15 @@ const ProfilePage: React.FC = () => {
     }
   });
 
-  // ユーザーデータの読み込み
+  // 组件挂载时加载用户数据
   useEffect(() => {
     loadUserData();
   }, []);
 
+  /**
+   * 加载通知计数
+   * 获取用户未读通知数量并更新状态
+   */
   const loadNotificationCount = async () => {
     try {
       const notiRes = await notificationApi.getMyNotifications();
@@ -64,8 +68,8 @@ const ProfilePage: React.FC = () => {
 
         let notiCount = 0;
         if (unreadList.length > 0) {
-          // 最新メッセージ時間が前回のクリック時間より新しいかチェック
-          const latestMsg = unreadList[0]; // 假设后端已按時間倒序返回
+          // 检查最新消息时间是否比上次点击时间更新
+          const latestMsg = unreadList[0]; // 假设后端已按时间倒序返回
           const latestTime = new Date(latestMsg.createTime).getTime();
           const lastCheck = parseInt(localStorage.getItem('last_notification_check_time') || '0');
 
@@ -86,6 +90,11 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  /**
+   * 加载用户数据
+   * 获取用户基本信息、投稿统计和通知信息
+   * 包含完善的错误处理和降级机制
+   */
   const loadUserData = async () => {
     try {
       // 获取用户基本信息
@@ -175,13 +184,7 @@ const ProfilePage: React.FC = () => {
         birthDate: formattedBirthDate
       });
       
-      // 初始化编辑表单
-      setEditForm({
-        name: me.name || `ユーザー${me.id}`,
-        nickname: me.nickname || '',
-        gender: me.gender || 0,
-        birthDate: formattedBirthDate
-      });
+      // 移除编辑表单初始化
       
 
 
@@ -270,13 +273,19 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  /**
+   * 处理功能卡片点击事件
+   * 根据不同的功能ID导航到相应的页面
+   * @param id 功能卡片ID
+   */
   const handleFeatureClick = (id: number) => {
     switch (id) {
       case 4:
+        // 跳转到我的投稿页面
         navigate('/my-tip');
         break;
       case 5:
-        // 更新最后查看时间，消除红点
+        // 更新最后查看时间，消除红点，并跳转到通知页面
         localStorage.setItem('last_notification_check_time', Date.now().toString());
         navigate('/notifications');
         break;
@@ -285,40 +294,20 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const toggleEdit = () => {
-    if (isEditing) {
-      // 取消编辑，恢复原始数据
-      if (profile) {
-        setEditForm({
-          name: profile.name || `ユーザー${profile.id}`,
-          nickname: profile.nickname || '',
-          gender: profile.gender !== undefined && profile.gender !== null ? profile.gender : 0,
-          birthDate: profile.birthDate || ''
-        });
-        setErrorMsg(null); // 清除错误信息
-      }
-    }
-    setIsEditing(!isEditing);
-  };
+  /**
+   * 移除编辑模式切换功能
+   */
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    
-    // 特殊处理gender字段，确保传给后端的是数字类型
-    if (name === 'gender') {
-      setEditForm(prev => ({
-        ...prev,
-        [name]: parseInt(value, 10)
-      }));
-    } else {
-      setEditForm(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
+  /**
+   * 移除表单输入处理功能
+   */
 
-  // 计算年龄的辅助函数
+  /**
+   * 计算年龄的辅助函数
+   * 根据出生日期计算当前年龄
+   * @param birthDate 出生日期字符串（YYYY-MM-DD格式）
+   * @returns number 计算得出的年龄
+   */
   const calculateAge = (birthDate: string): number => {
     if (!birthDate) return 0;
     
@@ -351,93 +340,9 @@ const ProfilePage: React.FC = () => {
     return age > 0 ? age : 0;
   };
 
-  const handleSave = async () => {
-    if (!profile) return;
-
-    try {
-      console.log('准备更新用户资料:', {
-        nickname: editForm.nickname,
-        gender: editForm.gender,
-        genderType: typeof editForm.gender,
-        birthDate: editForm.birthDate
-      });
-
-      // 调用API更新用户资料
-      const response = await userApi.updateProfile({
-        nickname: editForm.nickname,
-        gender: editForm.gender,
-        birthDate: editForm.birthDate
-      });
-
-      console.log('API响应完整数据:', response);
-      console.log('API响应数据结构:', {
-        hasData: !!response.data,
-        dataKeys: response.data ? Object.keys(response.data) : [],
-        code: response.data?.code,
-        message: response.data?.message,
-        msg: response.data?.msg,
-        dataContent: response.data?.data
-      });
-
-      // 更宽松的成功判断
-      const successCodes = [200, 0, '200', '0'];
-      const isSuccessful = successCodes.includes(response.data?.code) || 
-                          (response.data?.code === undefined && response.data?.data);
-      
-      if (isSuccessful) {
-        // 更新成功，更新本地状态
-        setProfile({
-          ...profile,
-          nickname: editForm.nickname,
-          gender: editForm.gender,
-          birthDate: editForm.birthDate
-        });
-        setIsEditing(false);
-        alert('プロフィールが更新されました！');
-        setErrorMsg(null); // 清除错误信息
-      } else {
-        const errorMsg = response.data?.message || response.data?.msg || '更新に失敗しました';
-        setErrorMsg(`更新失败: ${errorMsg}`);
-        console.error('更新失败详情:', {
-          code: response.data?.code,
-          message: errorMsg,
-          fullResponse: response.data
-        });
-      }
-    } catch (error: any) {
-      console.error('=== 个人信息更新错误详情 ===');
-      console.error('错误对象:', error);
-      
-      let displayErrorMsg = 'プロフィールの更新中にエラーが発生しました';
-      
-      if (error.response) {
-        // 服务器响应了错误状态码
-        console.error('服务器响应错误:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        });
-        
-        const serverMessage = error.response.data?.message || 
-                             error.response.data?.msg || 
-                             `HTTP ${error.response.status}`;
-        displayErrorMsg = `サーバーエラー: ${serverMessage}`;
-        
-      } else if (error.request) {
-        // 请求已发出但没有收到响应
-        console.error('网络请求无响应:', error.request);
-        displayErrorMsg = 'ネットワーク接続エラー。サーバーに接続できません。';
-        
-      } else {
-        // 其他错误
-        console.error('其他错误:', error.message);
-        displayErrorMsg = `予期せぬエラー: ${error.message}`;
-      }
-      
-      setErrorMsg(displayErrorMsg);
-      console.error('===========================');
-    }
-  };
+  /**
+   * 移除保存用户资料功能
+   */
 
   // 健康检查函数被移除
 
@@ -462,11 +367,6 @@ const ProfilePage: React.FC = () => {
                   {profile?.nickname || profile?.name || 'ユーザー'}
                 </h1>
                 <div className="user-meta">
-                  {profile?.gender !== undefined && profile.gender !== null && (
-                    <span className="meta-item">
-                      {profile.gender === 1 ? '男性' : profile.gender === 2 ? '女性' : '未設定'}
-                    </span>
-                  )}
                   {profile?.birthDate && (
                     <span className="meta-item">
                       {calculateAge(profile.birthDate)}歳
@@ -476,94 +376,12 @@ const ProfilePage: React.FC = () => {
               </div>
               
               <div className="edit-action">
-                {!isEditing ? (
-                  <>
-                    <button className="edit-profile-btn" onClick={toggleEdit}>
-                      <span className="btn-icon">✏️</span>
-                      編集
-                    </button>
-                    {/* 测试按钮 - 仅在开发时使用 */}
-                    <button 
-                      className="test-btn" 
-                      onClick={async () => {
-                        try {
-                          const testResponse = await userApi.getProfile();
-                          console.log('测试API连接:', testResponse);
-                          console.log('测试数据结构:', {
-                            hasData: !!testResponse.data,
-                            dataKeys: testResponse.data ? Object.keys(testResponse.data) : [],
-                            code: testResponse.data?.code,
-                            message: testResponse.data?.message,
-                            dataContent: testResponse.data?.data
-                          });
-                          alert(`API连接正常\n状态码: ${testResponse.data?.code}\n数据: ${!!testResponse.data?.data}`);
-                        } catch (error) {
-                          console.error('API连接测试失败:', error);
-                          alert('API连接失败');
-                        }
-                      }}
-                      style={{ marginLeft: '10px', fontSize: '12px', padding: '4px 8px' }}
-                    >
-                      テスト
-                    </button>
-                  </>
-                ) : (
-                  <div className="edit-actions-inline">
-                    <button className="save-btn" onClick={handleSave}>保存</button>
-                    <button className="cancel-btn" onClick={toggleEdit}>キャンセル</button>
-                  </div>
-                )}
+                {/* 移除编辑按钮 */}
               </div>
             </div>
           </div>
 
-          {/* 编辑表单（仅在编辑模式下显示） */}
-          {isEditing && (
-            <div className="edit-form-section">
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">ニックネーム</label>
-                  <input
-                    type="text"
-                    name="nickname"
-                    value={editForm.nickname}
-                    onChange={handleInputChange}
-                    placeholder="ニックネーム"
-                    className="form-input"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">性別</label>
-                  <select
-                    name="gender"
-                    value={editForm.gender}
-                    onChange={handleInputChange}
-                    className="form-select"
-                  >
-                    <option value={0}>未設定</option>
-                    <option value={1}>男性</option>
-                    <option value={2}>女性</option>
-                  </select>
-                </div>
-                
-
-                
-                <div className="form-group">
-                  <label className="form-label">生年月日</label>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={editForm.birthDate}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    max="2020-12-31"  // 限制最大日期
-                    min="1900-01-01"  // 限制最小日期
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* 移除编辑表单 */}
 
           {/* 功能统计卡片 */}
           <div className="stats-section">

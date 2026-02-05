@@ -57,16 +57,18 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
             createDefaultAdminAccount(conn, dbProductName);
             
             // 检查并创建DISCLOSURE_LIKE表
-            ensureDisclosureLikeTable(conn, meta, dbProductName);
+            ensureDisclosureLikeAndCollectTables(conn, meta, dbProductName);
         } catch (Exception e) {
             log.error("Failed to update schema", e);
         }
     }
 
-    private void ensureDisclosureLikeTable(java.sql.Connection conn, java.sql.DatabaseMetaData meta,
+    private void ensureDisclosureLikeAndCollectTables(java.sql.Connection conn, java.sql.DatabaseMetaData meta,
             String dbProductName) {
+        // 点赞收藏表创建逻辑已删除
+        /*
+        // 确保DISCLOSURE_LIKE表存在
         try {
-            // 检查DISCLOSURE_LIKE表是否存在
             boolean tableExists = false;
             try (java.sql.ResultSet tables = meta.getTables(null, null, "DISCLOSURE_LIKE", new String[] { "TABLE" })) {
                 if (tables.next()) {
@@ -148,6 +150,7 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
         } catch (Exception e) {
             log.error("Failed to ensure DISCLOSURE_COLLECT table", e);
         }
+        */
     }
 
     private void ensureUserTableColumns(java.sql.Connection conn, java.sql.DatabaseMetaData meta,

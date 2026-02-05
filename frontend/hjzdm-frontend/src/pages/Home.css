@@ -379,10 +379,18 @@
 }
 
 .rank-meta span {
-  background: rgba(0,0,0,0.04);
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+
+.rank-meta .mall-10 { background: linear-gradient(135deg, #bf0000, #990000); }
+.rank-meta .mall-20 { background: linear-gradient(135deg, #ff0033, #cc0000); }
+.rank-meta .mall-30 { background: linear-gradient(135deg, #ff5000, #e64a19); }
+.rank-meta .mall-40 { background: linear-gradient(135deg, #ff9900, #f57c00); }
 
 .rank-price {
   font-size: clamp(1.2rem, 1.8vw, 1.5rem);
@@ -534,13 +542,7 @@
   }
   
   .section-header {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
-  }
-  
-  .section-header a {
-    align-self: flex-end;
   }
   
   .ranking-row {

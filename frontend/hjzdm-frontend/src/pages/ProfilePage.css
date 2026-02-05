@@ -739,15 +739,7 @@
     transform: none;
   }
   
-  .edit-profile-btn,
-  .save-btn,
-  .cancel-btn,
-  .retry-btn {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* 移除触摸设备编辑按钮优化 */
   
   .stat-card,
   .shortcut-card {

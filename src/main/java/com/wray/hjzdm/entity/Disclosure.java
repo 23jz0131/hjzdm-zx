@@ -15,8 +15,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-;
-
 /**
  * <b>[disclosure]数据持久化对象</b>
  * <p>
@@ -94,6 +92,8 @@ public class Disclosure implements Serializable {
     @Column(name = "STATUS")
     private Integer status;
 
+    // 点赞收藏相关字段已删除
+    /*
     // 以下字段用于返回给前端显示
     @TableField(exist = false)
     private Long likeCount; // 点赞数
@@ -139,7 +139,5 @@ public class Disclosure implements Serializable {
     public void setCollectedByCurrentUser(Boolean collectedByCurrentUser) {
         this.collectedByCurrentUser = collectedByCurrentUser;
     }
+    */
 }
-
-
-

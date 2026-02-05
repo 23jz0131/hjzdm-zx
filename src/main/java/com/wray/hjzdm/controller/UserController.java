@@ -29,6 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ユーザー管理コントローラー
+ * ユーザー関連のすべてのRESTful APIリクエストを処理
+ * ログイン、登録、個人情報管理、閲覧履歴などの機能を含む
+ */
 @Api(tags = "用户接口")
 @RestController
 @RequestMapping("/user")
@@ -36,44 +41,30 @@ public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
+    /** ユーザーサービスインターフェース */
     @Autowired
     private UserService userService;
 
+    /** JWT設定プロパティ */
     @Autowired
     private JwtProperties jwtProperties;
 
+    /** ユーザー閲覧履歴サービス */
     @Autowired
     private UserBrowseHistoryService userBrowseHistoryService;
 
-    @PostMapping("/localLogin")
-    @ApiOperation("本地手机号登录")
-    public Result<?> localLogin(@RequestBody LocalLoginDTO dto) {
-        User user = userService.localLogin(dto);
-
-        // 生成JWT令牌
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(Constants.USER_ID, user.getId());
-        String token = JwtUtil.createJWT(
-                jwtProperties.getUserSecretKey(),
-                jwtProperties.getUserTtl(),
-                claims);
-
-        // 构建返回对象
-        UserLoginVO loginVO = UserLoginVO.builder()
-                .id(user.getId())
-                .openid(user.getOpenid())
-                .token(token)
-                .build();
-
-        return Result.success(loginVO);
-    }
-
+    /**
+     * ユーザー名またはメールアドレスログインインターフェース
+     * ユーザー名と電話番号の2つのログイン方式をサポート
+     * @param dto ログインデータ転送オブジェクト、ユーザー名/電話番号とパスワードを含む
+     * @return Result ログイン結果を返し、ユーザー情報とJWTトークンを含む
+     */
     @PostMapping("/login")
     @ApiOperation("用户名或邮箱登录")
     public Result<?> login(@RequestBody UserLoginDTO dto) {
         User user = userService.login(dto);
 
-        // 生成JWT令牌
+        // JWTトークンを生成
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.USER_ID, user.getId());
         String token = JwtUtil.createJWT(
@@ -81,7 +72,7 @@ public class UserController {
                 jwtProperties.getUserTtl(),
                 claims);
 
-        // 构建返回对象
+        // 戻りオブジェクトを構築
         UserLoginVO loginVO = UserLoginVO.builder()
                 .id(user.getId())
                 .openid(user.getOpenid())
@@ -91,6 +82,12 @@ public class UserController {
         return Result.success(loginVO);
     }
 
+    /**
+     * ユーザー登録インターフェース
+     * 新規ユーザー登録機能、ユーザー名の一意性とパスワード強度を検証
+     * @param dto 登録データ転送オブジェクト、ユーザー名、パスワードなどの情報を含む
+     * @return Result 登録結果を返し、新しく作成されたユーザー情報を含む
+     */
     @PostMapping("/register")
     @ApiOperation("用户注册")
     public Result<?> register(@RequestBody UserRegisterDTO dto) {
@@ -98,96 +95,47 @@ public class UserController {
         return Result.success(user);
     }
 
+    /**
+     * 現在ログイン中のユーザー情報を取得するインターフェース
+     * JWTトークンを解析して現在のユーザーの完全情報を取得
+     * @param request HTTPリクエストオブジェクト、JWTコンテキストを取得するために使用
+     * @return Result 現在のユーザー情報を返す
+     */
     @PostMapping("/me")
     @ApiOperation("获取当前用户信息")
     public Result<?> getMe(HttpServletRequest request) {
-        // 从BaseContext获取用户ID
+        // BaseContextからユーザーIDを取得
         Long userId = BaseContext.getCurrentId();
         
-        log.info("获取用户信息请求，用户ID: {}", userId);
+        log.info("ユーザー情報取得リクエスト、ユーザーID: {}", userId);
         
         if (userId == null) {
-            log.warn("用户未登录或JWT验证失败");
-            return Result.error("未登录");
+            log.warn("ユーザーがログインしていないかJWT検証に失敗");
+            return Result.error("未ログイン");
         }
 
         User user = userService.getUserProfile(userId);
         if (user == null) {
-            log.warn("用户不存在，用户ID: {}", userId);
-            return Result.error("用户不存在");
+            log.warn("ユーザーが存在しない、ユーザーID: {}", userId);
+            return Result.error("ユーザーが存在しない");
         }
         
-        log.info("成功获取用户信息，用户ID: {}, 用户名: {}", userId, user.getName());
+        log.info("ユーザー情報の取得に成功、ユーザーID: {}, ユーザー名: {}", userId, user.getName());
 
         return Result.success(user);
     }
 
-    @PostMapping("/updateProfile")
-    @ApiOperation("更新用户资料")
-    public Result<?> updateProfile(
-            HttpServletRequest request,
-            @RequestBody Map<String, Object> profileData) {
-        
-        // 从BaseContext获取用户ID
-        Long userId = BaseContext.getCurrentId();
-        if (userId == null) {
-            return Result.error("未登录");
-        }
-        
-        // 从Map中提取参数
-        String avatar = (String) profileData.get("avatar");
-        String nickname = (String) profileData.get("nickname");
-        String name = (String) profileData.get("name");
-        
-        // 安全地处理gender字段类型转换
-        Integer gender = null;
-        Object genderObj = profileData.get("gender");
-        if (genderObj != null) {
-            if (genderObj instanceof Integer) {
-                gender = (Integer) genderObj;
-            } else if (genderObj instanceof String) {
-                try {
-                    gender = Integer.parseInt((String) genderObj);
-                } catch (NumberFormatException e) {
-                    log.warn("性别字段格式错误: {}", genderObj);
-                    return Result.error("性别字段格式错误");
-                }
-            } else {
-                log.warn("性别字段类型错误: {}", genderObj.getClass());
-                return Result.error("性别字段类型错误");
-            }
-        }
-        
-        String birthDateStr = (String) profileData.get("birthDate");
-        
-        Date parsedBirthDate = null;
-        if (birthDateStr != null && !birthDateStr.isEmpty()) {
-            try {
-                // 前端传递的是YYYY-MM-DD格式的字符串
-                // 验证日期格式
-                if (!birthDateStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                    return Result.error("生日日期格式错误，请使用YYYY-MM-DD格式");
-                }
-                
-                parsedBirthDate = java.sql.Date.valueOf(birthDateStr);
-                
-                // 验证年份合理性（1900-2020）
-                java.util.Calendar cal = java.util.Calendar.getInstance();
-                cal.setTime(parsedBirthDate);
-                int year = cal.get(java.util.Calendar.YEAR);
-                if (year < 1900 || year > 2020) {
-                    return Result.error("年份必须在1900-2020之间");
-                }
-                
-            } catch (IllegalArgumentException e) {
-                return Result.error("生日日期格式错误，请使用YYYY-MM-DD格式: " + e.getMessage());
-            }
-        }
+    /**
+     * ユーザー個人プロファイル更新インターフェースを削除
+     * 個人情報編集機能は削除済み
+     */
 
-        User user = userService.updateUserProfile(userId, avatar, nickname, name, gender, parsedBirthDate);
-        return Result.success(user);
-    }
-
+    /**
+     * ユーザー閲覧履歴クエリインターフェース
+     * 現在のユーザーの商品閲覧記録をページ分割でクエリ
+     * @param queryDto クエリパラメータオブジェクト、ページ分割情報を含む
+     * @return Result 閲覧履歴商品リストを返す
+     */
     @PostMapping("/queryHistory")
     @ApiOperation("查询浏览历史")
     public Result<List<Goods>> queryHistory(@RequestBody QueryDTO queryDto) {
@@ -201,6 +149,13 @@ public class UserController {
         return Result.success(history);
     }
 
+    /**
+     * ユーザー閲覧履歴取得インターフェース（GET方式）
+     * RESTfulスタイルの閲覧履歴クエリインターフェースを提供
+     * @param pageNum ページ番号、デフォルト第1ページ
+     * @param pageSize 1ページのサイズ、デフォルト10件
+     * @return Result 閲覧履歴商品リストを返す
+     */
     @GetMapping("/browse-history")
     @ApiOperation("获取浏览历史（GET方式）")
     public Result<List<Goods>> getBrowseHistory(
@@ -220,6 +175,12 @@ public class UserController {
         return Result.success(history);
     }
 
+    /**
+     * 閲覧履歴記録追加インターフェース
+     * ユーザーが商品を閲覧した行動を記録
+     * @param operateDto 操作データ転送オブジェクト、商品IDなどの情報を含む
+     * @return Result 操作結果
+     */
     @PostMapping("/addHistory")
     @ApiOperation("添加浏览历史")
     public Result<Void> addHistory(@RequestBody OperateDTO operateDto) {
@@ -233,6 +194,11 @@ public class UserController {
         return Result.success(null);
     }
 
+    /**
+     * ユーザー閲覧履歴クリアインターフェース
+     * 現在のユーザーのすべての閲覧履歴記録を削除
+     * @return Result 操作結果
+     */
     @PostMapping("/clearHistory")
     @ApiOperation("清空浏览历史")
     public Result<Void> clearHistory() {
@@ -245,6 +211,12 @@ public class UserController {
         return Result.success(null);
     }
 
+    /**
+     * 特定商品の閲覧履歴削除インターフェース
+     * 閲覧履歴から指定商品の記録を削除
+     * @param goodsId 削除する商品ID
+     * @return Result 操作結果
+     */
     @PostMapping("/deleteHistory")
     @ApiOperation("删除浏览历史")
     public Result<Void> deleteHistory(@RequestParam Long goodsId) {

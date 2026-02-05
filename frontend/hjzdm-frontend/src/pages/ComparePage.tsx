@@ -448,7 +448,7 @@ const ComparePage: React.FC = () => {
 
       // デバッグ用ログ removed
 
-      // 使用api.ts中定义的API服务
+      // 使用api.ts中定义的APIサービス
       const response = await goodsApi.compareGoods(searchQuery);
 
       // デバッグ用ログ removed
@@ -622,30 +622,27 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  const getPlatformName = (mallType: number): string => {
+  const getPlatformName = (mallType: number) => {
     switch (mallType) {
-      case 10: return '楽天';
-      case 20: return 'Yahoo!';
-      case 40: return 'Amazon';
-      default: return '其他';
+      case 10: return '楽天市場';
+      case 20: return 'Yahoo!ショッピング';
+      default: return 'その他';
     }
   };
 
-  const getPlatformColor = (mallType: number): string => {
+  const getPlatformColor = (mallType: number) => {
     switch (mallType) {
-      case 10: return '#bf0000'; // Rakuten Red
-      case 20: return '#ff0033'; // Yahoo Red
-      case 40: return '#FF9900'; // Amazon Orange
+      case 10: return '#bf0000'; // 楽天赤
+      case 20: return '#007bc7'; // Yahoo!青
       default: return '#666';
     }
   };
 
-  const getPlatformBadgeClass = (mallType: number): string => {
+  const getPlatformBadgeClass = (mallType: number) => {
     switch (mallType) {
       case 10: return 'platform-badge rakuten';
       case 20: return 'platform-badge yahoo';
-      case 40: return 'platform-badge amazon';
-      default: return 'platform-badge unknown';
+      default: return 'platform-badge';
     }
   };
 
@@ -723,7 +720,7 @@ const ComparePage: React.FC = () => {
   const sizes = Array.from(new Set(facetIndex.map(f => f.size).filter(Boolean)));
   const parseCategory = (name: string) => {
     const n = (name || '').toLowerCase();
-    if (/手机壳|ケース|保护壳|カバー/.test(n)) return { parent: 'スマホアクセサリー', child: 'ケース' };
+    if (/手机壳|ケース|保護壳|カバー/.test(n)) return { parent: 'スマホアクセサリー', child: 'ケース' };
     if (/iphone|galaxy|xiaomi|huawei|pixel|xperia/.test(n)) return { parent: '携帯電話・スマートフォン', child: 'スマートフォン本体' };
     if (/ipad|galaxy tab|surface|tablet/.test(n)) return { parent: 'パソコン・タブレット', child: 'タブレットPC' };
     if (/macbook|thinkpad|notebook|laptop/.test(n)) return { parent: 'パソコン・タブレット', child: 'ノートパソコン' };
@@ -797,17 +794,6 @@ const ComparePage: React.FC = () => {
   const goNext = () => setCurrentPage(p => Math.min(totalPages, p + 1));
   const onChangePageSize = (size: number) => { setPageSize(size); setCurrentPage(1); };
 
-  const getSelectKey = (p: Product) => {
-    if (p.goodsId) return `id:${p.goodsId}`;
-    const base = `${p.mallType}-${p.goodsLink || ''}-${p.goodsName}`;
-    return `k:${base}`;
-  };
-  const isSelected = (key: string) => selectedKeys.includes(key);
-  const toggleSelect = (p: Product) => {
-    const key = getSelectKey(p);
-    setSelectedKeys(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]);
-  };
-
   const getSellerFromLink = (url?: string) => {
     if (!url) return '不明な店铺';
     try {
@@ -817,17 +803,6 @@ const ComparePage: React.FC = () => {
       return '不明な店铺';
     }
   };
-  
-
-
-  // 清理函数 - 可选，如果想在页面卸载时清除存储数据
-  useEffect(() => {
-    return () => {
-      // 这里可以选择清除部分存储的数据，或者保留它们以供下次访问
-      // 例えば、検索結果を保持しつつ、読み込み状態をクリアできます
-      sessionStorage.setItem('comparePage_loading', 'false');
-    };
-  }, []);
 
   return (
     <div className="compare-page">
@@ -913,12 +888,10 @@ const ComparePage: React.FC = () => {
           {/* Main Content Results */}
           <div className="main-content">
             <div className="results-header">
-              <h2>「{query}」 検索結果 <span>({filteredProducts.length}件)</span></h2>
               <div className="sort-bar">
                 <span className="sort-label">並び替え:</span>
                 <button className={`sort-tab ${sortOption === 'price_asc' ? 'active' : ''}`} onClick={() => setSortOption('price_asc')}>価格: 安い順</button>
                 <button className={`sort-tab ${sortOption === 'price_desc' ? 'active' : ''}`} onClick={() => setSortOption('price_desc')}>価格: 高い順</button>
-                <button className={`sort-tab ${sortOption === 'platform' ? 'active' : ''}`} onClick={() => setSortOption('platform')}>商城</button>
               </div>
             </div>
 
@@ -961,7 +934,7 @@ const ComparePage: React.FC = () => {
                       className="btn-shop"
                       onClick={(e) => { ensureGoodsIdAndHistory(product, e); }}
                     >
-                      前往购买
+                      購入する
                     </a>
 
 
@@ -986,9 +959,6 @@ const ComparePage: React.FC = () => {
                       setTrendSeries(series);
                       setTrendOpen(true);
                     }}>価格推移</button>
-                    <label className="compare-check">
-                      <input type="checkbox" checked={isSelected(getSelectKey(product))} onChange={() => toggleSelect(product)} /> 对比
-                    </label>
                   </div>
                 </div>
               ))}
@@ -999,171 +969,6 @@ const ComparePage: React.FC = () => {
               <span className="page-info">{currentPage} / {totalPages}</span>
               <button type="button" onClick={goNext} disabled={currentPage === totalPages}>下一页</button>
             </div>
-            
-            {/* 对比面板 */}
-            {compareProducts.length > 0 && (
-              <div className="compare-panel">
-                <div className="compare-panel-header">
-                  <h3>商品对比 ({compareProducts.length}/4)</h3>
-                  <button className="btn-clear-compare" onClick={() => {
-                    setSelectedKeys([]);
-                    setCompareProducts([]);
-                  }}>
-                    清空对比
-                  </button>
-                </div>
-                <div className="compare-products-grid">
-                  {compareProducts.map((product, index) => (
-                    <div key={index} className="compare-product-card">
-                      <button 
-                        className="btn-remove-compare" 
-                        onClick={() => toggleSelect(product)}
-                      >
-                        ×
-                      </button>
-                      <div className="compare-product-image">
-                        <img 
-                          src={product.imgUrl || '/images/default-product.png'} 
-                          alt={product.goodsName} 
-                          onError={(e) => (e.target as HTMLImageElement).src = '/images/default-product.png'} 
-                        />
-                      </div>
-                      <div className="compare-product-info">
-                        <h4 className="compare-product-name">{product.goodsName}</h4>
-                        <div className="compare-product-price">¥{product.goodsPrice.toLocaleString()}</div>
-                        <div className="compare-product-platform">
-                          <span className={`mall-tag mall-${product.mallType}`}>
-                            {getPlatformName(product.mallType)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {/* 占位符 */}
-                  {Array.from({ length: 4 - compareProducts.length }).map((_, index) => (
-                    <div key={`placeholder-${index}`} className="compare-product-placeholder">
-                      <div className="placeholder-content">
-                        等待添加商品
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* 详细对比表格 */}
-                <div className="compare-details">
-                  <h4>详细参数对比</h4>
-                  <div className="compare-table-wrapper">
-                    <table className="compare-table">
-                      <thead>
-                        <tr>
-                          <th>参数</th>
-                          {compareProducts.map((product, index) => (
-                            <th key={index}>{product.goodsName.substring(0, 20)}...</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* 品牌 */}
-                        <tr>
-                          <td>品牌</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.brand || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 系列 */}
-                        <tr>
-                          <td>系列</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.series || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 型号 */}
-                        <tr>
-                          <td>型号</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.model || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 存储容量 */}
-                        <tr>
-                          <td>存储容量</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.storage || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 颜色 */}
-                        <tr>
-                          <td>颜色</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.color || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 尺寸 */}
-                        <tr>
-                          <td>尺寸</td>
-                          {compareProducts.map((product: Product, index: number) => {
-                            const facets = parseFacets(product.goodsName);
-                            return <td key={index}>{facets.size || '未知'}</td>;
-                          })}
-                        </tr>
-                        {/* 价格 */}
-                        <tr>
-                          <td>价格</td>
-                          {compareProducts.map((product: Product, index: number) => (
-                            <td key={index} className="price-cell">
-                              <span className="price-value">¥{product.goodsPrice.toLocaleString()}</span>
-                              {index === 0 && compareProducts.length > 1 && (
-                                <span className="price-diff">
-                                  (最低价)
-                                </span>
-                              )}
-                              {index > 0 && (
-                                <span className="price-diff">
-                                  (+¥{(product.goodsPrice - compareProducts[0].goodsPrice).toLocaleString()})
-                                </span>
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                        {/* 平台 */}
-                        <tr>
-                          <td>销售平台</td>
-                          {compareProducts.map((product: Product, index: number) => (
-                            <td key={index}>
-                              <span className={`mall-tag mall-${product.mallType}`}>
-                                {getPlatformName(product.mallType)}
-                              </span>
-                            </td>
-                          ))}
-                        </tr>
-                        {/* 购买链接 */}
-                        <tr>
-                          <td>购买操作</td>
-                          {compareProducts.map((product: Product, index: number) => (
-                            <td key={index}>
-                              <a
-                                href={product.goodsLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn-buy-small"
-                                onClick={(e) => { ensureGoodsIdAndHistory(product, e); }}
-                              >
-                                前往购买
-                              </a>
-                            </td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {trendOpen && (

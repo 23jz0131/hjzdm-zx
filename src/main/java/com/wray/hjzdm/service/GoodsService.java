@@ -27,18 +27,6 @@ public interface GoodsService extends IService<Goods> {
 
     List<Goods> queryGoodsByName(String query);
 
-    void like(OperateDTO operateDto);
-
-    void dislike(OperateDTO operateDto);
-
-    void collect(OperateDTO operateDto);
-
-    void cancelCollect(OperateDTO operateDto);
-
-    void pullLikedGoods(Long id);
-
-    List<Goods> queryLikedGoods();
-
     List<Goods> queryMyGoods(QueryDTO queryDto);
 
     boolean delete(Long goodsId);
@@ -61,7 +49,7 @@ public interface GoodsService extends IService<Goods> {
      * <p>
      * - 自动聚合同名商品
      * - 返回最低价
-     * - 支持多平台（Rakuten / Yahoo / Amazon）
+     * - 支持多平台（Rakuten / Yahoo）
      */
     List<CompareGroupDTO> compareGoods(QueryDTO queryDto);
 
