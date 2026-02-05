@@ -70,6 +70,19 @@ public class HandlerConfig extends WebMvcConfigurationSupport {
                 .maxAge(3600);
     }
 
+    @Override
+    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        // 配置上传文件的静态资源映射
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:./uploads/");
+        
+        // 配置其他静态资源
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/");
+        
+        super.addResourceHandlers(registry);
+    }
+
     /**
      * 注册自定义拦截器
      *
