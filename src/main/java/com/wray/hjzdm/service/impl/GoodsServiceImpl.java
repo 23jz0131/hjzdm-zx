@@ -31,7 +31,6 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     @Autowired
     private GoodsCollectMapper goodsCollectMapper;
 
-    @Override
     public List<Goods> searchGoods(String query, java.util.Map<Long, String> attrFilters, Long catId) {
         return new ArrayList<>();
     }
