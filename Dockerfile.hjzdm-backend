@@ -1,0 +1,48 @@
+# 专为HJZDM后端Java应用设计的Dockerfile
+# 符合用户简化设计偏好和真实电商平台数据需求
+
+# 多阶段构建 - 构建阶段
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制Maven配置文件（利用Docker缓存优化）
+COPY pom.xml .
+COPY src ./src
+
+# 构建应用（跳过测试以加快构建速度）
+RUN mvn clean package -DskipTests
+
+# 运行阶段 - 使用轻量级Java运行环境
+FROM openjdk:11-jre-slim
+
+# 安装必要的工具
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 创建应用用户（安全最佳实践）
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# 设置工作目录
+WORKDIR /app
+
+# 从构建阶段复制JAR文件
+COPY --from=builder /app/target/*.jar app.jar
+
+# 更改文件所有权
+RUN chown appuser:appuser app.jar
+
+# 切换到非root用户
+USER appuser
+
+# 暴露应用端口（9090，符合用户端口偏好）
+EXPOSE 9090
+
+# 健康检查（延长等待时间，适应应用启动）
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+    CMD curl -f http://localhost:9090/actuator/health || exit 1
+
+# 启动应用
+ENTRYPOINT ["java", "-jar", "app.jar"]
