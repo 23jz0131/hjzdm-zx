@@ -5,17 +5,18 @@ services:
     plan: free
     region: singapore
     healthCheckPath: /actuator/health
+    healthCheckTimeoutSeconds: 60
     autoDeploy: true
     envVars:
       - key: PORT
-        value: 8080
+        value: 9090
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
+      - key: SPRING_DATASOURCE_URL
         sync: false
-      - key: DB_USERNAME
+      - key: SPRING_DATASOURCE_USERNAME
         sync: false
-      - key: DB_PASSWORD
+      - key: SPRING_DATASOURCE_PASSWORD
         sync: false
       - key: RAKUTEN_APP_ID
         sync: false
