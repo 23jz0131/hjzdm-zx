@@ -1,0 +1,44 @@
+# Render部署专用Dockerfile
+# 使用稳定可靠的Eclipse Temurin镜像
+
+# 构建阶段
+FROM maven:3.8.6-eclipse-temurin-17 AS builder
+
+WORKDIR /app
+
+# 先复制pom.xml进行依赖下载缓存
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 复制源代码并构建
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# 运行阶段
+FROM eclipse-temurin:17-jre-alpine
+
+# 安装必要工具
+RUN apk add --no-cache curl
+
+# 创建非root用户
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# 复制构建产物
+COPY --from=builder /app/target/*.jar app.jar
+
+# 设置权限
+RUN chown appuser:appgroup app.jar
+
+USER appuser
+
+# 暴露端口（Render会自动映射到PORT环境变量）
+EXPOSE 9090
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9090/actuator/health || exit 1
+
+# 启动应用
+ENTRYPOINT ["java", "-Dserver.port=${PORT:-9090}", "-jar", "app.jar"]

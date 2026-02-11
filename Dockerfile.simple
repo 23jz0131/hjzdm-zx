@@ -1,4 +1,4 @@
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:11-jre-alpine
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 9090
 
 # 启动应用
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=9090", "-jar", "app.jar"]
