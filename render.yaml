@@ -1,11 +1,33 @@
 services:
   - type: web
-    name: hjzdm-fullstack
+    name: hjzdm-ecommerce
     env: docker
     plan: free
-    healthCheckPath: /
+    region: singapore
+    healthCheckPath: /actuator/health
+    autoDeploy: true
     envVars:
-      - key: SERVER_PORT
-        value: 9090
-      - key: NODE_ENV
-        value: production
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: RAKUTEN_APP_ID
+        sync: false
+      - key: RAKUTEN_APPLICATION_SECRET
+        sync: false
+      - key: RAKUTEN_AFFILIATE_ID
+        sync: false
+      - key: YAHOO_CLIENT_ID
+        sync: false
+      - key: YAHOO_SECRET
+        sync: false
+      - key: JWT_USER_SECRET_KEY
+        generateValue: true
+      - key: UPLOAD_PATH
+        value: /tmp/uploads
