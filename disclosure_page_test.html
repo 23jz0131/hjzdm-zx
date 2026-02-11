@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投稿审查页面测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 投稿审查页面功能测试</h1>
+        <p>此页面用于测试投稿审查功能是否正常工作</p>
+        
+        <div class="test-section">
+            <h2>基础功能测试</h2>
+            <button class="btn" onclick="testLoginPage()">测试登录页面</button>
+            <button class="btn" onclick="testDisclosurePage()">测试投稿审查页面</button>
+            <div id="basicTestResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>API接口测试</h2>
+            <button class="btn" onclick="testPendingAPI()">测试待审核API</button>
+            <button class="btn" onclick="testPublicAPI()">测试已公开API</button>
+            <div id="apiTestResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>综合状态检查</h2>
+            <button class="btn" onclick="runFullTest()">运行完整测试</button>
+            <div id="fullTestResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:9090/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser3',
+                        password: '123123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.code === 200) {
+                    authToken = data.data.token;
+                    return true;
+                }
+            } catch (error) {
+                console.error('Login failed:', error);
+            }
+            return false;
+        }
+
+        async function testLoginPage() {
+            const resultDiv = document.getElementById('basicTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试登录页面...';
+            
+            try {
+                const success = await login();
+                if (success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ 登录功能正常\n管理员账户可用';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ 登录功能异常\n请检查管理员账户';
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 测试失败: ${error.message}`;
+            }
+        }
+
+        async function testDisclosurePage() {
+            const resultDiv = document.getElementById('basicTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试投稿审查页面访问...';
+            
+            try {
+                if (!authToken && !(await login())) {
+                    throw new Error('登录失败');
+                }
+                
+                // 尝试访问投稿审查页面
+                window.open('http://localhost:3000/admin/disclosures', '_blank');
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ 投稿审查页面已打开\n请在新窗口中检查页面加载情况';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 页面访问失败: ${error.message}`;
+            }
+        }
+
+        async function testPendingAPI() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试待审核投稿API...';
+            
+            try {
+                if (!authToken && !(await login())) {
+                    throw new Error('登录失败');
+                }
+                
+                const response = await fetch('http://localhost:9090/disclosure/queryPendingList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        pageNum: 1,
+                        pageSize: 10
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 待审核API正常
+返回数据: ${data.data?.length || 0} 条
+
+示例数据:
+${JSON.stringify(data.data?.[0] || {}, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ API返回错误: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API测试失败: ${error.message}`;
+            }
+        }
+
+        async function testPublicAPI() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试已公开投稿API...';
+            
+            try {
+                if (!authToken && !(await login())) {
+                    throw new Error('登录失败');
+                }
+                
+                const response = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        pageNum: 1,
+                        pageSize: 10
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 已公开API正常
+返回数据: ${data.data?.length || 0} 条
+
+示例数据:
+${JSON.stringify(data.data?.[0] || {}, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ API返回错误: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API测试失败: ${error.message}`;
+            }
+        }
+
+        async function runFullTest() {
+            const resultDiv = document.getElementById('fullTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在运行完整测试...\n';
+            
+            let testResults = [];
+            
+            try {
+                // 1. 测试登录
+                const loginSuccess = await login();
+                testResults.push(`登录测试: ${loginSuccess ? '✅ 通过' : '❌ 失败'}`);
+                
+                if (!loginSuccess) {
+                    throw new Error('登录失败，无法继续测试');
+                }
+                
+                // 2. 测试待审核API
+                const pendingResponse = await fetch('http://localhost:9090/disclosure/queryPendingList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 100 })
+                });
+                const pendingData = await pendingResponse.json();
+                testResults.push(`待审核API: ${pendingData.code === 200 ? '✅ 通过' : '❌ 失败'} (${pendingData.data?.length || 0} 条数据)`);
+                
+                // 3. 测试已公开API
+                const publicResponse = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 100 })
+                });
+                const publicData = await publicResponse.json();
+                testResults.push(`已公开API: ${publicData.code === 200 ? '✅ 通过' : '❌ 失败'} (${publicData.data?.length || 0} 条数据)`);
+                
+                // 4. 综合评估
+                const totalItems = (pendingData.data?.length || 0) + (publicData.data?.length || 0);
+                testResults.push(`\n📊 综合统计:`);
+                testResults.push(`   总投稿数: ${totalItems} 条`);
+                testResults.push(`   待审核: ${pendingData.data?.length || 0} 条`);
+                testResults.push(`   已公开: ${publicData.data?.length || 0} 条`);
+                
+                if (totalItems > 0) {
+                    resultDiv.className = 'result success';
+                    testResults.push(`\n✅ 所有测试通过，投稿功能正常！`);
+                } else {
+                    resultDiv.className = 'result info';
+                    testResults.push(`\n⚠️  API接口正常但无投稿数据`);
+                    testResults.push(`   建议创建测试投稿数据`);
+                }
+                
+            } catch (error) {
+                testResults.push(`\n❌ 测试过程中发生错误: ${error.message}`);
+                resultDiv.className = 'result error';
+            }
+            
+            resultDiv.textContent = testResults.join('\n');
+        }
+    </script>
+</body>
+</html>

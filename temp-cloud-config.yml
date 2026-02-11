@@ -1,0 +1,25 @@
+server:
+  port: 9090
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fortune500?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&requireSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true
+    username: 2eXmMXiGeCt9iz7.root
+    password: 00KpH8EmSBk7A3ET
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+# JWT
+jwt:
+  user-secret-key: wray12121212asdhiashdikasbdiasgfiabgfkbaiwfgiwfawfafa
+  user-ttl: 172800000
+  user-token-name: Authorization
+
+# MyBatis Plus
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:**/mapper/*.xml
+  type-aliases-package: com.wray.hjzdm.entity

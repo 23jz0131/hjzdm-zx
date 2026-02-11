@@ -16,12 +16,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * ユーザーエンティティクラス
- * データベースのUSERテーブルをマッピングし、システムユーザーの基本情報を表す
- * ユーザーの身分情報、連絡先、個人プロファイルなどのフィールドを含む
+ * 用户实体类
+ * 映射数据库中的USER表，表示系统用户的基本信息
+ * 包含用户的身份信息、联系方式、个人资料等字段
  * 
  * <p>
- * 注意:このファイルはフレームワークによって自動生成されます-ユーザー定義は拡張関数方式で処理できます。
+ * 注意:此文件由框架自动生成-用户自定义可以使用扩展函数方式进行处理。
  * </p>
  *
  * @author makejava
@@ -37,8 +37,8 @@ public class User implements Serializable {
     private static final long serialVersionUID = 979107219508044875L;
 
     /**
-     * ユーザーの一意の識別子
-     * 主キー、自動増分戦略
+     * 用户唯一标识符
+     * 主键，自增策略
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,35 +46,38 @@ public class User implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+
     /**
-     * WeChatユーザーの一意の識別子
-     * WeChat認証ログイン時にユーザー身元を識別するために使用
-     */
-    @Column(name = "OPENID")
-    private String openid;
-    /**
-     * ユーザーのニックネーム
-     * ユーザーがカスタムした表示名、インターフェース表示に使用
+     * 用户昵称
+     * 用户自定义的显示名称，用于界面展示
      */
     @Column(name = "NICKNAME")
     private String nickname;
     
     /**
-     * ユーザー名（アカウント名）
-     * ユーザーログイン時に使用するユーザー名、一意性を持つ
+     * 用户开放ID
+     * 第三方平台用户的唯一标识符
      */
-    @Column(name = "NAME")
-    private String name;
+    @Column(name = "OPENID")
+    private String openid;
+    
     /**
-     * 電話番号
-     * 電話番号ログインとユーザー連絡に使用
+     * 用户手机号
+     * 用户的联系电话号码
      */
     @Column(name = "PHONE")
     private String phone;
+    
+    /**
+     * 用户名称（账号名）
+     * 用户登录时使用的用户名，具有唯一性
+     */
+    @Column(name = "NAME")
+    private String name;
 
     /**
-     * ユーザーパスワード
-     * BCryptで暗号化して保存、@JsonIgnoreでフロントエンドへのシリアライズを防止
+     * 用户密码
+     * 使用BCrypt加密存储，@JsonIgnore防止序列化到前端
      */
     @JsonIgnore
     @Column(name = "PASSWORD")
@@ -86,42 +89,21 @@ public class User implements Serializable {
     // @Column(name = "EMAIL")
     // private String email;
     /**
-     * ユーザーアバターURL
-     * ユーザーがアップロードしたアバター画像アドレスを保存
+     * 用户头像URL
+     * 存储用户上传的头像图片地址
      */
     @Column(name = "AVATAR")
     private String avatar;
     /**
-     * ユーザー登録時間
-     * ユーザーアカウント作成のタイムスタンプを記録
+     * 用户注册时间
+     * 记录用户账户创建的时间戳
      */
     @Column(name = "create_time")
     private Date createTime;
     
     /**
-     * ユーザーの性別
-     * 1-男性、2-女性、0-未設定
-     */
-    @Column(name = "GENDER")
-    private Integer gender;
-    
-    /**
-     * ユーザーの年齢
-     * 誕生日から自動計算された実際の年齢
-     */
-    @Column(name = "AGE")
-    private Integer age;
-    
-    /**
-     * ユーザーの誕生日
-     * 年齢計算と個人化サービスに使用
-     */
-    @Column(name = "BIRTH_DATE")
-    private Date birthDate;
-    
-    /**
-     * 情報更新時間
-     * ユーザープロファイルの最終更新時間を記録
+     * 信息更新时间
+     * 记录用户资料最后一次修改的时间
      */
     @Column(name = "UPDATE_TIME")
     private Date updateTime;

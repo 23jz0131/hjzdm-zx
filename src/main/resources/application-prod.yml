@@ -1,0 +1,106 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fortune500?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&requireSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true
+    username: 2eXmMXiGeCt9iz7.root
+    password: FPpKFpms5hDXtOuF
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    com.wray.hjzdm: info
+    org.springframework.web: info
+    org.hibernate.SQL: warn
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ./logs/application.log
+    max-size: 10MB
+    max-history: 30
+
+# 文件上传路径配置
+file:
+  upload-path: ${UPLOAD_PATH:/app/uploads/}
+
+# JWT
+jwt:
+  user-secret-key: ${JWT_USER_SECRET_KEY:wray12121212asdhiashdikasbdiasgfiabgfkbaiwfgiwfawfafa}
+  user-ttl: 172800000   # 2 天
+  user-token-name: Authorization
+
+features:
+  rakuten:
+    enabled: true
+
+# MyBatis Plus
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:**/mapper/*.xml
+  type-aliases-package: com.wray.hjzdm.entity
+  global-config:
+    banner: off
+
+# Knife4j
+knife4j:
+  enable: false
+
+# =========================
+# 第三方商品平台配置
+# =========================
+
+rakuten:
+  app-id: ${RAKUTEN_APP_ID:1065081596741280321}
+  application-secret: ${RAKUTEN_APPLICATION_SECRET:d3cea25fd388a80da369ee74a20e67c9c4b00625}
+  affiliate-id: ${RAKUTEN_AFFILIATE_ID:4f0e084a.2fb02d14.4f0e084b.3ecf281e}
+
+yahoo:
+  client-id: ${YAHOO_CLIENT_ID:dmVyPTIwMjUwNyZpZD1LUlpMQm80aVNUJmhhc2g9TVdJME1ERTRNVFJrTkdJMk1ESmpaQQ}
+  secret: ${YAHOO_SECRET:8TwrbIHTWFS5Zk6tyOBQLVHdOQQ6g3XEnQmU70SO}
+
+amazon:
+  access-key: ${AMAZON_ACCESS_KEY:YOUR_ACCESS_KEY}
+  secret-key: ${AMAZON_SECRET_KEY:YOUR_SECRET_KEY}
+  partner-tag: ${AMAZON_PARTNER_TAG:YOUR_PARTNER_TAG}
+  region: ${AMAZON_REGION:us-west-2}
+
+# 生产环境特定配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

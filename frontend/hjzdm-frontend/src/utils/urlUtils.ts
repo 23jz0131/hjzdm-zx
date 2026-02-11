@@ -4,7 +4,7 @@ export const getApiBaseUrl = () => {
     return 'https://hjzdm-zx.onrender.com';
   }
   // 开发环境使用默认配置
-  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 };
 
 export const getImageUrl = (url?: string, defaultPlaceholder: string = 'https://placehold.co/400x300') => {

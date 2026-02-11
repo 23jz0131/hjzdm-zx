@@ -64,7 +64,7 @@ server {\
 
 # Start both nginx and java backend
 RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'java -jar /app/app.jar &' >> /start.sh && \
+    echo 'java -Dspring.profiles.active=prod -jar /app/app.jar &' >> /start.sh && \
     echo 'nginx -g "daemon off;"' >> /start.sh && \
     chmod +x /start.sh
 EXPOSE 80 9090

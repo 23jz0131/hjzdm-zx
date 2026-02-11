@@ -489,14 +489,6 @@
 
 /* 响应式设计 */
 @media (max-width: 1200px) {
-  .profile-layout {
-    gap: 20px;
-  }
-  
-  .sidebar-content {
-    width: 240px;
-  }
-  
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -505,15 +497,6 @@
 @media (max-width: 992px) {
   .profile-container {
     padding: 16px;
-  }
-  
-  .profile-layout {
-    flex-direction: column;
-  }
-  
-  .sidebar-content {
-    width: 100%;
-    order: -1;
   }
   
   .user-header {

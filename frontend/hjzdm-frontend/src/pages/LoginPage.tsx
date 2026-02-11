@@ -3,16 +3,16 @@ import { useNavigate, Link } from 'react-router-dom';
 import { userApi } from '../services/api';
 import './LoginPage.css';
 
-const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
 interface LoginFormData {
-  phone: string; // 使用phone字段兼容后端API
+  username: string; // 用户名字段
   password: string;
 }
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginFormData>({
-    phone: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,7 @@ const LoginPage: React.FC = () => {
     try {
       // 调用真实API - 使用新的login端点
       const response = await userApi.login({
-        username: formData.phone, // 使用username字段，但保持变量名不变以兼容现有代码
+        username: formData.username,
         password: formData.password
       });
 
@@ -90,12 +90,12 @@ const LoginPage: React.FC = () => {
         
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="phone">ユーザー名またはメールアドレス</label>
+            <label htmlFor="username">ユーザー名またはメールアドレス</label>
             <input
               type="text"
-              id="phone"
-              name="phone"
-              value={formData.phone}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               placeholder="ユーザー名またはメールアドレスを入力"
               required

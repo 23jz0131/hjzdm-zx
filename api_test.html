@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API测试页面</title>
+</head>
+<body>
+    <h1>用户登录测试</h1>
+    <form id="loginForm">
+        <div>
+            <label>用户名:</label>
+            <input type="text" id="username" value="testuser3" required>
+        </div>
+        <div>
+            <label>密码:</label>
+            <input type="password" id="password" value="123123" required>
+        </div>
+        <button type="submit">登录测试</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<p>正在测试...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:9090/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                console.log('登录响应:', data);
+                
+                if (data.code === 200) {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: green;">✅ 登录成功!</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    
+                    // 测试获取用户信息
+                    if (data.data && data.data.token) {
+                        const token = data.data.token;
+                        try {
+                            const profileResponse = await fetch('http://localhost:9090/user/me', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+                            
+                            const profileData = await profileResponse.json();
+                            console.log('用户信息响应:', profileData);
+                            
+                            resultDiv.innerHTML += `
+                                <h3>👤 用户信息:</h3>
+                                <pre>${JSON.stringify(profileData, null, 2)}</pre>
+                                <p>检查返回的数据中是否包含phone字段</p>
+                            `;
+                        } catch (profileError) {
+                            resultDiv.innerHTML += `<p style="color: red;">获取用户信息失败: ${profileError.message}</p>`;
+                        }
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: red;">❌ 登录失败</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">网络错误: ${error.message}</p>`;
+                console.error('请求错误:', error);
+            }
+        });
+    </script>
+</body>
+</html>

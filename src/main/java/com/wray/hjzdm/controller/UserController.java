@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ユーザー管理コントローラー
- * ユーザー関連のすべてのRESTful APIリクエストを処理
- * ログイン、登録、個人情報管理、閲覧履歴などの機能を含む
+ * 用户管理控制器
+ * 处理用户相关的所有RESTful API请求
+ * 包括登录、注册、个人信息管理、浏览历史等功能
  */
 @Api(tags = "用户接口")
 @RestController
@@ -41,30 +41,30 @@ public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
-    /** ユーザーサービスインターフェース */
+    /** 用户服务接口 */
     @Autowired
     private UserService userService;
 
-    /** JWT設定プロパティ */
+    /** JWT配置属性 */
     @Autowired
     private JwtProperties jwtProperties;
 
-    /** ユーザー閲覧履歴サービス */
+    /** 用户浏览历史服务 */
     @Autowired
     private UserBrowseHistoryService userBrowseHistoryService;
 
     /**
-     * ユーザー名またはメールアドレスログインインターフェース
-     * ユーザー名と電話番号の2つのログイン方式をサポート
-     * @param dto ログインデータ転送オブジェクト、ユーザー名/電話番号とパスワードを含む
-     * @return Result ログイン結果を返し、ユーザー情報とJWTトークンを含む
+     * 用户名或邮箱登录接口
+     * 支持用户名和手机号两种方式登录
+     * @param dto 登录数据传输对象，包含用户名/手机号和密码
+     * @return Result 返回登录结果，包含用户信息和JWT令牌
      */
     @PostMapping("/login")
     @ApiOperation("用户名或邮箱登录")
     public Result<?> login(@RequestBody UserLoginDTO dto) {
         User user = userService.login(dto);
 
-        // JWTトークンを生成
+        // 生成JWT令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.USER_ID, user.getId());
         String token = JwtUtil.createJWT(
@@ -72,7 +72,7 @@ public class UserController {
                 jwtProperties.getUserTtl(),
                 claims);
 
-        // 戻りオブジェクトを構築
+        // 构建返回对象
         UserLoginVO loginVO = UserLoginVO.builder()
                 .id(user.getId())
                 .openid(user.getOpenid())
@@ -83,10 +83,10 @@ public class UserController {
     }
 
     /**
-     * ユーザー登録インターフェース
-     * 新規ユーザー登録機能、ユーザー名の一意性とパスワード強度を検証
-     * @param dto 登録データ転送オブジェクト、ユーザー名、パスワードなどの情報を含む
-     * @return Result 登録結果を返し、新しく作成されたユーザー情報を含む
+     * 用户注册接口
+     * 新用户注册功能，验证用户名唯一性和密码强度
+     * @param dto 注册数据传输对象，包含用户名、密码等信息
+     * @return Result 返回注册结果，包含新创建的用户信息
      */
     @PostMapping("/register")
     @ApiOperation("用户注册")
@@ -96,45 +96,45 @@ public class UserController {
     }
 
     /**
-     * 現在ログイン中のユーザー情報を取得するインターフェース
-     * JWTトークンを解析して現在のユーザーの完全情報を取得
-     * @param request HTTPリクエストオブジェクト、JWTコンテキストを取得するために使用
-     * @return Result 現在のユーザー情報を返す
+     * 获取当前登录用户信息接口
+     * 通过JWT令牌解析获取当前用户的完整信息
+     * @param request HTTP请求对象，用于获取JWT上下文
+     * @return Result 返回当前用户信息
      */
     @PostMapping("/me")
     @ApiOperation("获取当前用户信息")
     public Result<?> getMe(HttpServletRequest request) {
-        // BaseContextからユーザーIDを取得
+        // 从BaseContext获取用户ID
         Long userId = BaseContext.getCurrentId();
         
-        log.info("ユーザー情報取得リクエスト、ユーザーID: {}", userId);
+        log.info("获取用户信息请求，用户ID: {}", userId);
         
         if (userId == null) {
-            log.warn("ユーザーがログインしていないかJWT検証に失敗");
-            return Result.error("未ログイン");
+            log.warn("用户未登录或JWT验证失败");
+            return Result.error("未登录");
         }
 
         User user = userService.getUserProfile(userId);
         if (user == null) {
-            log.warn("ユーザーが存在しない、ユーザーID: {}", userId);
-            return Result.error("ユーザーが存在しない");
+            log.warn("用户不存在，用户ID: {}", userId);
+            return Result.error("用户不存在");
         }
         
-        log.info("ユーザー情報の取得に成功、ユーザーID: {}, ユーザー名: {}", userId, user.getName());
+        log.info("成功获取用户信息，用户ID: {}, 用户名: {}", userId, user.getName());
 
         return Result.success(user);
     }
 
     /**
-     * ユーザー個人プロファイル更新インターフェースを削除
-     * 個人情報編集機能は削除済み
+     * 移除更新用户个人资料接口
+     * 个人信息编辑功能已被删除
      */
 
     /**
-     * ユーザー閲覧履歴クエリインターフェース
-     * 現在のユーザーの商品閲覧記録をページ分割でクエリ
-     * @param queryDto クエリパラメータオブジェクト、ページ分割情報を含む
-     * @return Result 閲覧履歴商品リストを返す
+     * 查询用户浏览历史接口
+     * 分页查询当前用户的商品浏览记录
+     * @param queryDto 查询参数对象，包含分页信息
+     * @return Result 返回浏览历史商品列表
      */
     @PostMapping("/queryHistory")
     @ApiOperation("查询浏览历史")
@@ -150,11 +150,11 @@ public class UserController {
     }
 
     /**
-     * ユーザー閲覧履歴取得インターフェース（GET方式）
-     * RESTfulスタイルの閲覧履歴クエリインターフェースを提供
-     * @param pageNum ページ番号、デフォルト第1ページ
-     * @param pageSize 1ページのサイズ、デフォルト10件
-     * @return Result 閲覧履歴商品リストを返す
+     * 获取用户浏览历史接口（GET方式）
+     * 提供RESTful风格的浏览历史查询接口
+     * @param pageNum 页码，默认第1页
+     * @param pageSize 每页大小，默认10条
+     * @return Result 返回浏览历史商品列表
      */
     @GetMapping("/browse-history")
     @ApiOperation("获取浏览历史（GET方式）")
@@ -176,10 +176,10 @@ public class UserController {
     }
 
     /**
-     * 閲覧履歴記録追加インターフェース
-     * ユーザーが商品を閲覧した行動を記録
-     * @param operateDto 操作データ転送オブジェクト、商品IDなどの情報を含む
-     * @return Result 操作結果
+     * 添加浏览历史记录接口
+     * 记录用户浏览商品的行为
+     * @param operateDto 操作数据传输对象，包含商品ID等信息
+     * @return Result 操作结果
      */
     @PostMapping("/addHistory")
     @ApiOperation("添加浏览历史")
@@ -195,9 +195,9 @@ public class UserController {
     }
 
     /**
-     * ユーザー閲覧履歴クリアインターフェース
-     * 現在のユーザーのすべての閲覧履歴記録を削除
-     * @return Result 操作結果
+     * 清空用户浏览历史接口
+     * 删除当前用户的所有浏览历史记录
+     * @return Result 操作结果
      */
     @PostMapping("/clearHistory")
     @ApiOperation("清空浏览历史")
@@ -212,10 +212,10 @@ public class UserController {
     }
 
     /**
-     * 特定商品の閲覧履歴削除インターフェース
-     * 閲覧履歴から指定商品の記録を削除
-     * @param goodsId 削除する商品ID
-     * @return Result 操作結果
+     * 删除特定商品的浏览历史接口
+     * 从浏览历史中删除指定商品的记录
+     * @param goodsId 要删除的商品ID
+     * @return Result 操作结果
      */
     @PostMapping("/deleteHistory")
     @ApiOperation("删除浏览历史")

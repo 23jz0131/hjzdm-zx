@@ -21,12 +21,8 @@ const Header: React.FC = () => {
   const isRegisterPage = location.pathname === '/register'; // Also treat register separately for consistency
   const isDisclosureCollectionPage = location.pathname === '/my-disclosure-collection';
   const isMyTipPage = location.pathname === '/my-tip';
-  const isMemberBPage = location.pathname === '/member-b';
 
-  // デバッグログ
-  useEffect(() => {
-    // Debug logs removed
-  }, [location.pathname, isComparePage, isHomePage, isAdminPage, isProfilePage, isLoginPage, isCommunityPage, isRegisterPage, isDisclosureCollectionPage, isMyTipPage]);
+
 
   const syncAuthState = () => {
     const token = localStorage.getItem('token');
@@ -41,7 +37,14 @@ const Header: React.FC = () => {
     setIsLoggedIn(true);
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // 验证token格式
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid token format');
+      }
+      
+      // 解析JWT payload
+      const payload = JSON.parse(atob(tokenParts[1]));
       const userId = payload?.userId;
       setUsername(userId ? `user${userId}` : 'ユーザー');
 
@@ -50,7 +53,11 @@ const Header: React.FC = () => {
       
       // ユーザーの詳細情報を取得してニックネームを表示
       fetchUserProfile();
-    } catch {
+    } catch (error) {
+      console.error('JWT token parsing error:', error);
+      // 清除无效token
+      localStorage.removeItem('token');
+      setIsLoggedIn(false);
       setUsername('ユーザー');
       setDisplayName('ユーザー');
       setIsAdmin(false);
@@ -76,7 +83,7 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     syncAuthState();
-  }, [location.pathname]);
+  }, [location.pathname, syncAuthState]);
 
   // localStorageの変化を監視し、ユーザー切り替え時に状態を適時更新
   useEffect(() => {
@@ -88,23 +95,35 @@ const Header: React.FC = () => {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [syncAuthState]);
 
   // トークン状態を定期的にチェックし、状態同期を確保
   useEffect(() => {
     const interval = setInterval(() => {
       const currentToken = localStorage.getItem('token');
-      const storedPayload = currentToken ? JSON.parse(atob(currentToken.split('.')[1])) : null;
-      const currentUserId = storedPayload?.userId;
+      if (!currentToken) return;
       
-      // ユーザーIDが変化した場合、再同期
-      if (isLoggedIn && currentUserId && currentUserId !== parseInt(username.replace('user', ''))) {
+      try {
+        const tokenParts = currentToken.split('.');
+        if (tokenParts.length !== 3) {
+          throw new Error('Invalid token format');
+        }
+        const storedPayload = JSON.parse(atob(tokenParts[1]));
+        const currentUserId = storedPayload?.userId;
+        
+        // ユーザーIDが変化した場合、再同期
+        if (isLoggedIn && currentUserId && currentUserId !== parseInt(username.replace('user', ''))) {
+          syncAuthState();
+        }
+      } catch (error) {
+        console.error('Token validation error:', error);
+        localStorage.removeItem('token');
         syncAuthState();
       }
     }, 1000); // 1秒ごとにチェック
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, username]);
+  }, [isLoggedIn, username, syncAuthState]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

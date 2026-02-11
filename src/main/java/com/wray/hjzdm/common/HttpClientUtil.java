@@ -62,7 +62,10 @@ public class HttpClientUtil {
                 // Log HTTP Request Failed
                 // 尝试读取错误信息
                 String errorBody = EntityUtils.toString(response.getEntity(),"UTF-8");
-                // Log Error Body
+                System.err.println("HTTP请求失败，状态码: " + statusCode);
+                System.err.println("错误响应体: " + errorBody);
+                // 仍然返回结果，让调用方处理
+                result = errorBody;
             }
         }catch (Exception e){
             e.printStackTrace();

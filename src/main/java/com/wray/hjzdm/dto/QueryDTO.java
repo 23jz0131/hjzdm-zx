@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 public class QueryDTO {
 
     private String query;
+    
+    // 兼容前端keyword字段
+    private String keyword;
 
     private Long catId;
 

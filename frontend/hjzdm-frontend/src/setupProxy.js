@@ -1,7 +1,8 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function (app) {
-  const target = process.env.BACKEND_ORIGIN || 'http://localhost:9090';
+  // 固定代理到本地后端 9090，确保与后端端口保持一致
+  const target = 'http://localhost:9090';
 
   app.use(
     [

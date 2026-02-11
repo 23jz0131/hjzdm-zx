@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投稿审查页面闪烁问题修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .test-section h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        .fix-list {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .fix-list h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        .fix-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .fix-list li {
+            margin: 5px 0;
+            color: #333;
+        }
+        .verification-steps {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .verification-steps h3 {
+            color: #ef6c00;
+            margin-top: 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #ff9800;
+        }
+        .expected-result {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .expected-result h3 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ 投稿审查页面闪烁问题修复方案</h1>
+        
+        <div class="test-section">
+            <h2>🔍 问题诊断</h2>
+            <p>经过分析，投稿历史出现闪烁的根本原因是：</p>
+            <ul>
+                <li><strong>React无限重新渲染循环</strong> - useEffect依赖数组中包含了load函数</li>
+                <li><strong>函数引用不稳定</strong> - load函数在每次渲染时重新创建</li>
+                <li><strong>状态更新冲突</strong> - 多次重复的状态设置操作</li>
+            </ul>
+        </div>
+
+        <div class="fix-list">
+            <h3>🔧 已实施的修复措施</h3>
+            <ul>
+                <li>使用 <code>useCallback</code> 包装 load 函数，稳定函数引用</li>
+                <li>优化 useEffect 依赖数组，移除 load 函数依赖</li>
+                <li>清理重复的状态更新操作</li>
+                <li>移除不必要的调试代码和控制台输出</li>
+                <li>保留必要的 activeTab 依赖以支持标签切换</li>
+            </ul>
+        </div>
+
+        <div class="code-block">
+// 修复前的问题代码
+const load = async () => {
+  // ... 加载逻辑
+};
+
+useEffect(() => {
+  load();
+}, [isAdmin, navigate, activeTab, load]); // ❌ load函数导致无限循环
+
+// 修复后的正确代码
+const load = useCallback(async () => {
+  // ... 加载逻辑
+}, [activeTab]); // ✅ 只依赖必要的值
+
+useEffect(() => {
+  load();
+}, [isAdmin, navigate, activeTab]); // ✅ 移除了load依赖
+        </div>
+
+        <div class="verification-steps">
+            <h3>📋 验证步骤</h3>
+            <div class="step">
+                <strong>步骤1：</strong> 刷新投稿审查页面
+            </div>
+            <div class="step">
+                <strong>步骤2：</strong> 观察页面加载过程，应该不再出现闪烁现象
+            </div>
+            <div class="step">
+                <strong>步骤3：</strong> 切换不同的状态标签（全部/待审核/已公开）
+            </div>
+            <div class="step">
+                <strong>步骤4：</strong> 点击"更新"按钮手动刷新数据
+            </div>
+            <div class="step">
+                <strong>步骤5：</strong> 执行审核操作（通过/拒绝）并观察页面反应
+            </div>
+        </div>
+
+        <div class="expected-result">
+            <h3>🎯 预期修复效果</h3>
+            <ul>
+                <li class="success">✅ 页面加载平稳，无闪烁现象</li>
+                <li class="success">✅ 标签切换流畅，响应迅速</li>
+                <li class="success">✅ 数据更新准确，不会重复加载</li>
+                <li class="success">✅ 审核操作后页面状态正确更新</li>
+                <li class="success">✅ 控制台无重复的日志输出</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>⚠️ 如果仍有问题</h2>
+            <p>如果修复后仍然出现闪烁，请检查：</p>
+            <ul>
+                <li>浏览器开发者工具中的React DevTools组件重新渲染次数</li>
+                <li>网络请求是否正常完成</li>
+                <li>是否存在其他可能导致重新渲染的因素</li>
+                <li>控制台是否有新的错误信息</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0f8ff; border-radius: 10px;">
+            <h3 style="color: #1976d2; margin-top: 0;">🎉 修复完成</h3>
+            <p>投稿审查页面的闪烁问题应该已经解决。<br>请按照上述步骤进行验证测试。</p>
+        </div>
+    </div>
+</body>
+</html>

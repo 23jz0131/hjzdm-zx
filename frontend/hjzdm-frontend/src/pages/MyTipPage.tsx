@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import UserSidebar from '../components/UserSidebar';
+
 import './MyTipPage.css';
 import { disclosureApi, commonApi } from '../services/api';
 
@@ -20,37 +20,7 @@ const MyTipPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   
-  // 添加图片URL转换函数
-  const convertImageUrl = (url: string): string => {
-    // 如果URL为空或无效，返回空字符串
-    if (!url) return '';
-    
-    // 如果是相对路径且以 /uploads/ 开头，则转换为完整的后端URL
-    if (url.startsWith('/uploads/')) {
-      // 在开发环境中，使用代理地址；在生产环境中使用绝对URL
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      if (isDevelopment) {
-        // 开发环境：通过代理访问后端的/uploads/路径
-        return url;
-      } else {
-        // 生产环境：使用完整的后端URL
-        return `http://localhost:9090${url}`;
-      }
-    }
-    
-    // 如果是完整的URL（包含http/https），直接返回
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // 其他情况（相对路径但不是/uploads/开头）也使用后端地址
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    if (isDevelopment) {
-      return url;
-    } else {
-      return `http://localhost:9090${url.startsWith('/') ? url : '/' + url}`;
-    }
-  };
+
   
   // Form state
   const [formData, setFormData] = useState({
@@ -263,7 +233,7 @@ const MyTipPage: React.FC = () => {
       <div className="tip-layout">
         <div className="main-content">
           <div className="tip-header">
-            <h1>マイヒント (投稿管理)</h1>
+            <h1>マイ投稿 (投稿管理)</h1>
             <button className="submit-button" onClick={() => setShowForm(!showForm)}>
               {showForm ? 'キャンセル' : '📝 新規投稿'}
             </button>
@@ -462,7 +432,7 @@ const MyTipPage: React.FC = () => {
         </div>
         
         <div className="sidebar-content">
-          <UserSidebar />
+          
         </div>
       </div>
     </div>

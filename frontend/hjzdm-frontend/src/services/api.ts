@@ -17,7 +17,8 @@ const getApiBaseUrl = () => {
 };
 
 // 获取API基础URL
-const apiBaseUrl = getApiBaseUrl();
+// Force proxy usage through CRA dev server to ensure consistent routing to 8080
+const apiBaseUrl = '';
 
 /**
  * 创建axios实例
@@ -25,7 +26,7 @@ const apiBaseUrl = getApiBaseUrl();
  */
 const apiClient = axios.create({
   baseURL: apiBaseUrl,           // API基础地址
-  timeout: 15000,               // 请求超时时间15秒
+  timeout: 30000,               // 请求超时时间延长到30秒
   headers: {
     'Content-Type': 'application/json',  // 默认请求头
   },

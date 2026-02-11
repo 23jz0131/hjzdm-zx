@@ -17,21 +17,21 @@ public class HjzdmApplication {
         SpringApplication.run(HjzdmApplication.class, args);
     }
 
-    @Bean
-    public CommandLineRunner cleanup(GoodsMapper goodsMapper) {
-        return args -> {
-            // Clean up invalid goods (price 0 or default name) created during testing
-            goodsMapper.delete(
-                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.wray.hjzdm.entity.Goods>()
-                            .eq("GOODS_PRICE", 0)
-                            .or()
-                            .eq("GOODS_NAME", "未命名商品")
-                            .or()
-                            .isNull("GOODS_LINK")
-                            .or()
-                            .eq("GOODS_LINK", ""));
-            // Log cleaned up invalid goods data
-        };
-    }
+    // @Bean
+    // public CommandLineRunner cleanup(GoodsMapper goodsMapper) {
+    //     return args -> {
+    //         // Clean up invalid goods (price 0 or default name) created during testing
+    //         goodsMapper.delete(
+    //                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.wray.hjzdm.entity.Goods>()
+    //                         .eq("GOODS_PRICE", 0)
+    //                         .or()
+    //                         .eq("GOODS_NAME", "未命名商品")
+    //                         .or()
+    //                         .isNull("GOODS_LINK")
+    //                         .or()
+    //                         .eq("GOODS_LINK", ""));
+    //         // Log cleaned up invalid goods data
+    //     };
+    // }
 
 }

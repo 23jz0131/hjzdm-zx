@@ -44,6 +44,60 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
         }
     }
 
+    private void ensureDisclosureTable(java.sql.Connection conn, java.sql.DatabaseMetaData meta,
+            String dbProductName) {
+        try {
+            boolean tableExists = false;
+            try (java.sql.ResultSet tables = meta.getTables(null, null, "DISCLOSURE", new String[] { "TABLE" })) {
+                if (tables.next()) {
+                    tableExists = true;
+                }
+            }
+
+            if (!tableExists) {
+                // 如果DISCLOSURE表不存在，创建它
+                String createDisclosureTableSql;
+                if ("H2".equalsIgnoreCase(dbProductName)) {
+                    createDisclosureTableSql = "CREATE TABLE \"DISCLOSURE\" (\n" +
+                            "    \"DISCLOSURE_ID\" BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    \"GOODS_ID\" BIGINT,\n" +
+                            "    \"AUTHOR\" BIGINT NOT NULL,\n" +
+                            "    \"CREATE_TIME\" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    \"CONTENT\" TEXT,\n" +
+                            "    \"DISCLOSURE_PRICE\" DECIMAL(10,2),\n" +
+                            "    \"IMG_URL\" TEXT,\n" +
+                            "    \"TITLE\" VARCHAR(512),\n" +
+                            "    \"LINK\" VARCHAR(2048),\n" +
+                            "    \"STATUS\" INTEGER DEFAULT 0\n" +
+                            ");";
+                } else {
+                    // MySQL
+                    createDisclosureTableSql = "CREATE TABLE DISCLOSURE (\n" +
+                            "    DISCLOSURE_ID BIGINT AUTO_INCREMENT PRIMARY KEY,\n" +
+                            "    GOODS_ID BIGINT,\n" +
+                            "    AUTHOR BIGINT NOT NULL,\n" +
+                            "    CREATE_TIME TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n" +
+                            "    CONTENT TEXT,\n" +
+                            "    DISCLOSURE_PRICE DECIMAL(10,2),\n" +
+                            "    IMG_URL TEXT,\n" +
+                            "    TITLE VARCHAR(512),\n" +
+                            "    LINK VARCHAR(2048),\n" +
+                            "    STATUS INTEGER DEFAULT 0\n" +
+                            ");";
+                }
+
+                try (java.sql.Statement stmt = conn.createStatement()) {
+                    stmt.execute(createDisclosureTableSql);
+                    log.info("Created DISCLOSURE table");
+                }
+            } else {
+                log.info("DISCLOSURE table already exists");
+            }
+        } catch (Exception e) {
+            log.error("Failed to ensure DISCLOSURE table", e);
+        }
+    }
+
     private void updateSchema() {
         try (java.sql.Connection conn = dataSource.getConnection()) {
             java.sql.DatabaseMetaData meta = conn.getMetaData();
@@ -55,6 +109,9 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
             
             // 创建默认管理员账户
             createDefaultAdminAccount(conn, dbProductName);
+            
+            // 创建DISCLOSURE表
+            ensureDisclosureTable(conn, meta, dbProductName);
             
             // 检查并创建DISCLOSURE_LIKE表
             ensureDisclosureLikeAndCollectTables(conn, meta, dbProductName);
@@ -165,33 +222,27 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
             }
 
             if (!tableExists) {
-                // 如果USER表不存在，创建它
+                // 如果USER表不存在，创建它（简化版，只包含必要字段）
                 String createUserTableSql;
                 if ("H2".equalsIgnoreCase(dbProductName)) {
                     createUserTableSql = "CREATE TABLE \"USER\" (" +
                             "\"ID\" BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-                            "\"OPENID\" VARCHAR(255), " +
                             "\"NAME\" VARCHAR(255), " +
-                            "\"PHONE\" VARCHAR(20), " +
                             "\"PASSWORD\" VARCHAR(255), " +
+                            "\"NICKNAME\" VARCHAR(255), " +
                             "\"AVATAR\" VARCHAR(500), " +
                             "\"create_time\" TIMESTAMP, " +
-                            "\"GENDER\" INTEGER, " +
-                            "\"AGE\" INTEGER, " +
-                            "\"BIRTH_DATE\" TIMESTAMP)";
+                            "\"UPDATE_TIME\" TIMESTAMP)";
                 } else {
                     // MySQL
                     createUserTableSql = "CREATE TABLE USER (" +
                             "ID BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-                            "OPENID VARCHAR(255), " +
                             "NAME VARCHAR(255), " +
-                            "PHONE VARCHAR(20), " +
                             "PASSWORD VARCHAR(255), " +
+                            "NICKNAME VARCHAR(255), " +
                             "AVATAR VARCHAR(500), " +
                             "create_time TIMESTAMP, " +
-                            "GENDER INT, " +
-                            "AGE INT, " +
-                            "BIRTH_DATE TIMESTAMP)";
+                            "UPDATE_TIME TIMESTAMP)";
                 }
 
                 try (java.sql.Statement stmt = conn.createStatement()) {
@@ -201,10 +252,8 @@ public class Initializer implements ApplicationListener<ContextRefreshedEvent> {
                 return; // 表刚创建，字段已包含，直接返回
             }
 
-            // 如果表已存在，则检查并添加缺失的字段
-            ensureColumn(conn, dbProductName, "USER", "GENDER", "INTEGER", "INT");
-            ensureColumn(conn, dbProductName, "USER", "AGE", "INTEGER", "INT");
-            ensureColumn(conn, dbProductName, "USER", "BIRTH_DATE", "TIMESTAMP", "DATETIME");
+            // 注意：已移除GENDER、AGE、BIRTH_DATE字段的自动添加
+            // 保持数据库表结构与简化后的实体类一致
         } catch (Exception e) {
             log.error("Failed to ensure USER table columns", e);
         }

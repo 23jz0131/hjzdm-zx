@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库投稿数据诊断工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 数据库投稿数据诊断工具</h1>
+        
+        <div class="section">
+            <h2>📊 基础环境检查</h2>
+            <button onclick="checkBackendStatus()">📡 检查后端服务状态</button>
+            <button onclick="checkDatabaseConnection()">🔌 检查数据库连接</button>
+            <div id="envResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>📋 投稿数据统计</h2>
+            <button onclick="getDisclosureStats()">📈 获取投稿统计数据</button>
+            <button onclick="getAllDisclosures()">📄 获取所有投稿列表</button>
+            <div id="statsResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 详细数据查询</h2>
+            <button onclick="checkPendingDisclosures()">⏳ 查询待审核投稿</button>
+            <button onclick="checkApprovedDisclosures()">✅ 查询已通过投稿</button>
+            <button onclick="checkRejectedDisclosures()">❌ 查询被拒绝投稿</button>
+            <div id="detailResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 快速修复工具</h2>
+            <button onclick="createSampleData()">➕ 创建测试投稿数据</button>
+            <button onclick="clearTestData()">🗑️ 清理测试数据</button>
+            <div id="fixResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        // 检查后端服务状态
+        async function checkBackendStatus() {
+            const resultDiv = document.getElementById('envResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在检查后端服务...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/actuator/health');
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ 后端服务运行正常\n状态: ${data.status}\n时间: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 后端服务无法访问\n错误: ${error.message}\n请确保Spring Boot应用正在运行`;
+            }
+        }
+
+        // 检查数据库连接
+        async function checkDatabaseConnection() {
+            const resultDiv = document.getElementById('envResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在检查数据库连接...';
+            
+            try {
+                // 尝试登录获取token
+                const loginResponse = await fetch('http://localhost:9090/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error('管理员登录失败');
+                }
+
+                const loginData = await loginResponse.json();
+                authToken = loginData.data.token;
+                
+                // 测试数据库查询
+                const testResponse = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (testResponse.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 数据库连接正常\n✅ 管理员登录成功\n✅ API接口可访问`;
+                } else {
+                    throw new Error('API接口访问异常');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 数据库连接检查失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 获取投稿统计数据
+        async function getDisclosureStats() {
+            const resultDiv = document.getElementById('statsResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在获取统计数据...';
+            
+            if (!authToken) {
+                await checkDatabaseConnection();
+                if (!authToken) {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ 请先完成数据库连接检查';
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const disclosures = data.data || [];
+                    const stats = {
+                        total: disclosures.length,
+                        pending: disclosures.filter(d => d.status === 0).length,
+                        approved: disclosures.filter(d => d.status === 1).length,
+                        rejected: disclosures.filter(d => d.status === 2).length
+                    };
+
+                    resultDiv.className = 'result info';
+                    resultDiv.textContent = `📊 投稿数据统计:
+总投稿数: ${stats.total}
+待审核: ${stats.pending}
+已通过: ${stats.approved}
+被拒绝: ${stats.rejected}
+
+${stats.total > 0 ? '✅ 数据库中有投稿数据' : '⚠️ 数据库中暂无投稿数据'}`;
+                } else {
+                    throw new Error(data.msg || '获取数据失败');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 获取统计数据失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 获取所有投稿列表
+        async function getAllDisclosures() {
+            const resultDiv = document.getElementById('statsResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在获取投稿列表...';
+            
+            if (!authToken) {
+                await checkDatabaseConnection();
+            }
+
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const disclosures = data.data || [];
+                    let resultText = `📄 所有投稿列表 (共${disclosures.length}条):\n\n`;
+                    
+                    if (disclosures.length === 0) {
+                        resultText += '暂无投稿数据';
+                    } else {
+                        disclosures.forEach((disclosure, index) => {
+                            const statusMap = {0: '待审核', 1: '已通过', 2: '被拒绝'};
+                            resultText += `${index + 1}. ID: ${disclosure.id}\n`;
+                            resultText += `   标题: ${disclosure.title}\n`;
+                            resultText += `   状态: ${statusMap[disclosure.status]}\n`;
+                            resultText += `   提交时间: ${disclosure.createTime}\n`;
+                            resultText += `   内容预览: ${disclosure.content?.substring(0, 50)}...\n\n`;
+                        });
+                    }
+
+                    resultDiv.className = 'result info';
+                    resultDiv.textContent = resultText;
+                } else {
+                    throw new Error(data.msg || '获取数据失败');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 获取投稿列表失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 查询待审核投稿
+        async function checkPendingDisclosures() {
+            const resultDiv = document.getElementById('detailResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在查询待审核投稿...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const pendingDisclosures = (data.data || []).filter(d => d.status === 0);
+                    
+                    let resultText = `⏳ 待审核投稿 (${pendingDisclosures.length}条):\n\n`;
+                    
+                    if (pendingDisclosures.length === 0) {
+                        resultText += '暂无待审核的投稿';
+                    } else {
+                        pendingDisclosures.forEach((disclosure, index) => {
+                            resultText += `${index + 1}. 标题: ${disclosure.title}\n`;
+                            resultText += `   提交者: ${disclosure.username}\n`;
+                            resultText += `   提交时间: ${disclosure.createTime}\n`;
+                            resultText += `   内容: ${disclosure.content?.substring(0, 100)}...\n\n`;
+                        });
+                    }
+
+                    resultDiv.className = 'result warning';
+                    resultDiv.textContent = resultText;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 查询失败: ${error.message}`;
+            }
+        }
+
+        // 查询已通过投稿
+        async function checkApprovedDisclosures() {
+            const resultDiv = document.getElementById('detailResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在查询已通过投稿...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const approvedDisclosures = (data.data || []).filter(d => d.status === 1);
+                    
+                    let resultText = `✅ 已通过投稿 (${approvedDisclosures.length}条):\n\n`;
+                    
+                    if (approvedDisclosures.length === 0) {
+                        resultText += '暂无已通过的投稿';
+                    } else {
+                        approvedDisclosures.forEach((disclosure, index) => {
+                            resultText += `${index + 1}. 标题: ${disclosure.title}\n`;
+                            resultText += `   提交者: ${disclosure.username}\n`;
+                            resultText += `   审核时间: ${disclosure.updateTime}\n\n`;
+                        });
+                    }
+
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = resultText;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 查询失败: ${error.message}`;
+            }
+        }
+
+        // 查询被拒绝投稿
+        async function checkRejectedDisclosures() {
+            const resultDiv = document.getElementById('detailResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在查询被拒绝投稿...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const rejectedDisclosures = (data.data || []).filter(d => d.status === 2);
+                    
+                    let resultText = `❌ 被拒绝投稿 (${rejectedDisclosures.length}条):\n\n`;
+                    
+                    if (rejectedDisclosures.length === 0) {
+                        resultText += '暂无被拒绝的投稿';
+                    } else {
+                        rejectedDisclosures.forEach((disclosure, index) => {
+                            resultText += `${index + 1}. 标题: ${disclosure.title}\n`;
+                            resultText += `   提交者: ${disclosure.username}\n`;
+                            resultText += `   拒绝时间: ${disclosure.updateTime}\n\n`;
+                        });
+                    }
+
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = resultText;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 查询失败: ${error.message}`;
+            }
+        }
+
+        // 创建测试投稿数据
+        async function createSampleData() {
+            const resultDiv = document.getElementById('fixResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在创建测试数据...';
+            
+            try {
+                // 先确保有用户数据
+                const userResponse = await fetch('http://localhost:9090/user/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const userData = await userResponse.json();
+                const users = userData.data || [];
+                
+                if (users.length === 0) {
+                    throw new Error('系统中没有用户，请先注册用户');
+                }
+
+                // 创建几条测试投稿
+                const sampleDisclosures = [
+                    {
+                        title: "测试投稿一 - 待审核",
+                        content: "这是第一条测试投稿内容，用于测试待审核状态的功能。",
+                        userId: users[0].id
+                    },
+                    {
+                        title: "测试投稿二 - 待审核",
+                        content: "这是第二条测试投稿内容，包含一些技术相关内容。",
+                        userId: users[0].id
+                    }
+                ];
+
+                let successCount = 0;
+                for (const disclosure of sampleDisclosures) {
+                    const submitResponse = await fetch('http://localhost:9090/disclosure/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(disclosure)
+                    });
+
+                    if (submitResponse.ok) {
+                        successCount++;
+                    }
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ 成功创建 ${successCount} 条测试投稿数据\n请刷新页面查看效果`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 创建测试数据失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 清理测试数据
+        async function clearTestData() {
+            const resultDiv = document.getElementById('fixResult');
+            resultDiv.innerHTML = '<div class="loading"></div>正在清理测试数据...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/list', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                const testDisclosures = (data.data || []).filter(d => 
+                    d.title.includes('测试投稿') || d.content.includes('测试')
+                );
+
+                let deletedCount = 0;
+                for (const disclosure of testDisclosures) {
+                    const deleteResponse = await fetch(`http://localhost:9090/disclosure/delete/${disclosure.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    if (deleteResponse.ok) {
+                        deletedCount++;
+                    }
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ 成功清理 ${deletedCount} 条测试数据`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 清理测试数据失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 页面加载时自动检查基础环境
+        window.onload = function() {
+            setTimeout(checkBackendStatus, 1000);
+        };
+    </script>
+</body>
+</html>

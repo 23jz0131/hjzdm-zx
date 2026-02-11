@@ -1,7 +1,6 @@
 package com.wray.hjzdm.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.wray.hjzdm.common.BaseContext;
 import com.wray.hjzdm.dto.LocalLoginDTO;
 import com.wray.hjzdm.dto.UserLoginDTO;
 import com.wray.hjzdm.dto.UserRegisterDTO;
@@ -9,13 +8,13 @@ import com.wray.hjzdm.entity.User;
 import com.wray.hjzdm.mapper.UserMapper;
 import com.wray.hjzdm.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Calendar;
 
 /**
  * 用户服务实现类
@@ -26,9 +25,60 @@ import java.util.List;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    /** 密码加密器，用于用户密码的安全存储 */
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * 本地手机号登录实现
+     * 支持手机号自动注册功能，简化用户使用流程
+     * @param dto 登录数据传输对象
+     * @return User 登录成功的用户对象
+     * @throws RuntimeException 当手机号为空或密码不符合要求时抛出异常
+     */
+    public User localLogin(LocalLoginDTO dto) {
+
+        String phone = dto.getPhone();
+        String password = dto.getPassword();
+
+        // 验证手机号是否为空
+        if (!StringUtils.hasText(phone)) {
+            throw new RuntimeException("手机号不能为空");
+        }
+
+        // 查询该手机号是否已存在用户
+        User user = this.lambdaQuery()
+                .eq(User::getPhone, phone)
+                .one();
+
+        // 如果用户不存在，则自动创建新用户
+        if (user == null) {
+            if (!StringUtils.hasText(password) || password.length() < 6) {
+                throw new RuntimeException("密码至少6位");
+            }
+            user = User.builder()
+                    .phone(phone)
+                    .name("用户" + phone.substring(Math.max(0, phone.length() - 4)))
+                    .password(passwordEncoder.encode(password))
+                    .createTime(new Date())
+                    .build();
+            this.save(user);
+        } else {
+            if (StringUtils.hasText(user.getPassword())) {
+                if (!StringUtils.hasText(password) || !passwordEncoder.matches(password, user.getPassword())) {
+                    throw new RuntimeException("用户名或密码错误");
+                }
+            } else if (StringUtils.hasText(password)) {
+                if (password.length() < 6) {
+                    throw new RuntimeException("密码至少6位");
+                }
+                user.setPassword(passwordEncoder.encode(password));
+                this.updateById(user);
+            }
+        }
+
+        return user;
+    }
+    
     /**
      * 用户名或邮箱登录实现
      * 支持用户名和手机号双重登录方式
@@ -46,17 +96,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("用户名或密码错误");
         }
         
-        // 首先尝试按用户名精确查找用户
+        // 按用户名精确查找用户
         User user = this.lambdaQuery()
                 .eq(User::getName, username)
                 .one();
 
-        // 如果按用户名没找到，尝试按手机号查找
-        if (user == null) {
-            user = this.lambdaQuery()
-                    .eq(User::getPhone, username)
-                    .one();
-        }
+        // 注意：已移除手机号查找功能，因为phone字段已被删除
         
         if (user == null || !StringUtils.hasText(user.getPassword())) {
             throw new RuntimeException("用户名或密码错误");
@@ -189,19 +234,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("密码至少6位");
         }
         
-        // 查询用户是否存在
+        // 验证用户是否存在
         User user = this.getById(userId);
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
         
-        // 更新密码
-        user.setPassword(passwordEncoder.encode(newPassword));
+        // 对新密码进行加密处理
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
         user.setUpdateTime(new Date());
         
-        // 保存更新
+        // 更新数据库中的密码
         this.updateById(user);
         
-        log.info("用户密码重置成功，用户ID: {}", userId);
+        log.info("用户 {} 的密码已重置", userId);
     }
 }

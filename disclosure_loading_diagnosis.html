@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投稿审查页面加载诊断工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-public {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 投稿审查页面加载诊断工具</h1>
+        <p>此工具帮助诊断投稿审查页面数据加载问题，基于真实电商平台数据环境</p>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">🔒 管理员登录</div>
+            <div class="tab" onclick="switchTab('diagnosis')">🔍 数据诊断</div>
+            <div class="tab" onclick="switchTab('test')">🧪 功能测试</div>
+        </div>
+
+        <!-- 管理员登录标签页 -->
+        <div id="login-tab" class="tab-content active">
+            <h2>管理员账户登录</h2>
+            <div class="section">
+                <label>用户名: <input type="text" id="username" value="testuser3" readonly></label>
+                <label>密码: <input type="password" id="password" value="123123" readonly></label>
+                <button class="btn" onclick="login()">登录</button>
+                <div id="loginResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 数据诊断标签页 -->
+        <div id="diagnosis-tab" class="tab-content">
+            <h2>投稿数据状态诊断</h2>
+            
+            <div class="section">
+                <h3>数据库连接测试</h3>
+                <button class="btn" onclick="testDatabaseConnection()">测试数据库连接</button>
+                <div id="dbTestResult" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h3>投稿表结构检查</h3>
+                <button class="btn" onclick="checkDisclosureTable()">检查DISCLOSURE表</button>
+                <div id="tableCheckResult" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h3>投稿数据统计</h3>
+                <button class="btn" onclick="getDisclosureStatistics()">获取投稿统计</button>
+                <div id="statsResult" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h3>API接口测试</h3>
+                <button class="btn" onclick="testPendingApi()">测试待审核API</button>
+                <button class="btn" onclick="testPublicApi()">测试已公开API</button>
+                <div id="apiTestResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 功能测试标签页 -->
+        <div id="test-tab" class="tab-content">
+            <h2>投稿审查功能测试</h2>
+            
+            <div class="section">
+                <h3>待审核投稿列表</h3>
+                <button class="btn" onclick="getPendingDisclosures()">获取待审核投稿</button>
+                <button class="btn" onclick="refreshAllTests()">刷新全部</button>
+                <div id="pendingTestResult" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h3>已公开投稿列表</h3>
+                <button class="btn" onclick="getPublicDisclosures()">获取已公开投稿</button>
+                <div id="publicTestResult" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h3>审核功能测试</h3>
+                <div id="auditTestSection" style="display: none;">
+                    <p>选择一个投稿进行审核测试：</p>
+                    <div id="auditTestButtons"></div>
+                </div>
+                <div id="auditTestResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+        let currentDisclosures = [];
+
+        function switchTab(tabName) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签页
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 管理员登录
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在登录...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    authToken = data.data.token;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 登录成功\n用户ID: ${data.data.id}\n用户名: ${data.data.name}\nToken: ${authToken.substring(0, 20)}...`;
+                    
+                    // 启用其他标签页
+                    document.querySelectorAll('.tab:not(:first-child)').forEach(tab => {
+                        tab.disabled = false;
+                        tab.style.opacity = '1';
+                    });
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 登录失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        // 数据库连接测试
+        async function testDatabaseConnection() {
+            const resultDiv = document.getElementById('dbTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试数据库连接...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/user/me', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ 数据库连接正常\n后端服务运行正常';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 数据库连接失败: ${error.message}\n请检查后端服务是否启动`;
+            }
+        }
+
+        // 检查投稿表结构
+        async function checkDisclosureTable() {
+            const resultDiv = document.getElementById('tableCheckResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在检查DISCLOSURE表结构...';
+            
+            try {
+                // 通过获取所有投稿来间接检查表结构
+                const response = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 1 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ DISCLOSURE表结构正常\n可以正常访问投稿数据';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 表结构异常: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 检查失败: ${error.message}`;
+            }
+        }
+
+        // 获取投稿统计数据
+        async function getDisclosureStatistics() {
+            const resultDiv = document.getElementById('statsResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在获取投稿统计数据...';
+            
+            try {
+                // 并行获取待审核和已公开投稿
+                const [pendingRes, publicRes] = await Promise.all([
+                    fetch('http://localhost:9090/disclosure/queryPendingList', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ pageNum: 1, pageSize: 1000 })
+                    }),
+                    fetch('http://localhost:9090/disclosure/queryPublicList', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ pageNum: 1, pageSize: 1000 })
+                    })
+                ]);
+                
+                const pendingData = await pendingRes.json();
+                const publicData = await publicRes.json();
+                
+                if (pendingData.code === 200 && publicData.code === 200) {
+                    const pendingCount = pendingData.data?.length || 0;
+                    const publicCount = publicData.data?.length || 0;
+                    const totalCount = pendingCount + publicCount;
+                    
+                    let resultText = `📊 投稿数据统计:\n`;
+                    resultText += `   待审核投稿: ${pendingCount} 条\n`;
+                    resultText += `   已公开投稿: ${publicCount} 条\n`;
+                    resultText += `   总计: ${totalCount} 条\n\n`;
+                    
+                    if (totalCount > 0) {
+                        resultText += '📋 投稿详情示例:\n';
+                        const sample = [...(pendingData.data || []), ...(publicData.data || [])][0];
+                        if (sample) {
+                            resultText += `   ID: ${sample.disclosureId}\n`;
+                            resultText += `   标题: ${sample.title}\n`;
+                            resultText += `   状态: ${sample.status === 0 ? '待审核' : sample.status === 1 ? '已公开' : '被拒绝'}\n`;
+                            resultText += `   时间: ${sample.createTime}\n`;
+                        }
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultText += '⚠️  暂无投稿数据\n建议创建测试投稿数据';
+                        resultDiv.className = 'result info';
+                    }
+                    
+                    resultDiv.textContent = resultText;
+                } else {
+                    throw new Error('API返回错误');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 获取统计数据失败: ${error.message}`;
+            }
+        }
+
+        // 测试API接口
+        async function testPendingApi() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试待审核投稿API...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPendingList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 5 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 待审核API测试成功\n返回数据条数: ${data.data?.length || 0}\n\n${JSON.stringify(data.data?.slice(0, 2) || [], null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 待审核API测试失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API测试失败: ${error.message}`;
+            }
+        }
+
+        async function testPublicApi() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试已公开投稿API...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 5 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 已公开API测试成功\n返回数据条数: ${data.data?.length || 0}\n\n${JSON.stringify(data.data?.slice(0, 2) || [], null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 已公开API测试失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API测试失败: ${error.message}`;
+            }
+        }
+
+        // 功能测试部分
+        async function getPendingDisclosures() {
+            if (!authToken) {
+                alert('请先登录');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('pendingTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在获取待审核投稿...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPendingList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 20 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    currentDisclosures = data.data || [];
+                    displayDisclosures('pendingTestResult', data.data, 'pending');
+                    updateAuditTestSection(data.data);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 获取失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        async function getPublicDisclosures() {
+            if (!authToken) {
+                alert('请先登录');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('publicTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在获取已公开投稿...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ pageNum: 1, pageSize: 20 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    displayDisclosures('publicTestResult', data.data, 'public');
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 获取失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        function displayDisclosures(elementId, disclosures, type) {
+            const container = document.getElementById(elementId);
+            
+            if (!disclosures || disclosures.length === 0) {
+                container.innerHTML = '<div class="result info">暂无投稿数据</div>';
+                return;
+            }
+
+            let html = `<div class="result success"><h3>共找到 ${disclosures.length} 个投稿</h3>`;
+            html += '<table><tr><th>ID</th><th>标题</th><th>价格</th><th>状态</th><th>时间</th></tr>';
+            
+            disclosures.forEach(disclosure => {
+                const statusText = disclosure.status === 0 ? '待审核' : 
+                                 disclosure.status === 1 ? '已公开' : '被拒绝';
+                const statusClass = disclosure.status === 0 ? 'status-pending' : 
+                                  disclosure.status === 1 ? 'status-public' : 'status-rejected';
+                
+                html += `
+                    <tr>
+                        <td>${disclosure.disclosureId}</td>
+                        <td>${disclosure.title}</td>
+                        <td>¥${disclosure.disclosurePrice}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>${new Date(disclosure.createTime).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table></div>';
+            container.innerHTML = html;
+        }
+
+        function updateAuditTestSection(disclosures) {
+            const section = document.getElementById('auditTestSection');
+            const buttonsContainer = document.getElementById('auditTestButtons');
+            
+            if (disclosures && disclosures.length > 0) {
+                section.style.display = 'block';
+                let buttonsHtml = '';
+                disclosures.slice(0, 3).forEach(disclosure => {
+                    buttonsHtml += `
+                        <button class="btn" onclick="testAudit(${disclosure.disclosureId}, 1)">通过 #${disclosure.disclosureId}</button>
+                        <button class="btn" onclick="testAudit(${disclosure.disclosureId}, 2)">拒绝 #${disclosure.disclosureId}</button>
+                    `;
+                });
+                buttonsContainer.innerHTML = buttonsHtml;
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        async function testAudit(disclosureId, status) {
+            const resultDiv = document.getElementById('auditTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = `正在${status === 1 ? '通过' : '拒绝'}投稿 #${disclosureId}...`;
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/audit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        disclosureId: disclosureId,
+                        status: status
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 审核操作成功\n投稿 #${disclosureId} 已${status === 1 ? '通过' : '拒绝'}`;
+                    // 刷新列表
+                    setTimeout(() => {
+                        getPendingDisclosures();
+                        getPublicDisclosures();
+                    }, 1000);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 审核失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 审核操作失败: ${error.message}`;
+            }
+        }
+
+        function refreshAllTests() {
+            getPendingDisclosures();
+            getPublicDisclosures();
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 禁用除登录外的所有标签页
+            document.querySelectorAll('.tab:not(:first-child)').forEach(tab => {
+                tab.disabled = true;
+                tab.style.opacity = '0.5';
+            });
+        });
+    </script>
+</body>
+</html>

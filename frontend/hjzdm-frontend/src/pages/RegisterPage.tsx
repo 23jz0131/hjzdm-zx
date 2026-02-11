@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { userApi } from '../services/api';
 import './RegisterPage.css';
 
-const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9090';
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
 interface RegisterFormData {
   username: string;

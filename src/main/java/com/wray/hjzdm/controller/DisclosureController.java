@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 // 导入项目自定义类
@@ -148,48 +147,6 @@ public class DisclosureController {
     }
 
     /**
-     * GET方法 - 查询待审核的披露内容列表（管理员功能）
-     * @param pageNum 页码
-     * @param pageSize 每页大小
-     * @return Result 包含待审核披露内容列表的响应结果
-     */
-    @GetMapping("/pending")
-    public Result getPendingDisclosure(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "200") int pageSize) {
-        QueryDTO queryDto = new QueryDTO();
-        queryDto.setPageNum(pageNum);
-        queryDto.setPageSize(pageSize);
-        
-        // 调用服务层查询待审核披露内容
-        List<Disclosure> disclosureList = disclosureService.queryPendingDisclosure(queryDto);
-        
-        // 返回成功结果
-        return Result.success(disclosureList);
-    }
-
-    /**
-     * GET方法 - 查询公开的披露内容列表
-     * @param pageNum 页码
-     * @param pageSize 每页大小
-     * @return Result 包含公开披露内容列表的响应结果
-     */
-    @GetMapping("/public")
-    public Result getPublicDisclosure(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "200") int pageSize) {
-        QueryDTO queryDto = new QueryDTO();
-        queryDto.setPageNum(pageNum);
-        queryDto.setPageSize(pageSize);
-        
-        // 调用服务层查询公开披露内容
-        List<Disclosure> disclosureList = disclosureService.queryPublicDisclosure(queryDto);
-        
-        // 返回成功结果
-        return Result.success(disclosureList);
-    }
-
-    /**
      * 点赞功能已删除
      * 原like接口方法已被移除
      */
@@ -213,4 +170,19 @@ public class DisclosureController {
      * 查询我的收藏功能已删除
      * 原myCollect接口方法已被移除
      */
+    
+    /**
+     * 查询我的投稿（GET方式）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return Result 包含我的投稿列表的响应结果
+     */
+    @GetMapping("/my")
+    public Result getMyDisclosure(Integer pageNum, Integer pageSize) {
+        QueryDTO queryDto = new QueryDTO();
+        queryDto.setPageNum(pageNum != null ? pageNum : 1);
+        queryDto.setPageSize(pageSize != null ? pageSize : 10);
+        List<Disclosure> disclosureList = disclosureService.queryMyDisclosure(queryDto);
+        return Result.success(disclosureList);
+    }
 }

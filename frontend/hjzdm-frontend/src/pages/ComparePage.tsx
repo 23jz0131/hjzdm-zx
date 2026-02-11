@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './ComparePage.css';
 import { goodsApi, categoryApi, userApi } from '../services/api';
@@ -73,51 +73,7 @@ const ComparePage: React.FC = () => {
     return saved ? parseInt(saved) : 50;
   });
   
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedKeys');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  // 对比商品状态
-  const [compareProducts, setCompareProducts] = useState<Product[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_compareProducts');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedBrands');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedSeries, setSelectedSeries] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedSeries');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedModels, setSelectedModels] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedModels');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedStorage, setSelectedStorage] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedStorage');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedColors, setSelectedColors] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedColors');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedSizes, setSelectedSizes] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedSizes');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('comparePage_selectedCategories');
-    return saved ? JSON.parse(saved) : [];
-  });
+
   
   const [trendOpen, setTrendOpen] = useState(() => {
     const saved = sessionStorage.getItem('comparePage_trendOpen');
@@ -162,6 +118,41 @@ const ComparePage: React.FC = () => {
   });
   
 
+
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedBrands');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedSeries, setSelectedSeries] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedSeries');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedModels, setSelectedModels] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedModels');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedStorage, setSelectedStorage] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedStorage');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedColors, setSelectedColors] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedColors');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedSizes');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('comparePage_selectedCategories');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Dynamic Filters State
   const [categories, setCategories] = useState<{ catId: number, catName: string, children?: any[] }[]>([]);
@@ -210,41 +201,7 @@ const ComparePage: React.FC = () => {
     sessionStorage.setItem('comparePage_pageSize', pageSize.toString());
   }, [pageSize]);
   
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedKeys', JSON.stringify(selectedKeys));
-  }, [selectedKeys]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_compareProducts', JSON.stringify(compareProducts));
-  }, [compareProducts]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedBrands', JSON.stringify(selectedBrands));
-  }, [selectedBrands]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedSeries', JSON.stringify(selectedSeries));
-  }, [selectedSeries]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedModels', JSON.stringify(selectedModels));
-  }, [selectedModels]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedStorage', JSON.stringify(selectedStorage));
-  }, [selectedStorage]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedColors', JSON.stringify(selectedColors));
-  }, [selectedColors]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedSizes', JSON.stringify(selectedSizes));
-  }, [selectedSizes]);
-  
-  useEffect(() => {
-    sessionStorage.setItem('comparePage_selectedCategories', JSON.stringify(selectedCategories));
-  }, [selectedCategories]);
+
   
   useEffect(() => {
     sessionStorage.setItem('comparePage_trendOpen', JSON.stringify(trendOpen));
@@ -311,7 +268,8 @@ const ComparePage: React.FC = () => {
     if (searchSource === 'local') {
       searchProducts(executedQuery || query);
     }
-  }, [selectedDynamicFilters, currentCatId, currentPage, pageSize, searchSource, selectedPlatforms]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDynamicFilters, currentCatId, currentPage, pageSize, searchSource, selectedPlatforms, executedQuery, query]);
 
 
 
@@ -327,7 +285,7 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  const searchProducts = async (searchQuery: string) => {
+  const searchProducts = useCallback(async (searchQuery: string) => {
     // Debug log removed
     if (!searchQuery.trim() && searchSource === 'compare') return;
 
@@ -401,6 +359,16 @@ const ComparePage: React.FC = () => {
             }
           }
           setCompareGroups(processedData);
+          // 调试: 输出当前组的简要信息，确认 Yahoo 条目是否在结果中
+          console.log('ComparePage: updated compareGroups', processedData.map((g: any) => ({
+            goodsName: g.goodsName,
+            count: g.goodsList.length,
+            mallTypes: g.goodsList.map((p: any) => p.mallType)
+          })));
+          
+          setCompareGroups(processedData);
+          setLoading(false);
+          return;
         } else {
           setCompareGroups([]);
           setTotalItems(0);
@@ -448,19 +416,45 @@ const ComparePage: React.FC = () => {
 
       // デバッグ用ログ removed
 
-      // 使用api.ts中定义的APIサービス
+      // 使用api.ts中定义のAPIサービス
       const response = await goodsApi.compareGoods(searchQuery);
-
-      // デバッグ用ログ removed
+      
+      // 添加详细的响应データ调试
+      console.log('🔍 API响应详情:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: response.data
+      });
 
       let responseData = [];
-      if (response.data && response.data.data) {
-        responseData = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+      
+      // 更严格的レスポンスデータチェック
+      if (response.data) {
+        console.log('📊 响应data结构:', typeof response.data, response.data);
+        
+        if (response.data.data) {
+          console.log('📦 data.data结构:', typeof response.data.data, response.data.data);
+          responseData = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+          console.log('📋 处理後のresponseData:', responseData.length, '个项目');
+          
+          // 详细检查每个データ項
+          responseData.forEach((item: any, index: number) => {
+            console.log(`📦 データ項[${index}]:`, {
+              type: typeof item,
+              keys: Object.keys(item || {}),
+              goodsName: item?.goodsName,
+              goodsList: item?.goodsList,
+              goodsListType: Array.isArray(item?.goodsList) ? 'array' : typeof item?.goodsList,
+              goodsListLength: Array.isArray(item?.goodsList) ? item.goodsList.length : 'N/A'
+            });
+          });
+        } else {
+          console.log('⚠️ response.data.data 不存在');
+        }
       } else {
-        responseData = [];
+        console.log('❌ response.data 不存在');
       }
-
-      // デバッグ用ログ removed
 
       // レスポンスデータを処理
       let processedData: { goodsName: string, goodsList: { goodsId: number, goodsName: string, goodsPrice: number, goodsLink: string, imgUrl: string, mallType: number }[], lowestPrice: number, lowestPlatform: string }[] = [];
@@ -561,8 +555,9 @@ const ComparePage: React.FC = () => {
         }
       }
 
-      // デバッグ用ログ removed
-
+      // Debug: log the kinds of mallTypes in current results
+      console.log('ComparePage: after processing, groups:', processedData.map((g: any) => g.goodsList.map((p: any) => p.mallType)));
+      
       setCompareGroups(processedData);
       setLoading(false);
     } catch (err) {
@@ -613,7 +608,7 @@ const ComparePage: React.FC = () => {
       }
       console.warn(err);
     }
-  };
+  }, [searchSource, selectedDynamicFilters, currentCatId, currentPage, pageSize, selectedPlatforms, minPrice, maxPrice]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -630,13 +625,7 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  const getPlatformColor = (mallType: number) => {
-    switch (mallType) {
-      case 10: return '#bf0000'; // 楽天赤
-      case 20: return '#007bc7'; // Yahoo!青
-      default: return '#666';
-    }
-  };
+
 
   const getPlatformBadgeClass = (mallType: number) => {
     switch (mallType) {
@@ -699,9 +688,9 @@ const ComparePage: React.FC = () => {
   const parseFacets = (name: string) => {
     const n = name || '';
     const brand = knownBrands.find(b => new RegExp(b, 'i').test(n)) || '';
-    const seriesMatch = n.match(/(iPhone|MacBook|iPad|Galaxy|ThinkPad|Surface|PlayStation|Switch|WH\-\d{4}XM\d|RX\s?\d{3,}|EOS\s?\w+)/i);
+    const seriesMatch = n.match(/(iPhone|MacBook|iPad|Galaxy|ThinkPad|Surface|PlayStation|Switch|WH-\d{4}XM\d|RX\s?\d{3,}|EOS\s?\w+)/i);
     const series = seriesMatch ? seriesMatch[1] : '';
-    const modelMatch = n.match(/([A-Za-z]{1,3}\-?\d{2,4}[A-Za-z]?|\bPro Max\b|\bPro\b|\bUltra\b|\bPlus\b|\bAir\b|\bMini\b)/i);
+    const modelMatch = n.match(/([A-Za-z]{1,3}-?\d{2,4}[A-Za-z]?|\bPro Max\b|\bPro\b|\bUltra\b|\bPlus\b|\bAir\b|\bMini\b)/i);
     const model = modelMatch ? modelMatch[1] : '';
     const storageMatch = n.match(/(\b\d{2,4}\s?(GB|TB)\b)/i);
     const storage = storageMatch ? storageMatch[1].replace(/\s+/g, '') : '';
@@ -712,12 +701,7 @@ const ComparePage: React.FC = () => {
     return { brand, series, model, storage, color, size };
   };
   const facetIndex = allProducts.map(p => parseFacets(p.goodsName));
-  const brands = Array.from(new Set(facetIndex.map(f => f.brand).filter(Boolean)));
-  const series = Array.from(new Set(facetIndex.map(f => f.series).filter(Boolean)));
-  const models = Array.from(new Set(facetIndex.map(f => f.model).filter(Boolean)));
-  const storages = Array.from(new Set(facetIndex.map(f => f.storage).filter(Boolean)));
-  const colors = Array.from(new Set(facetIndex.map(f => f.color).filter(Boolean)));
-  const sizes = Array.from(new Set(facetIndex.map(f => f.size).filter(Boolean)));
+
   const parseCategory = (name: string) => {
     const n = (name || '').toLowerCase();
     if (/手机壳|ケース|保護壳|カバー/.test(n)) return { parent: 'スマホアクセサリー', child: 'ケース' };
@@ -792,7 +776,7 @@ const ComparePage: React.FC = () => {
     : sortedProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const goPrev = () => setCurrentPage(p => Math.max(1, p - 1));
   const goNext = () => setCurrentPage(p => Math.min(totalPages, p + 1));
-  const onChangePageSize = (size: number) => { setPageSize(size); setCurrentPage(1); };
+
 
   const getSellerFromLink = (url?: string) => {
     if (!url) return '不明な店铺';
@@ -1013,7 +997,9 @@ const ComparePage: React.FC = () => {
       )}
 
       {!loading && !error && compareGroups.length === 0 && query && (
-        <div className="no-results">関連商品が見つかりません</div>
+        <div className="no-results">
+          <p>関連商品が見つかりません</p>
+        </div>
       )}
     </div>
   );

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投稿API测试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 投稿API测试工具</h1>
+        <p>此工具用于测试投稿审查页面的API接口是否正常工作</p>
+        
+        <div class="test-section">
+            <h2>管理员登录测试</h2>
+            <button class="btn" onclick="login()">登录管理员账户</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>投稿数据测试</h2>
+            <button class="btn" onclick="testPendingList()">测试待审核投稿</button>
+            <button class="btn" onclick="testPublicList()">测试已公开投稿</button>
+            <button class="btn" onclick="testAllLists()">测试所有投稿</button>
+            <div id="apiResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在登录...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser3',
+                        password: '123123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    authToken = data.data.token;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 登录成功\n用户ID: ${data.data.id}\nToken: ${authToken.substring(0, 30)}...`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ 登录失败: ${data.msg || '未知错误'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        async function testPendingList() {
+            if (!authToken) {
+                alert('请先登录');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试待审核投稿API...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPendingList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        pageNum: 1,
+                        pageSize: 100
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const count = data.data?.length || 0;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 待审核投稿API正常
+数据条数: ${count}
+
+响应数据:
+${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ API返回错误: ${data.msg || '未知错误'}\n\n完整响应:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        async function testPublicList() {
+            if (!authToken) {
+                alert('请先登录');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试已公开投稿API...';
+            
+            try {
+                const response = await fetch('http://localhost:9090/disclosure/queryPublicList', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        pageNum: 1,
+                        pageSize: 100
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    const count = data.data?.length || 0;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 已公开投稿API正常
+数据条数: ${count}
+
+响应数据:
+${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ API返回错误: ${data.msg || '未知错误'}\n\n完整响应:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 网络错误: ${error.message}`;
+            }
+        }
+
+        async function testAllLists() {
+            if (!authToken) {
+                alert('请先登录');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '正在测试所有投稿API...';
+            
+            try {
+                const [pendingRes, publicRes] = await Promise.all([
+                    fetch('http://localhost:9090/disclosure/queryPendingList', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ pageNum: 1, pageSize: 100 })
+                    }),
+                    fetch('http://localhost:9090/disclosure/queryPublicList', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ pageNum: 1, pageSize: 100 })
+                    })
+                ]);
+                
+                const pendingData = await pendingRes.json();
+                const publicData = await publicRes.json();
+                
+                const pendingCount = pendingData.data?.length || 0;
+                const publicCount = publicData.data?.length || 0;
+                const totalCount = pendingCount + publicCount;
+                
+                let resultText = `📊 投稿数据统计:\n`;
+                resultText += `   待审核: ${pendingCount} 条\n`;
+                resultText += `   已公开: ${publicCount} 条\n`;
+                resultText += `   总计: ${totalCount} 条\n\n`;
+                
+                resultText += `待审核数据示例:\n${JSON.stringify(pendingData.data?.slice(0, 2) || [], null, 2)}\n\n`;
+                resultText += `已公开数据示例:\n${JSON.stringify(publicData.data?.slice(0, 2) || [], null, 2)}`;
+                
+                if (pendingRes.ok && publicRes.ok && pendingData.code === 200 && publicData.code === 200) {
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultText = `❌ 部分API调用失败\n\n${resultText}`;
+                }
+                
+                resultDiv.textContent = resultText;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 测试失败: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

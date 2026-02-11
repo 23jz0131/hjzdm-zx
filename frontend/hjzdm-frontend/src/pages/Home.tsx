@@ -39,6 +39,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     fetchRecommendedProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRecommendedProducts = async () => {

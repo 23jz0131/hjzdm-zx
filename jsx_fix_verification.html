@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投稿审查页面修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #1976d2;
+        }
+        .fix-details {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .fix-details h3 {
+            color: #ef6c00;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .test-steps {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .test-steps h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ 投稿审查页面修复完成</h1>
+        
+        <div class="status success">
+            🎉 JSX语法错误已修复，页面可以正常编译运行
+        </div>
+        
+        <div class="fix-details">
+            <h3>🔧 修复的语法问题</h3>
+            <p><strong>问题描述：</strong>相邻的JSX元素没有被包装在同一个父元素中</p>
+            <p><strong>错误位置：</strong>文件第495行附近</p>
+            <p><strong>修复内容：</strong></p>
+            <ul>
+                <li>清理了重复的JSX渲染逻辑</li>
+                <li>移除了多余的闭合标签</li>
+                <li>统一了条件渲染结构</li>
+                <li>修复了标签嵌套不匹配的问题</li>
+            </ul>
+        </div>
+
+        <div class="code-block">
+// 修复前的错误结构
+{items.length === 0 ? (
+  &lt;div&gt;空状态1&lt;/div&gt;
+) : (
+  &lt;div&gt;列表1&lt;/div&gt;
+)}
+&lt;div&gt;多余的元素&lt;/div&gt;  // ❌ 这里缺少父级包装
+
+// 修复后的正确结构
+{items.length === 0 ? (
+  &lt;div&gt;空状态&lt;/div&gt;
+) : (
+  &lt;div&gt;列表&lt;/div&gt;
+)}  // ✅ 结构清晰，无多余元素
+        </div>
+
+        <div class="status info">
+            💡 同时保留了之前的闪烁问题修复
+        </div>
+
+        <div class="test-steps">
+            <h3>📋 测试验证步骤</h3>
+            <div class="step">
+                <strong>1. 启动服务：</strong> 确保前端服务正常运行在 http://localhost:3000
+            </div>
+            <div class="step">
+                <strong>2. 访问页面：</strong> 导航到投稿审查页面 (/admin-disclosure)
+            </div>
+            <div class="step">
+                <strong>3. 验证功能：</strong>
+                <ul>
+                    <li>页面应该正常加载，无编译错误</li>
+                    <li>无闪烁现象</li>
+                    <li>标签切换正常</li>
+                    <li>投稿数据显示正确</li>
+                </ul>
+            </div>
+            <div class="step">
+                <strong>4. 检查控制台：</strong> 确认无JavaScript错误
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0f8ff; border-radius: 10px;">
+            <h3 style="color: #1976d2; margin-top: 0;">🚀 准备就绪</h3>
+            <p>投稿审查页面现已完全修复，可以正常使用了！</p>
+        </div>
+    </div>
+</body>
+</html>

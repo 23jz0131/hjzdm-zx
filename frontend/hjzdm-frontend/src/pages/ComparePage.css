@@ -632,6 +632,20 @@
   transform: translateY(-1px);
 }
 
+/* 无结果提示样式 */
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.no-results .note {
+  font-size: 14px;
+  margin-top: 12px;
+  color: #666;
+  font-style: italic;
+}
+
 .btn-compare.selected {
   background: var(--accent-gradient);
   color: white;

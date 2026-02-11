@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { userApi, disclosureApi, notificationApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import UserSidebar from '../components/UserSidebar';
+
 import { useWebSocket } from '../services/websocketService';
 import './ProfilePage.css';
 
@@ -20,7 +20,7 @@ const ProfilePage: React.FC = () => {
 
   // 功能统计计数状态
   const [featureCounts, setFeatureCounts] = useState([
-    { id: 4, name: 'マイヒント', icon: '📢', count: 0 },
+    { id: 4, name: 'マイ投稿', icon: '📢', count: 0 },
     { id: 5, name: '通知', icon: '🔔', count: 0 }
   ]);
 
@@ -180,7 +180,6 @@ const ProfilePage: React.FC = () => {
         name: me.name || `ユーザー${me.id}`,
         nickname: me.nickname,
         avatar: me.avatar,
-        gender: me.gender,
         birthDate: formattedBirthDate
       });
       
@@ -419,10 +418,7 @@ const ProfilePage: React.FC = () => {
 
         </div>
         
-        {/* 侧边栏 */}
-        <div className="sidebar-content">
-          <UserSidebar />
-        </div>
+
       </div>
     </div>
   );

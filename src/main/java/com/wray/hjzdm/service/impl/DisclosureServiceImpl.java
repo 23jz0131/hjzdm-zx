@@ -1,10 +1,5 @@
 package com.wray.hjzdm.service.impl;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
@@ -18,10 +13,19 @@ import com.wray.hjzdm.mapper.CommentMapper;
 import com.wray.hjzdm.mapper.DisclosureMapper;
 import com.wray.hjzdm.service.DisclosureService;
 import com.wray.hjzdm.service.GoodsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclosure> implements DisclosureService {
 
+    private static final Logger log = LoggerFactory.getLogger(DisclosureServiceImpl.class);
     private static final Long ADMIN_USER_ID = 1L;
 
     @Autowired
@@ -38,21 +42,24 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
     private boolean isAdmin() {
         Long currentId = BaseContext.getCurrentId();
-        if (currentId == null)
-            return false;
-        
-        if (currentId.equals(ADMIN_USER_ID))
-            return true;
-
-        com.wray.hjzdm.entity.User user = userMapper.selectById(currentId);
-        return user != null && "admin".equals(user.getName());
+        boolean admin = false;
+        if (currentId != null) {
+            if (currentId.equals(ADMIN_USER_ID)) {
+                admin = true;
+            } else {
+                com.wray.hjzdm.entity.User user = userMapper.selectById(currentId);
+                admin = user != null && "admin".equals(user.getName());
+            }
+        }
+        log.info("Admin check: currentId={}, isAdmin={}", currentId, admin);
+        return admin;
     }
 
     @Override
     public List<Disclosure> queryDisclosure(Long goodsId) {
         List<Disclosure> disclosureList = this.baseMapper.selectList(new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getGoodsId, goodsId)
                 .orderByAsc(Disclosure::getCreateTime));
-        
+
         return disclosureList;
     }
 
@@ -60,7 +67,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
     public Disclosure getDisclosure(Long disclosureId) {
         Disclosure disclosure = this.baseMapper.selectOne(
                 new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getDisclosureId, disclosureId));
-        
+
         return disclosure;
     }
 
@@ -82,6 +89,14 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
 
         try {
             int result = this.baseMapper.insert(disclosure);
+
+            // 向管理员发送新投稿通知
+            if (result > 0) {
+                String title = "新しい投稿の通知";
+                String content = "新しい投稿「" + (disclosure.getTitle() != null ? disclosure.getTitle() : "無題") + "」が提出されました。審査をお願いします。";
+                notificationService.sendNotification(ADMIN_USER_ID, title, content);
+            }
+
             return result > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,7 +165,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                         .eq(Disclosure::getStatus, 0)
                         .orderByDesc(Disclosure::getCreateTime));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        
+        log.info("queryPendingDisclosure loaded: count={}", pageInfo.getList().size());
         return pageInfo.getList();
     }
 
@@ -162,7 +177,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
                         .eq(Disclosure::getStatus, 1)
                         .orderByDesc(Disclosure::getCreateTime));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        
+        log.info("queryPublicDisclosure loaded: count={}", pageInfo.getList().size());
         return pageInfo.getList();
     }
 
@@ -176,7 +191,7 @@ public class DisclosureServiceImpl extends ServiceImpl<DisclosureMapper, Disclos
         List<Disclosure> disclosureList = this.baseMapper.selectList(
                 new LambdaQueryWrapper<Disclosure>().eq(Disclosure::getAuthor, userId));
         PageInfo<Disclosure> pageInfo = new PageInfo<>(disclosureList);
-        
+
         return pageInfo.getList();
     }
 }
