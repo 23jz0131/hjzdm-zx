@@ -3,19 +3,16 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/node",
+      "use": "@vercel/static-build",
       "config": {
-        "includeFiles": ["dist/**"]
+        "distDir": "build"
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_API_URL": "https://your-backend-url.up.railway.app"
-  }
+  ]
 }
